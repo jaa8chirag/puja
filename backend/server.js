@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import authRouter from "./routes/authRouter.js";
-
+import userBookingDetailRoutes from "./routes/userBookingDetailRoutes.js";
 import pool from "./config/db.js";
 
 dotenv.config();
@@ -24,6 +24,8 @@ app.get("/", (req, res) => {
 // Routes
 app.use('/user', authRouter); // Yahan '/user' hona zaroori hai
 
+// booking routes
+app.use('/user/booking', userBookingDetailRoutes); //  '/user/booking-details'
 
 // 🔥 DATABASE CHECK + SERVER START
 (async () => {

@@ -12,7 +12,7 @@ import {
     updateAddress,
     addMember,
     allMembers,
-    deleteMember
+    deleteMember, 
 } from '../controllers/authController.js';
 
 import { verifyToken } from '../middleware/auth.js';
