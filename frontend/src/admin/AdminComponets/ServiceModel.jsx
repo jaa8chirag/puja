@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Image, Tag, AlignLeft, IndianRupee, MapPin, Calendar, Info, Clock, Activity } from "lucide-react"; 
+import { X, Trash2, Image, Tag, AlignLeft, IndianRupee, MapPin, Info, Clock, Activity } from "lucide-react"; 
 import { API } from "../../services/adminApi";
 
 const ServiceModal = ({ close, editData, refresh }) => {
@@ -7,7 +7,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
     puja_name: "",
     puja_type: "home_puja",
     description: "",
-    status: "", // Ab ye string text store karega
+    status: "",
     address: "",
     about: "",
     dateOfStart: "", 
@@ -16,6 +16,23 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+
+  const isTempleType = ["temple_puja", "pind_dan"].includes(form.puja_type);
+
+  const handleTypeChange = (newType) => {
+    const temple = ["temple_puja"].includes(newType);
+    setForm({
+      ...form,
+      puja_type: newType,
+      prices: temple
+        ? [
+            { pricing_type: "single",  price: "" },
+            { pricing_type: "couple",  price: "" },
+            { pricing_type: "family",  price: "" },
+          ]
+        : [{ pricing_type: "standard", price: "" }],
+    });
+  };
 
   useEffect(() => {
     if (editData) {
@@ -28,7 +45,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
         puja_name: editData.puja_name || "",
         puja_type: editData.puja_type || "home_puja",
         description: editData.description || "",
-        status: editData.status || "", // Backend se text status uthayega
+        status: editData.status || "",
         address: editData.address || "",
         about: editData.about || "",
         dateOfStart: formattedDateTime, 
@@ -41,8 +58,6 @@ const ServiceModal = ({ close, editData, refresh }) => {
       }
     }
   }, [editData]);
-
-  const isTempleType = ["temple_puja", "pind_dan"].includes(form.puja_type);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -98,7 +113,11 @@ const ServiceModal = ({ close, editData, refresh }) => {
               {/* Category Type */}
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">Category Type</label>
-                <select value={form.puja_type} onChange={(e) => setForm({ ...form, puja_type: e.target.value })} className="w-full px-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white outline-none focus:border-orange-500">
+                <select
+                  value={form.puja_type}
+                  onChange={(e) => handleTypeChange(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white outline-none focus:border-orange-500"
+                >
                   <option value="home_puja">Home Puja</option>
                   <option value="katha">Katha</option>
                   <option value="temple_puja">Temple Puja</option>
@@ -106,7 +125,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 </select>
               </div>
 
-              {/* Status Text Input - Updated to Text Field */}
+              {/* Status */}
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1 flex items-center gap-2">
                   <Activity size={12} /> Service Status Label
@@ -162,23 +181,25 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
           {/* Pricing */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center px-1">
+            <div className="px-1">
               <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-2">
                 <IndianRupee size={12} /> Pricing Configurations
               </label>
-              <button type="button" onClick={() => setForm({ ...form, prices: [...form.prices, { pricing_type: "standard", price: "" }] })} className="text-[10px] font-black text-emerald-400 uppercase hover:underline">Add Tier +</button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            <div className="grid grid-cols-1 gap-3">
               {form.prices.map((p, index) => (
-                <div key={index} className="flex gap-2 items-center bg-[#0b1120] p-2 rounded-2xl border border-slate-700">
-                  <select value={p.pricing_type} onChange={(e) => { const up = [...form.prices]; up[index].pricing_type = e.target.value; setForm({ ...form, prices: up }); }} className="bg-transparent text-xs text-orange-400 font-bold outline-none px-2">
-                    <option value="standard">Standard</option>
-                    <option value="single">Single</option>
-                    <option value="couple">Couple</option>
-                    <option value="family">Family</option>
-                  </select>
-                  <input type="number" value={p.price} onChange={(e) => { const up = [...form.prices]; up[index].price = e.target.value; setForm({ ...form, prices: up }); }} className="bg-transparent flex-1 text-sm text-white outline-none" placeholder="Price" />
-                  <button type="button" onClick={() => setForm({ ...form, prices: form.prices.filter((_, i) => i !== index) })} className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 size={14} /></button>
+                <div key={index} className="flex items-center gap-2 bg-[#0b1120] p-2 rounded-2xl border border-slate-700">
+                  <span className="text-xs text-orange-400 font-bold px-2 capitalize shrink-0 w-20">
+                    {p.pricing_type}
+                  </span>
+                  <input
+                    type="number"
+                    value={p.price}
+                    onChange={(e) => { const up = [...form.prices]; up[index].price = e.target.value; setForm({ ...form, prices: up }); }}
+                    className="bg-transparent flex-1 min-w-0 text-sm text-white outline-none"
+                    placeholder="Price"
+                  />
                 </div>
               ))}
             </div>
