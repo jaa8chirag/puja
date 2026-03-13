@@ -40,6 +40,24 @@ export const getServicesByType = async (req, res) => {
     });
   }
 };
+export const getAllServices = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT id, puja_name FROM services`
+    );
+
+    res.status(200).json({
+      success: true,
+      services: rows,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
 
 export const bookPuja = async (req, res) => {
   try {

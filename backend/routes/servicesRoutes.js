@@ -13,11 +13,13 @@ import {
   cancelBooking,
   postSupportQuery,
   getUserSupportQueries,
+  getAllServices
 } from "../controllers/servicesController.js";
 
 const router = express.Router();
 
 router.get("/allServices/:type", getServicesByType);
+router.get("/allServices", getAllServices);
 router.get("/bookPuja/:id", bookPuja);
 
 //jo user puja book kar rha hai vo sabhi booking puja requests mai ja rahi hai

@@ -788,7 +788,8 @@ export const createService = async (req, res) => {
       status,
     } = req.body;
     const prices = JSON.parse(req.body.prices || "[]");
-    const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+    const image_url = req.file ? `${req.file.filename}` : null;
+    console.log(image_url)
 
     await connection.beginTransaction();
 
@@ -805,7 +806,7 @@ export const createService = async (req, res) => {
       );
     }
 
-    if (["temple_pu_ja", "pind_dan"].includes(puja_type)) {
+    if (["temple_puja", "pind_dan"].includes(puja_type)) {
       await connection.query(
         `INSERT INTO temples (service_id, about, address, dateOfStart) VALUES (?, ?, ?, ?)`,
         [serviceId, about, address, dateOfStart],
@@ -840,7 +841,7 @@ export const updateService = async (req, res) => {
     if (typeof prices === "string") prices = JSON.parse(prices);
 
     await connection.beginTransaction();
-    let image_url = req.file ? `/uploads/${req.file.filename}` : null;
+    let image_url = req.file ? `${req.file.filename}` : null;
 
     // 1. Update Services Table
     const fields = [];
