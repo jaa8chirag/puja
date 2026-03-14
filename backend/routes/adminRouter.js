@@ -37,7 +37,14 @@ import {
   updateUser,
   getPanditBookingHistory,
   getGodViewAnalytics,
+  adminGetAllBlogs,
+  adminGetBlogById,
+  adminCreateBlog,
+  adminUpdateBlog,
+  adminDeleteBlog,
+  adminToggleBlogStatus,
 } from "../controllers/adminController.js";
+
 import { verifyToken } from "../middleware/auth.js";
 import { upload } from "../middleware/multerMiddleware.js";
 
@@ -127,4 +134,14 @@ router.get("/date-range", verifyToken, adminOnly, getRevenueByDateRange); // ?fr
 
 //----------Analytics Routes
 router.get("/analytics", verifyToken, adminOnly, getGodViewAnalytics);
+
+// ── Blogs Management ─────────────────────────────────────────
+router.get("/blogs",              verifyToken, adminOnly, adminGetAllBlogs);
+router.post("/blogs",             verifyToken, adminOnly, upload.single("image"), adminCreateBlog);
+router.get("/blogs/:id",          verifyToken, adminOnly, adminGetBlogById);
+router.put("/blogs/:id",          verifyToken, adminOnly, upload.single("image"), adminUpdateBlog);
+router.delete("/blogs/:id",       verifyToken, adminOnly, adminDeleteBlog);
+router.patch("/blogs/:id/status", verifyToken, adminOnly, adminToggleBlogStatus);
+
+
 export default router;

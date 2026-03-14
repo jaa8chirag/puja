@@ -10,6 +10,7 @@ import adminRouter from "./routes/adminRouter.js";
 import customerCare from "./routes/customerCareRouter.js";
 import mandirRouter from "./routes/mandirRouter.js";
 import kundliRouter from './routes/kundliRouter.js';
+import blogsRouter from './routes/blogsRouter.js';
 import { debugSweph, generateKundli } from './controllers/kundliController.js';
 import nameCorrectionRouter from "./controllers/nameCorrectionController.js";
 import chatRouter from "./routes/chatRouter.js";
@@ -424,6 +425,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/customerCare", customerCare);
 app.use("/api/chat", chatRouter);
 app.use("/api/contributions", contribution);
+app.use("/api/blogs",blogsRouter)
 
 const startServer = async () => {
     try {

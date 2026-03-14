@@ -1,6 +1,7 @@
 import db from "../config/db.js";
 import jwt from "jsonwebtoken";
 const otpStore = {}; // In-memory OTP store (phone: { otp, type, expires })
+import pool from "../config/db.js";
 
 // Admin sign-in with OTP
 export const AdminLoginRequest = async (req, res) => {
@@ -1550,5 +1551,165 @@ export const getGodViewAnalytics = async (req, res) => {
       message: "Analytics data fetch karne mein error aaya",
       error: error.message,
     });
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// BLOGS — Admin Controller Functions
+// Yeh sab adminController.js ke END mein paste karo
+// (import pool mat karna — already hoga upar)
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/admin/blogs
+export const adminGetAllBlogs = async (req, res) => {
+  try {
+    const { status, category, search, page = 1, limit = 15 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `SELECT id, title, slug, category, tag, author, image_url,
+                        read_time, status, views, created_at, updated_at
+                 FROM blogs WHERE 1=1`;
+    const params = [];
+
+    if (status)   { query += ` AND status = ?`;                       params.push(status); }
+    if (category) { query += ` AND category = ?`;                     params.push(category); }
+    if (search)   { query += ` AND (title LIKE ? OR excerpt LIKE ?)`; params.push(`%${search}%`, `%${search}%`); }
+
+    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    params.push(Number(limit), Number(offset));
+
+    const [blogs] = await pool.query(query, params);
+
+    // Total count
+    let countQ = `SELECT COUNT(*) as total FROM blogs WHERE 1=1`;
+    const countP = [];
+    if (status)   { countQ += ` AND status = ?`;                       countP.push(status); }
+    if (category) { countQ += ` AND category = ?`;                     countP.push(category); }
+    if (search)   { countQ += ` AND (title LIKE ? OR excerpt LIKE ?)`; countP.push(`%${search}%`, `%${search}%`); }
+    const [[{ total }]] = await pool.query(countQ, countP);
+
+    // Stats cards ke liye
+    const [[stats]] = await pool.query(`
+      SELECT
+        COUNT(*)                  AS total,
+        SUM(status = 'published') AS published,
+        SUM(status = 'draft')     AS drafts,
+        SUM(views)                AS total_views
+      FROM blogs
+    `);
+
+    res.json({ success: true, blogs, total, stats, page: Number(page), limit: Number(limit) });
+  } catch (err) {
+    console.error('adminGetAllBlogs:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// GET /api/admin/blogs/:id
+export const adminGetBlogById = async (req, res) => {
+  try {
+    const [[blog]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [req.params.id]);
+    if (!blog) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+    res.json({ success: true, blog });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// POST /api/admin/blogs
+export const adminCreateBlog = async (req, res) => {
+  try {
+    const { title, excerpt, content, category, tag, author, read_time, status = 'draft' } = req.body;
+
+    if (!title || !content)
+      return res.status(400).json({ success: false, error: 'Title aur content zaroori hai' });
+
+    const slug = title.toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 120);
+
+    const image_url = req.file ? req.file.filename : null;
+
+    const [result] = await pool.query(
+      `INSERT INTO blogs (title, slug, excerpt, content, category, tag, author, image_url, read_time, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, slug, excerpt || null, content, category || null, tag || null,
+       author || null, image_url, read_time || '5 min', status]
+    );
+
+    res.status(201).json({ success: true, id: result.insertId, slug, message: 'Blog create ho gaya' });
+  } catch (err) {
+    console.error('adminCreateBlog:', err);
+    if (err.code === 'ER_DUP_ENTRY')
+      return res.status(400).json({ success: false, error: 'Is title ka blog already exist karta hai' });
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// PUT /api/admin/blogs/:id
+export const adminUpdateBlog = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [[existing]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [id]);
+    if (!existing) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+
+    const { title, excerpt, content, category, tag, author, read_time, status } = req.body;
+    const image_url = req.file ? req.file.filename : existing.image_url;
+    const slug = title
+      ? title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 120)
+      : existing.slug;
+
+    await pool.query(
+      `UPDATE blogs SET title=?, slug=?, excerpt=?, content=?, category=?,
+                        tag=?, author=?, image_url=?, read_time=?, status=?
+       WHERE id = ?`,
+      [
+        title     || existing.title,
+        slug,
+        excerpt   ?? existing.excerpt,
+        content   || existing.content,
+        category  ?? existing.category,
+        tag       ?? existing.tag,
+        author    ?? existing.author,
+        image_url,
+        read_time || existing.read_time,
+        status    || existing.status,
+        id,
+      ]
+    );
+
+    res.json({ success: true, message: 'Blog update ho gaya' });
+  } catch (err) {
+    console.error('adminUpdateBlog:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// DELETE /api/admin/blogs/:id
+export const adminDeleteBlog = async (req, res) => {
+  try {
+    const [[blog]] = await pool.query(`SELECT id FROM blogs WHERE id = ?`, [req.params.id]);
+    if (!blog) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+    await pool.query(`DELETE FROM blogs WHERE id = ?`, [req.params.id]);
+    res.json({ success: true, message: 'Blog delete ho gaya' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// PATCH /api/admin/blogs/:id/status  — Published ↔ Draft toggle
+export const adminToggleBlogStatus = async (req, res) => {
+  try {
+    const [[blog]] = await pool.query(`SELECT id, status FROM blogs WHERE id = ?`, [req.params.id]);
+    if (!blog) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+
+    const newStatus = blog.status === 'published' ? 'draft' : 'published';
+    await pool.query(`UPDATE blogs SET status = ? WHERE id = ?`, [newStatus, req.params.id]);
+
+    res.json({ success: true, status: newStatus, message: `Blog ${newStatus} ho gaya` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 };

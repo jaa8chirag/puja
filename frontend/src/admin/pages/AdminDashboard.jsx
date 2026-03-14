@@ -10,7 +10,7 @@ import Users from "../AdminComponets/Users";
 import Services from "../AdminComponets/AdminServices";
 import Pandit from "../AdminComponets/Pandit";
 import FinancialDashboard from "../AdminComponets/financialDashboard";
-import { icons } from "lucide-react";
+import Adminblogs from "../AdminComponets/Adminblogs";
 import AnalyticsDashboard from "../AdminComponets/Analyticsdashboard";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -198,6 +198,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Pandits", icon: "pandits" },
     { label: "Finance", icon: "financial" },
     { label: "Analytics", icon: "analytics" },
+    { label: "Blogs", icon: "bookings" },
   ];
 
   return (
@@ -625,6 +626,7 @@ const AdminDashboard = () => {
             {tab === "Pandits" && <Pandit />}
             {tab === "Finance" && <FinancialDashboard />}
             {tab === "Analytics" && <AnalyticsDashboard />}
+            {tab === "Blogs" && <Adminblogs />}
           </div>
         </div>
       </div>

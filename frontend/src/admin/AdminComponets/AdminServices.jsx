@@ -7,12 +7,17 @@ import ServiceModal from "./ServiceModel";
 import { API } from "../../services/adminApi";
 
 const AdminServices = () => {
-  const [services, setServices] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [openModal, setOpenModal] = useState(false);
-  const [editData, setEditData] = useState(null);
-  const [category, setCategory] = useState("");
+  const [services, setServices]       = useState([]);
+  const [page, setPage]               = useState(1);
+  const [totalPages, setTotalPages]   = useState(1);
+  const [openModal, setOpenModal]     = useState(false);
+  const [editData, setEditData]       = useState(null);
+  const [category, setCategory]       = useState("");
+
+  // ── Delete modal state ─────────────────────────────────────
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, name }
+  const [deleting, setDeleting]       = useState(false);
 
   const fetchServices = async () => {
     try {
@@ -28,18 +33,34 @@ const AdminServices = () => {
 
   useEffect(() => { fetchServices(); }, [page, category]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this service?")) return;
-    await API.delete(`/services/${id}`);
-    fetchServices();
+  // ── Open delete modal ──────────────────────────────────────
+  const openDeleteModal = (service) => {
+    setDeleteTarget({ id: service.id, name: service.puja_name });
+    setDeleteModal(true);
+  };
+
+  // ── Confirm delete ─────────────────────────────────────────
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await API.delete(`/services/${deleteTarget.id}`);
+      setDeleteModal(false);
+      setDeleteTarget(null);
+      fetchServices();
+    } catch (err) {
+      console.error("Delete Error:", err);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const typeColor = (type) => {
     const map = {
-      home_puja: "bg-sky-900/60 text-sky-300 border border-sky-700",
-      katha: "bg-violet-900/60 text-violet-300 border border-violet-700",
+      home_puja:   "bg-sky-900/60 text-sky-300 border border-sky-700",
+      katha:       "bg-violet-900/60 text-violet-300 border border-violet-700",
       temple_puja: "bg-amber-900/60 text-amber-300 border border-amber-700",
-      pind_dan: "bg-rose-900/60 text-rose-300 border border-rose-700",
+      pind_dan:    "bg-rose-900/60 text-rose-300 border border-rose-700",
     };
     return map[type] || "bg-slate-700 text-slate-300 border border-slate-600";
   };
@@ -150,10 +171,14 @@ const AdminServices = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => { setEditData(service); setOpenModal(true); }} className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all">
+                      <button
+                        onClick={() => { setEditData(service); setOpenModal(true); }}
+                        className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all">
                         <Pencil size={15} />
                       </button>
-                      <button onClick={() => handleDelete(service.id)} className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all">
+                      <button
+                        onClick={() => openDeleteModal(service)}
+                        className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -175,7 +200,6 @@ const AdminServices = () => {
         ) : (
           services.map((service) => (
             <div key={service.id} className="bg-[#131e32] rounded-2xl border border-slate-800 p-4 flex flex-col gap-3">
-              {/* Top row */}
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1">
                   <p className="font-bold text-slate-200 text-sm">{service.puja_name}</p>
@@ -191,18 +215,20 @@ const AdminServices = () => {
                     </div>
                   )}
                 </div>
-                {/* Action buttons always visible on mobile */}
                 <div className="flex gap-2 flex-shrink-0">
-                  <button onClick={() => { setEditData(service); setOpenModal(true); }} className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all">
+                  <button
+                    onClick={() => { setEditData(service); setOpenModal(true); }}
+                    className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all">
                     <Pencil size={14} />
                   </button>
-                  <button onClick={() => handleDelete(service.id)} className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all">
+                  <button
+                    onClick={() => openDeleteModal(service)}
+                    className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all">
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
 
-              {/* Badges row */}
               <div className="flex flex-wrap gap-2 items-center">
                 <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${typeColor(service.puja_type)}`}>
                   {service.puja_type.replace('_', ' ')}
@@ -227,7 +253,48 @@ const AdminServices = () => {
         )}
       </div>
 
-      {openModal && <ServiceModal close={() => setOpenModal(false)} editData={editData} refresh={fetchServices} />}
+      {openModal && (
+        <ServiceModal
+          close={() => setOpenModal(false)}
+          editData={editData}
+          refresh={fetchServices}
+        />
+      )}
+
+      {/* ── Delete Confirm Modal ── */}
+      {deleteModal && deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="bg-[#0f1117] border border-red-500/20 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            <div className="text-center mb-5">
+              <div className="text-5xl mb-3">🗑️</div>
+              <h2 className="text-gray-100 font-bold text-lg m-0">Service Delete Karein?</h2>
+              <p className="text-gray-500 text-sm mt-2">
+                "<span className="text-orange-400">{deleteTarget.name}</span>" permanently delete ho jayega.
+                Yeh action undo nahi ho sakta.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDeleteModal(false); setDeleteTarget(null); }}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold border border-white/[0.08] text-gray-300 hover:border-white/20 transition-all bg-transparent cursor-pointer">
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                style={{ background: deleting ? "#7f1d1d" : "#dc2626" }}>
+                {deleting
+                  ? <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full inline-block" /> Deleting...</>
+                  : <><Trash2 size={14} /> Haan, Delete Karo</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

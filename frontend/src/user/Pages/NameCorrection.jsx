@@ -356,7 +356,7 @@ export default function NameCorrection() {
             Chaldean · Pythagorean · AI-Powered Analysis
           </p>
           <div className="flex justify-center gap-2 mt-4 flex-wrap">
-            {['🔮 Chaldean','📐 Pythagorean','🤖 Groq AI','✨ Smart Suggestions'].map(t=>(
+            {['🔮 Chaldean','📐 Pythagorean','✨ Smart Suggestions'].map(t=>(
               <span key={t} className="text-xs bg-stone-900/80 border border-stone-700/40 text-stone-500 px-3 py-1 rounded-full">{t}</span>
             ))}
           </div>
@@ -523,9 +523,7 @@ export default function NameCorrection() {
                             {result.suggestions.filter(s=>s.isPowerful).length} powerful · {result.suggestions.length} total
                           </p>
                         </div>
-                        <span className="text-xs bg-amber-900/40 text-amber-400 border border-amber-700/40 px-2 py-1 rounded-full">
-                          🤖 Groq AI ranked
-                        </span>
+                        
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {result.suggestions.map((s,i)=>(
@@ -550,8 +548,8 @@ export default function NameCorrection() {
           </div>
         )}
 
-        <div className="text-center mt-14 text-stone-800 text-xs space-y-1">
-          <p>🔮 Chaldean · 📐 Pythagorean · 🤖 Groq AI LLaMA 3.3</p>
+        <div className="text-center mt-14 text-stone-500 text-xs space-y-1">
+          <p>🔮 Chaldean · 📐 Pythagorean  </p>
           <p>For major decisions, consult a qualified numerologist.</p>
         </div>
       </div>

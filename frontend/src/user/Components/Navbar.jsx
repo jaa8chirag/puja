@@ -454,7 +454,7 @@ const Navbar = () => {
             <img
               src="/img/download.jpg"
               alt="Logo"
-              className="h-10 w-10 rounded-lg shadow-sm"
+              className="h-12 w-12 rounded-lg shadow-sm"
             />
             <div className="flex flex-col text-left">
               <span className="text-[18px] font-serif font-bold text-[#3b2a1a] leading-tight">

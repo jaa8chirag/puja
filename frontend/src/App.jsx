@@ -53,6 +53,8 @@ import KundliPortal from "./user/Pages/KundliPortal";
 import Chatwidget from "./user/Pages/Chatwidget";
 import NameCorrection from "./user/Pages/NameCorrection";
 import NotFound from "./user/Components/NotFound";
+import Blog from "./user/Pages/Blog"
+import BlogDetail from './user/Pages/BlogDetails';
 
 import AIPanditBot from "./user/Pages/AIPanditBot";
 
@@ -86,9 +88,13 @@ function App() {
           <Route path="/" element={<Home />} />
 
           <Route path="/chat" element={<Chatwidget />} />
-          <Route path="/aiPandit" element={<AIPanditBot/>}/>
+          <Route path="/aiPandit" element={<AIPanditBot />} />
           <Route path="/kundli" element={<KundliPortal />} />
           <Route path="/nameCorrection" element={<NameCorrection />} />
+          <Route path="/blogs" element={<Blog />} />
+          <Route path="/blogs/:id" element={<BlogDetail />} />
+
+
 
           <Route path="/temples" element={<FullTemplePage />} />
           <Route path="/temples/:id" element={<MandirDetailsPage />} />

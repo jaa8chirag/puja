@@ -98,7 +98,7 @@ const AartiPage = () => {
   return (
     <div className="bg-gradient-to-b from-orange-100 to-white min-h-screen">
 
-      <div className="bg-orange-400 py-16 text-center text-white">
+      <div className="bg-orange-400 py-8 text-center text-white">
         <h1 className="text-4xl md:text-5xl font-black mb-4">
           Daily Aarti Schedule
         </h1>

@@ -40,10 +40,11 @@ export const getServicesByType = async (req, res) => {
     });
   }
 };
+
 export const getAllServices = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT id, puja_name FROM services`
+      `SELECT * FROM services`
     );
 
     res.status(200).json({

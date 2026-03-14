@@ -19,7 +19,7 @@ const Footer = () => {
       { label: "Temple Gallery", to: "/temples" },
       { label: "Events Gallery", to: "/events" },
       { label: "Aarti Gallery", to: "/aarti" },
-
+      { label: "Blog", to: "/blogs" },
     ]
   };
 

@@ -57,6 +57,12 @@ const Pandits = () => {
 
   const [toast, setToast] = useState(null);
 
+  // ── NAYE STATES: Delete modal ke liye ────────────────────
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  // ─────────────────────────────────────────────────────────
+
   // --- Functions ---
 
   const showToast = (message, type = "success") => {
@@ -134,16 +140,28 @@ const Pandits = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
+  // ── CHANGED: window.confirm hata ke custom modal ──────────
+  const openDeleteModal = (p) => {
+    setDeleteTarget({ id: p.id, name: p.name });
+    setDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await API.delete(`/pandits/${id}`);
+      await API.delete(`/pandits/${deleteTarget.id}`);
       showToast("Record Deleted");
+      setDeleteModal(false);
+      setDeleteTarget(null);
       fetchPandits();
     } catch (err) {
       showToast("Delete failed", "error");
+    } finally {
+      setDeleting(false);
     }
   };
+  // ─────────────────────────────────────────────────────────
 
   const openEditModal = (p) => {
     setEditingPandit(p);
@@ -386,8 +404,9 @@ const Pandits = () => {
                             <ShieldOff size={14} />
                           )}
                         </button>
+                        {/* ONLY CHANGE: handleDelete(p.id) → openDeleteModal(p) */}
                         <button
-                          onClick={() => handleDelete(p.id)}
+                          onClick={() => openDeleteModal(p)}
                           className="p-2 rounded-xl text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"
                         >
                           <Trash2 size={14} />
@@ -685,6 +704,47 @@ const Pandits = () => {
           </div>
         </div>
       )}
+
+      {/* DELETE CONFIRM MODAL — ONLY NEW ADDITION */}
+      {deleteModal && deleteTarget && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 backdrop-blur-md px-4">
+          <div className="bg-[#131e32] border border-rose-500/20 rounded-[32px] p-8 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">🗑️</div>
+              <h2 className="text-white font-black text-xl tracking-tight m-0">
+                Pandit Delete Karein?
+              </h2>
+              <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+                "<span className="text-orange-400 font-bold">{deleteTarget.name}</span>"
+                ka record permanently delete ho jayega.
+                Yeh action undo nahi ho sakta.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDeleteModal(false); setDeleteTarget(null); }}
+                disabled={deleting}
+                className="flex-1 py-4 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-[1.5] py-4 text-[11px] font-black uppercase tracking-widest rounded-2xl text-white transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
+                style={{ background: deleting ? "#7f1d1d" : "#dc2626" }}
+              >
+                {deleting ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <><Trash2 size={14} /> Haan, Delete Karo</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
