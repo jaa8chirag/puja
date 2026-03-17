@@ -206,7 +206,7 @@ const MyBookings = () => {
               const mergedDateTime = new Date(`${bookingDate}T${time24}:00`);
 
               const isEventExpired = mergedDateTime < new Date();
-              const canCancel = b.status === "pending" && !isEventExpired;
+              const canCancel = b.status === "pending" && !isEventExpired && b.puja_type !== "temple_puja";
 
               return (
                 <div

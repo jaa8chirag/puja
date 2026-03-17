@@ -80,65 +80,70 @@ export default function KathaPuja() {
 
         {/* SERVICES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-          {filteredServices.map((service) => (
-            <div
-              key={service.id}
-              onClick={() => navigate(`/katha-jaap/${service.id}`)}
-              className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-200 cursor-pointer flex flex-col hover:-translate-y-2 active:scale-[0.98]"
-            >
-              {/* Image */}
-              <div className="relative h-48 md:h-64 overflow-hidden">
-                <img
-                  src={`${API_BASE_URL}/uploads/${service.image_url}`}
-                  alt={service.puja_name}
-                  className="w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
-                />
-                <div className="absolute top-3 right-3 z-20">
-                  <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
-                    <Sparkles size={10} fill="white" />
-                    <span className="text-[11px] md:text-[13px] font-bold capitalize tracking-wide">
-                      {service.status}
-                    </span>
+          {filteredServices.length > 0 ? (
+            filteredServices.map((service) => (
+              <div
+                key={service.id}
+                onClick={() => navigate(`/katha-jaap/${service.id}`)}
+                className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-200 cursor-pointer flex flex-col hover:-translate-y-2 active:scale-[0.98]"
+              >
+                {/* Image */}
+                <div className="relative h-48 md:h-64 overflow-hidden">
+                  <img
+                    src={`${API_BASE_URL}/uploads/${service.image_url}`}
+                    alt={service.puja_name}
+                    className="w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
+                  />
+                  <div className="absolute top-3 right-3 z-20">
+                    <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                      <Sparkles size={10} fill="white" />
+                      <span className="text-[11px] md:text-[13px] font-bold capitalize tracking-wide">
+                        {service.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-5 md:p-4 flex flex-col flex-1">
+                  <div className="mb-4 md:mb-2">
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <h3 className="flex-1 min-w-0 text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
+                        {service.title || service.puja_name}
+                      </h3>
+                      <button className="shrink-0 px-2 py-1 md:px-4 md:py-2 rounded-xl text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500">
+                        Book Now
+                      </button>
+                    </div>
+
+                    <div className="flex items-center text-gray-400 text-[10px] md:text-xs font-medium gap-2">
+                      <div className="flex items-center gap-1 bg-orange-50 px-2 py-0.5 rounded">
+                        <Calendar size={10} className="text-orange-500" />
+                        <span className="text-orange-700">Available Daily</span>
+                      </div>
+                      <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                      <span>At Home</span>
+                    </div>
+
+                    {service.description && (
+                      <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-3">
+                        {service.description}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
-
-              {/* Content */}
-              <div className="p-5 md:p-4 flex flex-col flex-1">
-                <div className="mb-4 md:mb-2">
-
-                  {/* Title + Arrow */}
-                  <div className="flex items-center justify-between gap-3 mb-1">
-                    <h3 className="text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
-                      {service.title || service.puja_name}
-                    </h3>
-
-                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl border border-orange-200 bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all duration-500 shrink-0">
-                      <ArrowRight size={18} />
-                    </div>
-                  </div>
-
-                  {/* Meta info */}
-                  <div className="flex items-center text-gray-400 text-[10px] md:text-xs font-medium gap-2">
-                    <div className="flex items-center gap-1 bg-orange-50 px-2 py-0.5 rounded">
-                      <Calendar size={10} className="text-orange-500" />
-                      <span className="text-orange-700">Available Daily</span>
-                    </div>
-                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                    <span>At Home</span>
-                  </div>
-
-                  {/* Description — 3 lines */}
-                  {service.description && (
-                    <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-3">
-                      {service.description}
-                    </p>
-                  )}
-
-                </div>
-              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center mt-6">
+              <h2 className="text-3xl md:text-5xl font-serif text-[#2f1e12] tracking-tight">
+                No <span className="text-orange-600 italic">Katha Found</span>
+              </h2>
+              <p className="text-gray-500 mt-2">
+                Try searching with another keyword.
+              </p>
             </div>
-          ))}
+          )}
         </div>
       </section>
     </div>

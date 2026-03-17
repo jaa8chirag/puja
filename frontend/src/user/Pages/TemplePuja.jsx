@@ -7,31 +7,22 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 export default function TemplePuja() {
 
 const slides = [
-  { 
-    image: "/img/slider1.jpeg",
-  },
-  { 
-    image: "/img/slider2.jpeg", 
-  },
-  { 
-    image: "/img/slider3.jpeg",  
-  }
+  { image: "/img/slider1.jpeg", quote: "Where devotion meets divinity, every prayer finds its way to the heavens." },
+  { image: "/img/slider2.jpeg", quote: "In the silence of the temple, the soul speaks its truest prayers." },
+  { image: "/img/slider3.jpeg", quote: "A single flame of faith can illuminate the darkest corners of the heart." }
 ];
-  const [currentSlide, setCurrentSlide] = useState(0);
 
+  const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
-
     return () => clearInterval(interval);
   }, []);
-
 
   useEffect(() => {
     const getSevices = async () => {
@@ -53,6 +44,10 @@ const slides = [
     getSevices();
   }, []);
 
+  const filteredServices = services.filter(service =>
+    service.puja_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (service.title && service.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div className="min-h-screen bg-[#FFF4E1] text-[#2D1B08] selection:bg-orange-100">
@@ -64,7 +59,7 @@ const slides = [
 
       <section className="relative max-w-7xl mx-auto px-6 pt-6 pb-5">
 
-        {/* HEADER SECTION - CENTERED & LARGE TEXT */}
+        {/* HEADER SECTION */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-[1px] w-12 bg-orange-300"></div>
@@ -74,11 +69,11 @@ const slides = [
             <div className="h-[1px] w-12 bg-orange-300"></div>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-serif  mb-4 tracking-tight text-[#1A1108]">
+          <h1 className="text-5xl md:text-6xl font-serif mb-4 tracking-tight text-[#1A1108]">
             Divine <span className="text-orange-600 italic">Temple Puja</span>
           </h1>
 
-          <p className=" text-gray-600 text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-600 text-base max-w-2xl mx-auto leading-relaxed">
             Authentic Vedic rituals and sacred narrations by master priests,
             bringing peace and prosperity to your spiritual journey.
           </p>
@@ -86,8 +81,6 @@ const slides = [
 
         {/* PREMIUM COMPACT SLIDER */}
         <div className="relative w-full max-w-6xl mx-auto border-2 border-orange-400 mb-12 overflow-hidden rounded-[28px] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)]">
-
-          {/* Slides Wrapper */}
           <div
             className="flex transition-transform duration-900 ease-in-out"
             style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -97,7 +90,6 @@ const slides = [
                 key={index}
                 className="min-w-full h-[300px] md:h-[300px] flex items-center justify-center relative"
                 style={{
-                  // Yaha 'slide.image' use hoga na ki slides[currentIndex]
                   backgroundImage: `url(${slide.image})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
@@ -107,8 +99,13 @@ const slides = [
                 {/* Cinematic Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20"></div>
 
-                {/* Text Content */}
-                
+                {/* Quote Text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center">
+                  <p className="text-white text-lg md:text-2xl font-serif italic leading-relaxed drop-shadow-lg max-w-2xl">
+                    "{slide.quote}"
+                  </p>
+                </div>
+
               </div>
             ))}
           </div>
@@ -128,18 +125,14 @@ const slides = [
 
         {/* SERVICES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 justify-items-center">
-          {services
-            .filter(service =>
-              service.puja_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              (service.title && service.title.toLowerCase().includes(searchTerm.toLowerCase()))
-            )
-            .map((service) => (
+          {filteredServices.length > 0 ? (
+            filteredServices.map((service) => (
               <div
                 key={service.service_id}
                 onClick={() => navigate(`/temple-puja/${service.service_id}`)}
                 className="group relative cursor-pointer bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 ease-out flex flex-col active:scale-[0.98] w-full"
               >
-                {/* IMAGE - Reduced height from h-64 to h-48 on mobile */}
+                {/* IMAGE */}
                 <div className="relative h-48 md:h-64 overflow-hidden">
                   <img
                     src={`${API_BASE_URL}/uploads/${service.image_url}`}
@@ -148,7 +141,6 @@ const slides = [
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1108]/90 via-transparent to-transparent opacity-60" />
 
-                  {/* Badge scaled down */}
                   <div className="absolute top-3 left-3 z-20">
                     <div className="bg-orange-500/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
                       <Sparkles size={10} fill="white" className="text-white" />
@@ -159,10 +151,9 @@ const slides = [
                   </div>
                 </div>
 
-                {/* CONTENT - Reduced padding from p-8 to p-5 */}
+                {/* CONTENT */}
                 <div className="p-5 md:p-8 flex flex-col flex-1 text-left">
                   <div className="flex-1">
-                    {/* Tagline */}
                     <div className="flex items-center gap-2 mb-3 md:mb-4">
                       <div className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
                       <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-600">
@@ -170,21 +161,16 @@ const slides = [
                       </span>
                     </div>
 
-                    {/* Title Scaled */}
                     <h3 className="text-xl md:text-2xl font-serif mb-2 group-hover:text-orange-600 transition-colors duration-300 leading-tight">
                       {service.title || service.puja_name}
                     </h3>
 
-                    {/* About - smaller text */}
                     <p className="text-gray-700 text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
                       {service.about}
                     </p>
 
                     <div className="flex items-center justify-between w-full mt-2">
-                      {/* Left Side: Address and Time together */}
                       <div className="flex flex-col gap-1.5 min-w-0">
-
-                        {/* 1. Location Row */}
                         <div className="flex items-center gap-2">
                           <MapPin size={12} className="text-orange-500 shrink-0" />
                           <p className="text-gray-500 text-xs line-clamp-1">
@@ -192,7 +178,6 @@ const slides = [
                           </p>
                         </div>
 
-                        {/* 2. Date & Time Row */}
                         <div className="flex items-center gap-2">
                           <Calendar size={12} className="text-orange-500 shrink-0" />
                           <div className="flex items-center gap-1.5 font-bold text-[12px] md:text-[13px] text-gray-700 whitespace-nowrap">
@@ -214,16 +199,24 @@ const slides = [
                         </div>
                       </div>
 
-                      {/* Right Side: Arrow Button (Now perfectly centered to both lines) */}
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl border border-orange-100 bg-orange-50 group-hover:bg-orange-600 flex items-center justify-center text-orange-600 group-hover:text-white transition-all duration-500 shadow-sm shrink-0 ml-4">
-                        <ArrowRight size={18} />
-                      </div>
+                      <button className="shrink-0 px-2 py-1 md:px-4 md:py-2 rounded-xl text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500">
+                        Book Now
+                      </button>
                     </div>
                   </div>
-
                 </div>
               </div>
-            ))}
+            ))
+          ) : (
+            <div className="col-span-full text-center mt-6">
+              <h2 className="text-3xl md:text-5xl font-serif text-[#2f1e12] tracking-tight">
+                No <span className="text-orange-600 italic">Temple Puja Found</span>
+              </h2>
+              <p className="text-gray-500 mt-2">
+                Try searching with another keyword.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>

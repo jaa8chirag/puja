@@ -13,6 +13,20 @@ export default function HomePuja() {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    { image: "/img/slider1.jpeg", quote: "Bring the divine into your home, where every prayer becomes a blessing." },
+    { image: "/img/slider2.jpeg", quote: "A home filled with sacred rituals is a home blessed by the gods." },
+    { image: "/img/slider3.jpeg", quote: "Let the fragrance of incense and the chants of Vedas purify your abode." }
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const getSevices = async () => {
@@ -38,14 +52,12 @@ export default function HomePuja() {
     getSevices();
   }, []);
 
-
   const filteredServices = services.filter((service) => {
     const name = service.title || service.puja_name || "";
     return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
-    // FULL PAGE BACKGROUND COLOR SET HERE
     <div className="min-h-screen bg-[#FFF4E1]">
 
       <section className="relative max-w-7xl mx-auto px-6 pt-6 pb-5">
@@ -55,7 +67,8 @@ export default function HomePuja() {
           <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-amber-200 rounded-full blur-[150px]"></div>
         </div>
 
-        <div className="flex flex-col mb-10 text-center">
+        {/* HEADER */}
+        <div className="flex flex-col mb-8 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-[1px] w-12 bg-orange-300"></div>
             <span className="text-xs tracking-[0.3em] uppercase text-orange-600 font-bold">
@@ -66,16 +79,45 @@ export default function HomePuja() {
           <h2 className="text-5xl md:text-6xl font-serif text-[#2f1e12] tracking-tight mb-4">
             Divine <span className="text-orange-600 italic">Home Puja</span>
           </h2>
-          <p className=" text-gray-600 text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-600 text-base max-w-2xl mx-auto leading-relaxed">
             Bring the sanctity of the temple to your doorstep with authentic
             Vedic ceremonies performed by master priests.
           </p>
         </div>
 
-        {/* 2. SEARCH INPUT */}
+        {/* SLIDER */}
+        <div className="relative w-full max-w-6xl mx-auto border-2 border-orange-400 mb-12 overflow-hidden rounded-[28px] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)]">
+          <div
+            className="flex transition-transform duration-900 ease-in-out"
+            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          >
+            {slides.map((slide, index) => (
+              <div
+                key={index}
+                className="min-w-full h-[300px] flex items-center justify-center relative"
+                style={{
+                  backgroundImage: `url(${slide.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              >
+                {/* Cinematic Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20"></div>
 
-        <div
-          className="max-w-7xl mx-auto px-6 pb-16 bg-[#FFF4E1]">
+                {/* Quote Text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center">
+                  <p className="text-white text-lg md:text-2xl font-serif italic leading-relaxed drop-shadow-lg max-w-2xl">
+                    "{slide.quote}"
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SEARCH INPUT */}
+        <div className="max-w-7xl mx-auto px-6 pb-16 bg-[#FFF4E1]">
           <div className="relative w-full max-w-2xl mx-auto">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500"
@@ -91,6 +133,7 @@ export default function HomePuja() {
           </div>
         </div>
 
+        {/* SERVICES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
           {filteredServices.length > 0 ? (
             filteredServices.map((service) => (
@@ -120,13 +163,13 @@ export default function HomePuja() {
                 <div className="p-5 md:p-4 flex flex-col flex-1">
                   <div className="mb-4 md:mb-2">
                     <div className="flex items-center justify-between gap-3 mb-1">
-                      <h3 className="text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
+                      <h3 className="flex-1 min-w-0 text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
                         {service.title || service.puja_name}
                       </h3>
 
-                      <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl border border-orange-200 bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all duration-500 shrink-0">
-                        <ArrowRight size={18} />
-                      </div>
+                      <button className="shrink-0 px-2 py-1 md:px-4 md:py-2 rounded-xl text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500">
+                        Book Now
+                      </button>
                     </div>
 
                     <div className="flex items-center text-gray-400 text-[10px] md:text-xs font-medium gap-2">
