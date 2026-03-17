@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaStar } from "react-icons/fa";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
@@ -15,7 +15,8 @@ const reviewsData = [
     avatar: "/img/review2.jpg",
     date: "5 months ago",
     rating: 5,
-    comment: "Highly recommended! Very easy to book online and trusted pandits.",
+    comment:
+      "Highly recommended! Very easy to book online and trusted pandits.",
   },
   {
     name: "Anita Singh",
@@ -33,23 +34,61 @@ const reviewsData = [
   },
 ];
 
+const AUTO_SCROLL_INTERVAL = 3500;
+
 export default function ReviewSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(3);
+  const timerRef = useRef(null);
+
+  // Responsive: kitne cards ek saath dikhne chahiye
+  useEffect(() => {
+    const updateVisible = () => {
+      if (window.innerWidth < 640) setVisibleCount(1);
+      else if (window.innerWidth < 1024) setVisibleCount(2);
+      else setVisibleCount(3);
+    };
+    updateVisible();
+    window.addEventListener("resize", updateVisible);
+    return () => window.removeEventListener("resize", updateVisible);
+  }, []);
+
+  const maxIndex = reviewsData.length - visibleCount;
+
+  const startTimer = () => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+    }, AUTO_SCROLL_INTERVAL);
+  };
+
+  useEffect(() => {
+    startTimer();
+    return () => clearInterval(timerRef.current);
+  }, [maxIndex]);
+
+  // Index out of bounds fix when visibleCount changes
+  useEffect(() => {
+    if (currentIndex > maxIndex) setCurrentIndex(maxIndex);
+  }, [maxIndex]);
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? reviewsData.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+    startTimer();
   };
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev === reviewsData.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+    startTimer();
   };
 
+  const cardWidthPercent = 100 / visibleCount;
+
   return (
-    <>
     <section className="bg-[#FFF4E1] py-16">
       {/* Heading + Google Rating */}
-      <div className="max-w-7xl mx-auto px-6 md:px-20 text-center mb-8">
-        <h2 className="text-2xl md:text-4xl font-serif font-bold text-[#3b2a1a] mb-10 md:mb-15">
+      <div className="max-w-7xl mx-auto px-6 md:px-20 text-center mb-10">
+        <h2 className="text-2xl md:text-4xl font-serif font-bold text-[#3b2a1a] mb-6">
           What Our Customers Say
         </h2>
         <div className="inline-flex items-center bg-white px-6 py-3 rounded-full shadow">
@@ -65,17 +104,19 @@ export default function ReviewSection() {
       </div>
 
       {/* Carousel */}
-      <div className="relative max-w-7xl mx-auto px-6 md:px-20">
-        {/* Slide */}
+      <div className="relative max-w-7xl mx-auto px-10 md:px-20">
         <div className="overflow-hidden">
           <div
-            className="flex transition-transform duration-500"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{
+              transform: `translateX(-${currentIndex * cardWidthPercent}%)`,
+            }}
           >
             {reviewsData.map((review, i) => (
               <div
                 key={i}
-                className="w-full md:w-1/3 flex-shrink-0 px-2"
+                className="flex-shrink-0 px-2"
+                style={{ width: `${cardWidthPercent}%` }}
               >
                 <div className="bg-white rounded-2xl p-6 shadow-lg h-full flex flex-col">
                   {/* Avatar + Name */}
@@ -92,12 +133,12 @@ export default function ReviewSection() {
                   </div>
 
                   {/* Stars */}
-                  <div className="flex mb-2">
-                    {[...Array(5)].map((_, i) => (
+                  <div className="flex mb-3">
+                    {[...Array(5)].map((_, j) => (
                       <FaStar
-                        key={i}
+                        key={j}
                         className={`text-yellow-400 ${
-                          i < review.rating ? "opacity-100" : "opacity-30"
+                          j < review.rating ? "opacity-100" : "opacity-30"
                         }`}
                       />
                     ))}
@@ -111,19 +152,35 @@ export default function ReviewSection() {
           </div>
         </div>
 
-        {/* Arrows */}
+        {/* Arrow Buttons */}
         <button
           onClick={prevSlide}
-          className="absolute top-1/2 -translate-y-1/2 left-0 bg-white p-2 rounded-full shadow hover:bg-gray-100"
+          className="absolute top-1/2 -translate-y-1/2 left-1 md:left-6 bg-white p-2 rounded-full shadow hover:bg-orange-50 transition"
         >
           <IoIosArrowBack size={20} />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute top-1/2 -translate-y-1/2 right-0 bg-white p-2 rounded-full shadow hover:bg-gray-100"
+          className="absolute top-1/2 -translate-y-1/2 right-1 md:right-6 bg-white p-2 rounded-full shadow hover:bg-orange-50 transition"
         >
           <IoIosArrowForward size={20} />
         </button>
+      </div>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-6">
+        {Array.from({ length: maxIndex + 1 }).map((_, i) => (
+          <span
+            key={i}
+            onClick={() => {
+              setCurrentIndex(i);
+              startTimer();
+            }}
+            className={`h-2 rounded-full cursor-pointer transition-all duration-300 ${
+              i === currentIndex ? "bg-orange-400 w-6" : "bg-orange-200 w-2"
+            }`}
+          />
+        ))}
       </div>
 
       {/* Google Review Button */}
@@ -136,6 +193,5 @@ export default function ReviewSection() {
         </a>
       </div>
     </section>
-    </>
   );
 }
