@@ -38,7 +38,6 @@ import CustomerCareSignIn from "./admin/pages/CustomerCareSignIn";
 
 import ScrollToTop from "./user/Components/ScrollToTop";
 
-import { RightFloatingMenu } from "./user/Components/RightFloatingMenu";
 import CustomerCareDashboard from "./admin/pages/CustomerCareDashboard";
 
 import FullTemplePage from "./user/Pages/FullTemplePage";
@@ -186,7 +185,6 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {!hideFloatingMenu && <RightFloatingMenu />}
       {/* {!hideFloatingMenu && <Chatwidget />} */}
       {isHomePage && <AIPanditBot />}
     </>

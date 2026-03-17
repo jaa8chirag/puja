@@ -5,7 +5,7 @@ import DevotionalStats from "../Components/DevotionalStats";
 import HowItWorks from "../Components/HowItWorks";
 import TrendingPuja from "../Components/TrendingPuja"
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ShieldCheck, Box, Sparkles, Home as HomeIcon, Star, Users, Video, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Sparkles, Home as HomeIcon, Star, Users, Video, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -51,22 +51,27 @@ export default function Home() {
             </p>
 
             {/* ✅ Buttons - Always Side by Side */}
-            <div className="flex gap-3 mt-8">
-              <button
-                className=" bg-orange-500 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-sm sm:text-base"
-                onClick={() => navigate("/homePuja")}
-              >
-                Book Home Puja
-              </button>
+<div className="flex gap-3 mt-8">
+  <div className="flex flex-col items-center gap-1">
+    <button
+      className="bg-orange-500 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-sm sm:text-base"
+      onClick={() => navigate("/kundli")}
+    >
+      Find Your Kundli
+    </button>
+    <p className="text-xs text-gray-600">Vedic birth chart analysis</p>
+  </div>
 
-              <button
-                className=" bg-white text-orange-500 font-bold py-3 px-6 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base"
-                onClick={() => navigate("/temple-puja")}
-              >
-                Book Temple Puja
-              </button>
-            </div>
-
+  <div className="flex flex-col items-center gap-1">
+    <button
+      className="bg-white text-orange-500 font-bold py-3 px-6 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base"
+      onClick={() => navigate("/nameCorrection")}
+    >
+      Name correction
+    </button>
+    <p className="text-xs text-gray-600">Free with any puja booking</p>
+  </div>
+</div>
             {/* ✅ Stats - Hidden on Mobile */}
             <div className="hidden md:flex items-center gap-10 mt-12">
 
@@ -107,11 +112,6 @@ export default function Home() {
               <div className="flex items-center gap-2 bg-orange-200/50 px-2 py-2 rounded-xl">
                 <ShieldCheck size={14} className="text-orange-600" />
                 <span className="text-xs font-semibold text-gray-600">Verified Pandits</span>
-              </div>
-
-              <div className="flex items-center gap-2 bg-orange-200/50 px-2 py-2 rounded-xl">
-                <Box size={14} className="text-orange-600" />
-                <span className="text-xs font-semibold text-gray-600">Samagri Included</span>
               </div>
 
               <div className="flex items-center gap-2 bg-orange-200/50 px-2 py-2 rounded-xl">
