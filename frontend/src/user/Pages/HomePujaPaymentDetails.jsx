@@ -574,21 +574,29 @@ const HomePujaPaymentDetails = () => {
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-2 border-y border-orange-200">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={donations["Temple Donation"]}
-                          onChange={() => toggleDonation("Temple Donation")}
-                          className="w-3.5 h-3.5 accent-orange-500"
-                        />
-                        <span className="text-[10px] font-bold text-gray-700 uppercase">
-                          Temple Donation
+                    <div className="flex flex-col py-2 border-y border-orange-200">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={donations["Temple Donation"]}
+                            onChange={() => toggleDonation("Temple Donation")}
+                            className="w-3.5 h-3.5 accent-orange-500"
+                          />
+                          <span className="text-[10px] font-bold text-gray-700 uppercase">
+                            Temple Donation
+                          </span>
+                        </label>
+                        <span className="text-[10px] font-black text-orange-500">
+                          +₹{getPrice("Temple Donation")}
                         </span>
-                      </label>
-                      <span className="text-[10px] font-black text-orange-500">
-                        +₹{getPrice("Temple Donation")}
-                      </span>
+                      </div>
+
+                      {/* ✅ Now will come below */}
+                      <p className="text-[12px] text-gray-500 mt-1 ml-5 leading-snug">
+                        Your donation helps maintain the temple, support daily
+                        rituals, and serve devotees.
+                      </p>
                     </div>
 
                     <div className="flex justify-between items-center pt-2">
@@ -731,21 +739,29 @@ const MobileSummaryInline = ({
       </button>
 
       {/* Temple donation */}
-      <div className="flex items-center justify-between py-1 px-1 border-t border-gray-100 pt-3">
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={donations["Temple Donation"]}
-            onChange={() => toggleDonation("Temple Donation")}
-            className="w-4 h-4 accent-orange-500 cursor-pointer"
-          />
-          <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">
-            Temple Donation
+
+      <div className="flex flex-col border-y border-orange-200 pt-3">
+        <div className="flex items-center justify-between py-1 px-1">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={donations["Temple Donation"]}
+              onChange={() => toggleDonation("Temple Donation")}
+              className="w-4 h-4 accent-orange-500 cursor-pointer"
+            />
+            <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">
+              Temple Donation
+            </span>
+          </label>
+          <span className="text-[13px] font-black text-orange-500">
+            +₹{getPrice("Temple Donation")}
           </span>
-        </label>
-        <span className="text-[13px] font-black text-orange-500">
-          +₹{getPrice("Temple Donation")}
-        </span>
+        </div>
+
+        {/* ✅ ADD THIS LINE BELOW */}
+        <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
+          Helps in temple upkeep, rituals, and serving the community.
+        </p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />
