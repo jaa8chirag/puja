@@ -577,26 +577,33 @@ const PindDanBooking = () => {
                   </div>
                 </button>
 
-                <div className="flex items-center justify-between py-1 px-1 border-t border-gray-50 pt-4">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={donations["Temple Donation"]}
-                      onChange={(e) =>
-                        setDonations((prev) => ({
-                          ...prev,
-                          "Temple Donation": e.target.checked,
-                        }))
-                      }
-                      className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
-                    />
-                    <span className="text-[14px] text-slate-500 font-bold uppercase tracking-wider group-hover:text-orange-600 transition-colors">
-                      Temple Donation
+                <div className="flex flex-col border-y border-orange-200 py-3 px-1">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={donations["Temple Donation"]}
+                        onChange={(e) =>
+                          setDonations((prev) => ({
+                            ...prev,
+                            "Temple Donation": e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+                      />
+                      <span className="text-[14px] text-gray-600 font-medium group-hover:text-orange-600 transition-colors">
+                        Temple Donation
+                      </span>
+                    </label>
+                    <span className="text-[14px] font-bold text-orange-500">
+                      +₹{getPrice("Temple Donation")}
                     </span>
-                  </label>
-                  <span className="text-[14px] font-black text-orange-500">
-                    +₹{getPrice("Temple Donation")}
-                  </span>
+                  </div>
+
+                  {/* ✅ NEW TEXT BELOW */}
+                  <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
+                    Helps in temple upkeep, daily rituals, and serving devotees.
+                  </p>
                 </div>
 
                 <div className="border-t border-dashed border-gray-300 w-full my-2" />
@@ -756,26 +763,34 @@ const MobileSummarySection = ({
         </div>
       </button>
 
-      <div className="flex items-center justify-between py-1 px-1 border-t border-gray-100 pt-3">
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={donations["Temple Donation"]}
-            onChange={(e) =>
-              setDonations((prev) => ({
-                ...prev,
-                "Temple Donation": e.target.checked,
-              }))
-            }
-            className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
-          />
-          <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">
-            Temple Donation
+      <div className="flex flex-col border-y border-orange-200 pt-3">
+        <div className="flex items-center justify-between py-1 px-1">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={donations["Temple Donation"]}
+              onChange={(e) =>
+                setDonations((prev) => ({
+                  ...prev,
+                  "Temple Donation": e.target.checked,
+                }))
+              }
+              className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+            />
+            <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">
+              Temple Donation
+            </span>
+          </label>
+
+          <span className="text-[13px] font-black text-orange-500">
+            +₹{getPrice("Temple Donation")}
           </span>
-        </label>
-        <span className="text-[13px] font-black text-orange-500">
-          +₹{getPrice("Temple Donation")}
-        </span>
+        </div>
+
+        {/* ✅ NEW LINE BELOW */}
+        <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
+          Helps in temple upkeep, daily rituals, and serving devotees.
+        </p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />
