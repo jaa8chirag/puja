@@ -46,7 +46,7 @@ export default function DevotionalStats() {
             <div>
               <h3 className="text-xl md:text-2xl font-bold">4.5 Rating</h3>
               <p className="text-sm md:text-base text-orange-100/80">
-                1 Lakh+ Play Store reviews
+                1 Lakh+ reviews
               </p>
             </div>
           </div>
