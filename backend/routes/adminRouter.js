@@ -43,6 +43,7 @@ import {
   adminUpdateBlog,
   adminDeleteBlog,
   adminToggleBlogStatus,
+  updateBookingStatus,
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -136,12 +137,30 @@ router.get("/date-range", verifyToken, adminOnly, getRevenueByDateRange); // ?fr
 router.get("/analytics", verifyToken, adminOnly, getGodViewAnalytics);
 
 // ── Blogs Management ─────────────────────────────────────────
-router.get("/blogs",              verifyToken, adminOnly, adminGetAllBlogs);
-router.post("/blogs",             verifyToken, adminOnly, upload.single("image"), adminCreateBlog);
-router.get("/blogs/:id",          verifyToken, adminOnly, adminGetBlogById);
-router.put("/blogs/:id",          verifyToken, adminOnly, upload.single("image"), adminUpdateBlog);
-router.delete("/blogs/:id",       verifyToken, adminOnly, adminDeleteBlog);
-router.patch("/blogs/:id/status", verifyToken, adminOnly, adminToggleBlogStatus);
+router.get("/blogs", verifyToken, adminOnly, adminGetAllBlogs);
+router.post(
+  "/blogs",
+  verifyToken,
+  adminOnly,
+  upload.single("image"),
+  adminCreateBlog,
+);
+router.get("/blogs/:id", verifyToken, adminOnly, adminGetBlogById);
+router.put(
+  "/blogs/:id",
+  verifyToken,
+  adminOnly,
+  upload.single("image"),
+  adminUpdateBlog,
+);
+router.delete("/blogs/:id", verifyToken, adminOnly, adminDeleteBlog);
+router.patch(
+  "/blogs/:id/status",
+  verifyToken,
+  adminOnly,
+  adminToggleBlogStatus,
+);
 
+router.put("/update-status/:id", verifyToken, adminOnly, updateBookingStatus);
 
 export default router;

@@ -13,7 +13,9 @@ import {
   cancelBooking,
   postSupportQuery,
   getUserSupportQueries,
-  getAllServices
+  getAllServices,
+  savePujaRequestMembers,
+  getPujaRequestMembers,
 } from "../controllers/servicesController.js";
 
 const router = express.Router();
@@ -33,7 +35,6 @@ router.post(
   homeORKathaPujaBookingDetails,
 );
 
-
 //user ko uski sare bookings dikh rahi hai..
 router.get("/my-bookings", verifyToken, getUserBookings);
 
@@ -48,5 +49,9 @@ router.post("/support-query", verifyToken, postSupportQuery);
 
 // 2. User ko uski purani conversations dikhane ke liye (GET Request)
 router.get("/my-support-queries", verifyToken, getUserSupportQueries);
+
+// ✅ NEW — puja_request_members routes
+router.post("/save-members", verifyToken, savePujaRequestMembers); // members save karo
+router.get("/get-members/:request_id", verifyToken, getPujaRequestMembers); // members fetch karo
 
 export default router;
