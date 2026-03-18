@@ -790,7 +790,7 @@ export const createService = async (req, res) => {
     } = req.body;
     const prices = JSON.parse(req.body.prices || "[]");
     const image_url = req.file ? `${req.file.filename}` : null;
-    console.log(image_url)
+    console.log(image_url);
 
     await connection.beginTransaction();
 
@@ -1571,9 +1571,18 @@ export const adminGetAllBlogs = async (req, res) => {
                  FROM blogs WHERE 1=1`;
     const params = [];
 
-    if (status)   { query += ` AND status = ?`;                       params.push(status); }
-    if (category) { query += ` AND category = ?`;                     params.push(category); }
-    if (search)   { query += ` AND (title LIKE ? OR excerpt LIKE ?)`; params.push(`%${search}%`, `%${search}%`); }
+    if (status) {
+      query += ` AND status = ?`;
+      params.push(status);
+    }
+    if (category) {
+      query += ` AND category = ?`;
+      params.push(category);
+    }
+    if (search) {
+      query += ` AND (title LIKE ? OR excerpt LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`);
+    }
 
     query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
     params.push(Number(limit), Number(offset));
@@ -1583,9 +1592,18 @@ export const adminGetAllBlogs = async (req, res) => {
     // Total count
     let countQ = `SELECT COUNT(*) as total FROM blogs WHERE 1=1`;
     const countP = [];
-    if (status)   { countQ += ` AND status = ?`;                       countP.push(status); }
-    if (category) { countQ += ` AND category = ?`;                     countP.push(category); }
-    if (search)   { countQ += ` AND (title LIKE ? OR excerpt LIKE ?)`; countP.push(`%${search}%`, `%${search}%`); }
+    if (status) {
+      countQ += ` AND status = ?`;
+      countP.push(status);
+    }
+    if (category) {
+      countQ += ` AND category = ?`;
+      countP.push(category);
+    }
+    if (search) {
+      countQ += ` AND (title LIKE ? OR excerpt LIKE ?)`;
+      countP.push(`%${search}%`, `%${search}%`);
+    }
     const [[{ total }]] = await pool.query(countQ, countP);
 
     // Stats cards ke liye
@@ -1598,9 +1616,16 @@ export const adminGetAllBlogs = async (req, res) => {
       FROM blogs
     `);
 
-    res.json({ success: true, blogs, total, stats, page: Number(page), limit: Number(limit) });
+    res.json({
+      success: true,
+      blogs,
+      total,
+      stats,
+      page: Number(page),
+      limit: Number(limit),
+    });
   } catch (err) {
-    console.error('adminGetAllBlogs:', err);
+    console.error("adminGetAllBlogs:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -1608,8 +1633,11 @@ export const adminGetAllBlogs = async (req, res) => {
 // GET /api/admin/blogs/:id
 export const adminGetBlogById = async (req, res) => {
   try {
-    const [[blog]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [req.params.id]);
-    if (!blog) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+    const [[blog]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [
+      req.params.id,
+    ]);
+    if (!blog)
+      return res.status(404).json({ success: false, error: "Blog nahi mila" });
     res.json({ success: true, blog });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1619,15 +1647,27 @@ export const adminGetBlogById = async (req, res) => {
 // POST /api/admin/blogs
 export const adminCreateBlog = async (req, res) => {
   try {
-    const { title, excerpt, content, category, tag, author, read_time, status = 'draft' } = req.body;
+    const {
+      title,
+      excerpt,
+      content,
+      category,
+      tag,
+      author,
+      read_time,
+      status = "draft",
+    } = req.body;
 
     if (!title || !content)
-      return res.status(400).json({ success: false, error: 'Title aur content zaroori hai' });
+      return res
+        .status(400)
+        .json({ success: false, error: "Title aur content zaroori hai" });
 
-    const slug = title.toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
+    const slug = title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
       .slice(0, 120);
 
     const image_url = req.file ? req.file.filename : null;
@@ -1635,15 +1675,33 @@ export const adminCreateBlog = async (req, res) => {
     const [result] = await pool.query(
       `INSERT INTO blogs (title, slug, excerpt, content, category, tag, author, image_url, read_time, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, slug, excerpt || null, content, category || null, tag || null,
-       author || null, image_url, read_time || '5 min', status]
+      [
+        title,
+        slug,
+        excerpt || null,
+        content,
+        category || null,
+        tag || null,
+        author || null,
+        image_url,
+        read_time || "5 min",
+        status,
+      ],
     );
 
-    res.status(201).json({ success: true, id: result.insertId, slug, message: 'Blog create ho gaya' });
+    res.status(201).json({
+      success: true,
+      id: result.insertId,
+      slug,
+      message: "Blog create ho gaya",
+    });
   } catch (err) {
-    console.error('adminCreateBlog:', err);
-    if (err.code === 'ER_DUP_ENTRY')
-      return res.status(400).json({ success: false, error: 'Is title ka blog already exist karta hai' });
+    console.error("adminCreateBlog:", err);
+    if (err.code === "ER_DUP_ENTRY")
+      return res.status(400).json({
+        success: false,
+        error: "Is title ka blog already exist karta hai",
+      });
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -1652,13 +1710,29 @@ export const adminCreateBlog = async (req, res) => {
 export const adminUpdateBlog = async (req, res) => {
   try {
     const { id } = req.params;
-    const [[existing]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [id]);
-    if (!existing) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+    const [[existing]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [
+      id,
+    ]);
+    if (!existing)
+      return res.status(404).json({ success: false, error: "Blog nahi mila" });
 
-    const { title, excerpt, content, category, tag, author, read_time, status } = req.body;
+    const {
+      title,
+      excerpt,
+      content,
+      category,
+      tag,
+      author,
+      read_time,
+      status,
+    } = req.body;
     const image_url = req.file ? req.file.filename : existing.image_url;
     const slug = title
-      ? title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 120)
+      ? title
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .slice(0, 120)
       : existing.slug;
 
     await pool.query(
@@ -1666,23 +1740,23 @@ export const adminUpdateBlog = async (req, res) => {
                         tag=?, author=?, image_url=?, read_time=?, status=?
        WHERE id = ?`,
       [
-        title     || existing.title,
+        title || existing.title,
         slug,
-        excerpt   ?? existing.excerpt,
-        content   || existing.content,
-        category  ?? existing.category,
-        tag       ?? existing.tag,
-        author    ?? existing.author,
+        excerpt ?? existing.excerpt,
+        content || existing.content,
+        category ?? existing.category,
+        tag ?? existing.tag,
+        author ?? existing.author,
         image_url,
         read_time || existing.read_time,
-        status    || existing.status,
+        status || existing.status,
         id,
-      ]
+      ],
     );
 
-    res.json({ success: true, message: 'Blog update ho gaya' });
+    res.json({ success: true, message: "Blog update ho gaya" });
   } catch (err) {
-    console.error('adminUpdateBlog:', err);
+    console.error("adminUpdateBlog:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -1690,10 +1764,13 @@ export const adminUpdateBlog = async (req, res) => {
 // DELETE /api/admin/blogs/:id
 export const adminDeleteBlog = async (req, res) => {
   try {
-    const [[blog]] = await pool.query(`SELECT id FROM blogs WHERE id = ?`, [req.params.id]);
-    if (!blog) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+    const [[blog]] = await pool.query(`SELECT id FROM blogs WHERE id = ?`, [
+      req.params.id,
+    ]);
+    if (!blog)
+      return res.status(404).json({ success: false, error: "Blog nahi mila" });
     await pool.query(`DELETE FROM blogs WHERE id = ?`, [req.params.id]);
-    res.json({ success: true, message: 'Blog delete ho gaya' });
+    res.json({ success: true, message: "Blog delete ho gaya" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1702,14 +1779,64 @@ export const adminDeleteBlog = async (req, res) => {
 // PATCH /api/admin/blogs/:id/status  — Published ↔ Draft toggle
 export const adminToggleBlogStatus = async (req, res) => {
   try {
-    const [[blog]] = await pool.query(`SELECT id, status FROM blogs WHERE id = ?`, [req.params.id]);
-    if (!blog) return res.status(404).json({ success: false, error: 'Blog nahi mila' });
+    const [[blog]] = await pool.query(
+      `SELECT id, status FROM blogs WHERE id = ?`,
+      [req.params.id],
+    );
+    if (!blog)
+      return res.status(404).json({ success: false, error: "Blog nahi mila" });
 
-    const newStatus = blog.status === 'published' ? 'draft' : 'published';
-    await pool.query(`UPDATE blogs SET status = ? WHERE id = ?`, [newStatus, req.params.id]);
+    const newStatus = blog.status === "published" ? "draft" : "published";
+    await pool.query(`UPDATE blogs SET status = ? WHERE id = ?`, [
+      newStatus,
+      req.params.id,
+    ]);
 
-    res.json({ success: true, status: newStatus, message: `Blog ${newStatus} ho gaya` });
+    res.json({
+      success: true,
+      status: newStatus,
+      message: `Blog ${newStatus} ho gaya`,
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const updateBookingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = ["pending", "accepted", "declined", "completed"];
+
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${allowedStatuses.join(", ")}`,
+      });
+    }
+
+    const [result] = await db.query(
+      `UPDATE puja_requests SET status = ? WHERE id = ?`,
+      [status, id],
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Status updated to ${status}`,
+    });
+  } catch (error) {
+    console.error("Update Booking Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };

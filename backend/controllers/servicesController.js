@@ -43,9 +43,7 @@ export const getServicesByType = async (req, res) => {
 
 export const getAllServices = async (req, res) => {
   try {
-    const [rows] = await db.query(
-      `SELECT * FROM services`
-    );
+    const [rows] = await db.query(`SELECT * FROM services`);
 
     res.status(200).json({
       success: true,
@@ -621,6 +619,81 @@ export const getUserSupportQueries = async (req, res) => {
     return res.status(500).json({
       message: "Error fetching data",
       error: error.message,
+    });
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+// ✅ NEW — puja_request_members ke liye 2 functions
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 1️⃣ Booking ke baad selected members save karo
+// POST /api/puja/save-members
+// Body: { request_id, member_ids: [4, 2] }
+export const savePujaRequestMembers = async (req, res) => {
+  try {
+    const { request_id, member_ids } = req.body;
+
+    if (!request_id || !Array.isArray(member_ids) || member_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "request_id aur member_ids zaroori hain",
+      });
+    }
+
+    for (let memberId of member_ids) {
+      await db.query(
+        `INSERT INTO puja_request_members (request_id, member_id) VALUES (?, ?)`,
+        [request_id, memberId],
+      );
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `${member_ids.length} member(s) saved successfully`,
+    });
+  } catch (error) {
+    console.error("Save Puja Request Members Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// 2️⃣ Kisi booking ke saare members fetch karo — puri detail ke saath
+// GET /api/puja/get-members/:request_id
+export const getPujaRequestMembers = async (req, res) => {
+  try {
+    const { request_id } = req.params;
+
+    const [rows] = await db.query(
+      `
+      SELECT 
+        prm.id,
+        prm.request_id,
+        prm.member_id,
+        prm.created_at,
+        ufm.name,
+        ufm.relation,
+        ufm.gotra,
+        ufm.dob,
+        ufm.rashi
+      FROM puja_request_members prm
+      JOIN user_family_members ufm ON prm.member_id = ufm.id
+      WHERE prm.request_id = ?
+      `,
+      [request_id],
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: rows,
+    });
+  } catch (error) {
+    console.error("Get Puja Request Members Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
     });
   }
 };
