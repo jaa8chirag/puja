@@ -159,93 +159,187 @@ const Th = ({ children, center }) => (
 );
 
 /* ════════════════════════════════════════════
-   CHAT SUPPORT PANEL — FULLY RESPONSIVE
+   TOAST COMPONENT
 ════════════════════════════════════════════ */
-const ChatSupportPanel = ({ token }) => {
-  const [sessions, setSessions] = useState([]);
+const ToastNotification = ({ toasts }) => {
+  if (toasts.length === 0) return null;
+  return (
+    <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-sm font-semibold text-white"
+          style={{
+            animation: "toastSlideIn 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+            background:
+              toast.type === "new-session"
+                ? "linear-gradient(135deg, #7c3aed, #4f46e5)"
+                : "linear-gradient(135deg, #1d4ed8, #4338ca)",
+            borderColor:
+              toast.type === "new-session"
+                ? "rgba(167,139,250,0.3)"
+                : "rgba(96,165,250,0.3)",
+            boxShadow:
+              toast.type === "new-session"
+                ? "0 8px 32px rgba(124,58,237,0.4)"
+                : "0 8px 32px rgba(29,78,216,0.4)",
+          }}
+        >
+          <span className="text-xl flex-shrink-0">
+            {toast.type === "new-session" ? "🧑" : "💬"}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wider opacity-70 mb-0.5">
+              {toast.type === "new-session" ? "New User" : "New Message From:"}
+            </p>
+            <p className="text-[13px] truncate">{toast.message}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ════════════════════════════════════════════
+   CHAT SUPPORT PANEL
+════════════════════════════════════════════ */
+const ChatSupportPanel = ({
+  token,
+  globalSocket,
+  initialSessions,
+  initialMessages,
+  onSessionsChange,
+  onMessagesChange,
+}) => {
+  const socketRef = useRef(globalSocket);
+
+  // Dashboard se aaye hue sessions/messages se initialize karo — tab events miss nahi honge
+  const [sessions, setSessions] = useState(initialSessions || []);
   const [activeSessionId, setActiveSessionId] = useState(null);
-  const [messages, setMessages] = useState({});
+  const [messages, setMessages] = useState(initialMessages || {});
   const [inputText, setInputText] = useState("");
   const [userTyping, setUserTyping] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(
+    globalSocket?.connected || false,
+  );
   const [unread, setUnread] = useState({});
-  const [notification, setNotification] = useState(null);
-  // Mobile: show list or chat
-  const [mobileView, setMobileView] = useState("list"); // "list" | "chat"
+  const [mobileView, setMobileView] = useState("list");
 
-  const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const notifRef = useRef(null);
+
+  // Sirf mount pe ek baar initial data set karo — baad mein socket events khud update karenge
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (!didInit.current) {
+      didInit.current = true;
+      if (initialSessions?.length) setSessions(initialSessions);
+      if (Object.keys(initialMessages || {}).length)
+        setMessages(initialMessages);
+    }
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeSessionId]);
 
   useEffect(() => {
-    if (!token) return;
-    const socket = io(SOCKET_URL, { auth: { token }, transports: ["polling"] });
+    const socket = globalSocket;
+    if (!socket) return;
+
     socketRef.current = socket;
+    setIsConnected(socket.connected);
 
-    socket.on("connect", () => setIsConnected(true));
-    socket.on("disconnect", () => setIsConnected(false));
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = () => setIsConnected(false);
 
-    socket.on("agent:sessions", (existing) => {
+    const onSessions = (existing) => {
       setSessions(existing);
+      onSessionsChange?.(existing);
       const msgs = {};
       existing.forEach((s) => {
         msgs[s.sessionId] = s.messages || [];
       });
       setMessages(msgs);
-    });
+      onMessagesChange?.(msgs);
+    };
 
-    socket.on("agent:new-session", (session) => {
-      setSessions((prev) =>
-        prev.find((s) => s.sessionId === session.sessionId)
+    const onNewSession = (session) => {
+      setSessions((prev) => {
+        const updated = prev.find((s) => s.sessionId === session.sessionId)
           ? prev
-          : [session, ...prev],
-      );
-      setMessages((prev) => ({ ...prev, [session.sessionId]: [] }));
+          : [session, ...prev];
+        onSessionsChange?.(updated);
+        return updated;
+      });
+      setMessages((prev) => {
+        if (prev[session.sessionId]) return prev;
+        const updated = { ...prev, [session.sessionId]: [] };
+        onMessagesChange?.(updated);
+        return updated;
+      });
       setUnread((prev) => ({ ...prev, [session.sessionId]: true }));
-      showNotif(`Naya user: ${session.userName}`);
-    });
+    };
 
-    socket.on("agent:session-updated", (session) => {
-      setSessions((prev) =>
-        prev.map((s) => (s.sessionId === session.sessionId ? session : s)),
-      );
-    });
+    const onSessionUpdated = (session) => {
+      setSessions((prev) => {
+        const updated = prev.map((s) =>
+          s.sessionId === session.sessionId ? session : s,
+        );
+        onSessionsChange?.(updated);
+        return updated;
+      });
+    };
 
-    socket.on("message:received", (msg) => {
-      setMessages((prev) => ({
-        ...prev,
-        [msg.sessionId]: [...(prev[msg.sessionId] || []), msg],
-      }));
+    const onMessage = (msg) => {
+      setMessages((prev) => {
+        const updated = {
+          ...prev,
+          [msg.sessionId]: [...(prev[msg.sessionId] || []), msg],
+        };
+        onMessagesChange?.(updated);
+        return updated;
+      });
       if (msg.senderType === "user")
         setUnread((prev) => ({ ...prev, [msg.sessionId]: true }));
-    });
+    };
 
-    socket.on("typing:show", ({ senderType }) => {
+    const onTypingShow = ({ senderType }) => {
       if (senderType === "user") setUserTyping(true);
-    });
-    socket.on("typing:hide", () => setUserTyping(false));
-
-    socket.on("session:closed", ({ sessionId }) => {
-      setSessions((prev) =>
-        prev.map((s) =>
+    };
+    const onTypingHide = () => setUserTyping(false);
+    const onSessionClosed = ({ sessionId }) => {
+      setSessions((prev) => {
+        const updated = prev.map((s) =>
           s.sessionId === sessionId ? { ...s, status: "closed" } : s,
-        ),
-      );
-    });
+        );
+        onSessionsChange?.(updated);
+        return updated;
+      });
+    };
 
-    return () => socket.disconnect();
-  }, [token]);
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("agent:sessions", onSessions);
+    socket.on("agent:new-session", onNewSession);
+    socket.on("agent:session-updated", onSessionUpdated);
+    socket.on("message:received", onMessage);
+    socket.on("typing:show", onTypingShow);
+    socket.on("typing:hide", onTypingHide);
+    socket.on("session:closed", onSessionClosed);
 
-  const showNotif = (text) => {
-    setNotification(text);
-    clearTimeout(notifRef.current);
-    notifRef.current = setTimeout(() => setNotification(null), 4000);
-  };
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("agent:sessions", onSessions);
+      socket.off("agent:new-session", onNewSession);
+      socket.off("agent:session-updated", onSessionUpdated);
+      socket.off("message:received", onMessage);
+      socket.off("typing:show", onTypingShow);
+      socket.off("typing:hide", onTypingHide);
+      socket.off("session:closed", onSessionClosed);
+    };
+  }, [globalSocket]);
 
   const acceptSession = (sessionId) => {
     socketRef.current.emit("agent:accept-session", { sessionId });
@@ -308,18 +402,11 @@ const ChatSupportPanel = ({ token }) => {
   };
   const statusLabel = { waiting: "Wait", active: "Live", closed: "Band" };
 
-  /* ── Sessions List panel ── */
+  /* ── Sessions List ── */
   const SessionsList = () => (
     <div
-      className={`
-      flex flex-col bg-gradient-to-br from-[#0d1829] to-[#080f1c]
-      border border-white/5 rounded-2xl overflow-hidden
-      w-full md:w-72 md:flex-shrink-0
-      ${mobileView === "chat" ? "hidden md:flex" : "flex"}
-      md:h-[calc(100vh-10rem)]
-    `}
+      className={`flex flex-col bg-gradient-to-br from-[#0d1829] to-[#080f1c] border border-white/5 rounded-2xl overflow-hidden w-full md:w-72 md:flex-shrink-0 ${mobileView === "chat" ? "hidden md:flex" : "flex"} md:h-[calc(100vh-10rem)]`}
     >
-      {/* Header */}
       <div className="px-5 py-4 border-b border-white/[0.04] bg-gradient-to-r from-blue-500/[0.08] to-indigo-500/[0.05]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -336,7 +423,6 @@ const ChatSupportPanel = ({ token }) => {
             </span>
           </div>
         </div>
-        {/* Mini stats */}
         <div className="flex gap-2 mt-3">
           {[
             {
@@ -373,7 +459,6 @@ const ChatSupportPanel = ({ token }) => {
         </div>
       </div>
 
-      {/* List */}
       <div className="flex-1 overflow-y-auto">
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-600 gap-3 py-16">
@@ -385,12 +470,7 @@ const ChatSupportPanel = ({ token }) => {
             <div
               key={session.sessionId}
               onClick={() => selectSession(session.sessionId)}
-              className={`px-4 py-3.5 cursor-pointer border-b border-white/[0.03] transition-all duration-150
-                ${
-                  activeSessionId === session.sessionId
-                    ? "bg-blue-500/[0.08] border-l-2 border-l-blue-500"
-                    : "hover:bg-white/[0.02] border-l-2 border-l-transparent"
-                }`}
+              className={`px-4 py-3.5 cursor-pointer border-b border-white/[0.03] transition-all duration-150 ${activeSessionId === session.sessionId ? "bg-blue-500/[0.08] border-l-2 border-l-blue-500" : "hover:bg-white/[0.02] border-l-2 border-l-transparent"}`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -427,31 +507,20 @@ const ChatSupportPanel = ({ token }) => {
     </div>
   );
 
-  const inputRef = useRef(null);
-
-  /* ── Chat Window panel ── */
+  /* ── Chat Window ── */
   const ChatWindow = () => {
     const inputRef = useRef(null);
-
     useEffect(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, [inputText]);
+      inputRef.current?.focus();
+    }, []);
 
     return (
       <div
-        className={`
-      flex flex-col flex-1 min-w-0
-      bg-gradient-to-br from-[#0d1829] to-[#080f1c]
-      border border-white/5 rounded-2xl overflow-hidden
-      md:h-[calc(100vh-10rem)]
-      ${mobileView === "list" ? "hidden md:flex" : "flex"}
-    `}
+        className={`flex flex-col flex-1 min-w-0 bg-gradient-to-br from-[#0d1829] to-[#080f1c] border border-white/5 rounded-2xl overflow-hidden md:h-[calc(100vh-10rem)] ${mobileView === "list" ? "hidden md:flex" : "flex"}`}
       >
         {activeSession ? (
           <>
-            {/* Chat Header */}
+            {/* Header */}
             <div className="px-4 md:px-6 py-4 border-b border-white/[0.04] flex items-center justify-between bg-[#05080f]/40 flex-shrink-0 gap-2">
               <div className="flex items-center gap-2 md:gap-3 min-w-0">
                 <button
@@ -460,11 +529,9 @@ const ChatSupportPanel = ({ token }) => {
                 >
                   <ChevronRight size={14} className="rotate-180" />
                 </button>
-
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/30 to-indigo-500/30 border border-blue-500/20 flex items-center justify-center font-bold text-blue-300 text-[15px] flex-shrink-0">
                   {activeSession.userName.charAt(0).toUpperCase()}
                 </div>
-
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-slate-200 truncate">
                     {activeSession.userName}
@@ -473,7 +540,6 @@ const ChatSupportPanel = ({ token }) => {
                     {activeSession.userEmail || activeSession.sessionId}
                   </p>
                 </div>
-
                 <span
                   className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ml-1 ${statusBadge[activeSession.status] || ""}`}
                 >
@@ -487,7 +553,6 @@ const ChatSupportPanel = ({ token }) => {
                       : "Band"}
                 </span>
               </div>
-
               <div className="flex gap-2 flex-shrink-0">
                 {activeSession.status === "waiting" && (
                   <button
@@ -497,7 +562,6 @@ const ChatSupportPanel = ({ token }) => {
                     <CheckCircle size={12} /> Accept
                   </button>
                 )}
-
                 {activeSession.status === "active" && (
                   <button
                     onClick={closeSession}
@@ -515,7 +579,6 @@ const ChatSupportPanel = ({ token }) => {
                 <div className="flex flex-col items-center justify-center flex-1 text-slate-600 gap-3 mt-16">
                   <MessageSquare size={36} className="opacity-30" />
                   <span className="text-xs">No message yet.</span>
-
                   {activeSession.status === "waiting" && (
                     <span className="text-[11px] text-amber-400/70 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg text-center">
                       Accept to start the chat.
@@ -523,7 +586,6 @@ const ChatSupportPanel = ({ token }) => {
                   )}
                 </div>
               )}
-
               {activeMessages.map((msg) =>
                 msg.type === "system" ? (
                   <div
@@ -538,8 +600,7 @@ const ChatSupportPanel = ({ token }) => {
                     className={`flex items-end gap-2 md:gap-2.5 ${msg.senderType === "agent" ? "flex-row-reverse" : "flex-row"}`}
                   >
                     <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[11px] flex-shrink-0
-                    ${msg.senderType === "agent" ? "bg-blue-500/20 border border-blue-500/30 text-blue-300" : "bg-indigo-500/20 border border-indigo-500/30 text-indigo-300"}`}
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[11px] flex-shrink-0 ${msg.senderType === "agent" ? "bg-blue-500/20 border border-blue-500/30 text-blue-300" : "bg-indigo-500/20 border border-indigo-500/30 text-indigo-300"}`}
                     >
                       {msg.senderType === "agent" ? (
                         <Headphones size={13} />
@@ -547,21 +608,14 @@ const ChatSupportPanel = ({ token }) => {
                         msg.senderName.charAt(0).toUpperCase()
                       )}
                     </div>
-
                     <div
                       className={`max-w-[75%] md:max-w-[65%] flex flex-col ${msg.senderType === "agent" ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`px-3 md:px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed break-words
-                      ${
-                        msg.senderType === "agent"
-                          ? "bg-gradient-to-br from-blue-600/80 to-indigo-600/80 text-white rounded-br-sm border border-blue-500/30"
-                          : "bg-[#0d1829] border border-white/[0.06] text-slate-200 rounded-bl-sm"
-                      }`}
+                        className={`px-3 md:px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed break-words ${msg.senderType === "agent" ? "bg-gradient-to-br from-blue-600/80 to-indigo-600/80 text-white rounded-br-sm border border-blue-500/30" : "bg-[#0d1829] border border-white/[0.06] text-slate-200 rounded-bl-sm"}`}
                       >
                         {msg.text}
                       </div>
-
                       <span className="text-[10px] text-slate-600 mt-1 px-1">
                         {new Date(msg.timestamp).toLocaleTimeString("en-IN", {
                           hour: "2-digit",
@@ -572,7 +626,11 @@ const ChatSupportPanel = ({ token }) => {
                   </div>
                 ),
               )}
-
+              {userTyping && (
+                <p className="text-[11px] text-slate-500 italic px-1">
+                  {activeSession.userName} likh raha hai...
+                </p>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -598,7 +656,6 @@ const ChatSupportPanel = ({ token }) => {
                 }
                 className="flex-1 bg-[#0a1220] border border-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/30 disabled:opacity-40 transition"
               />
-
               <button
                 onClick={sendMessage}
                 disabled={
@@ -611,29 +668,21 @@ const ChatSupportPanel = ({ token }) => {
               </button>
             </div>
           </>
-        ) : null}
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-600 gap-3">
+            <MessageSquare size={40} className="opacity-20" />
+            <span className="text-sm">Koi session select karein</span>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="relative">
-      {/* Notification */}
-      {notification && (
-        <div className="fixed top-20 right-4 z-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-blue-500/30">
-          🔔 {notification}
-        </div>
-      )}
-
-      {/* Layout: stack on mobile, side-by-side on md+ */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <SessionsList />
-        <ChatWindow />
-      </div>
-
-      <style>{`
-        @keyframes ccBounce { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-4px); } }
-      `}</style>
+    <div className="flex flex-col md:flex-row gap-4">
+      <SessionsList />
+      <ChatWindow />
+      <style>{`@keyframes ccBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }`}</style>
     </div>
   );
 };
@@ -662,9 +711,104 @@ const CustomerCareDashboard = () => {
   const [queryActionLoading, setQueryActionLoading] = useState(null);
   const [expandedQuery, setExpandedQuery] = useState(null);
 
+  // ── Global notification + socket state ──
+  const [toasts, setToasts] = useState([]);
+  const [chatBadgeCount, setChatBadgeCount] = useState(0);
+  const [globalSocket, setGlobalSocket] = useState(null);
+
+  // ── Sessions + messages dashboard level pe store — tab ChatSupportPanel mount ho tab miss na ho ──
+  const [chatSessions, setChatSessions] = useState([]);
+  const [chatMessages, setChatMessages] = useState({});
+
+  const toastIdRef = useRef(0);
+  const activeTabRef = useRef("overview");
+
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
   const navigate = useNavigate();
+
+  // ── Toast add / auto remove ──
+  const addToast = useCallback((message, type) => {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(
+      () => setToasts((prev) => prev.filter((t) => t.id !== id)),
+      4500,
+    );
+  }, []);
+
+  // ── Global socket — poori dashboard lifetime chalega ──
+  useEffect(() => {
+    if (!token) return;
+
+    const socket = io(SOCKET_URL, { auth: { token }, transports: ["polling"] });
+    setGlobalSocket(socket);
+
+    // Existing sessions — dashboard level pe store karo taaki ChatSupportPanel mount hone pe miss na ho
+    socket.on("agent:sessions", (existing) => {
+      setChatSessions(existing);
+      const msgs = {};
+      existing.forEach((s) => {
+        msgs[s.sessionId] = s.messages || [];
+      });
+      setChatMessages(msgs);
+    });
+
+    // Naya user aaya
+    socket.on("agent:new-session", (session) => {
+      setChatSessions((prev) =>
+        prev.find((s) => s.sessionId === session.sessionId)
+          ? prev
+          : [session, ...prev],
+      );
+      setChatMessages((prev) => ({ ...prev, [session.sessionId]: [] }));
+      if (activeTabRef.current !== "chatsupport") {
+        setChatBadgeCount((prev) => prev + 1);
+        addToast(`${session.userName} ne chat shuru ki`, "new-session");
+      }
+    });
+
+    // Session updated
+    socket.on("agent:session-updated", (session) => {
+      setChatSessions((prev) =>
+        prev.map((s) => (s.sessionId === session.sessionId ? session : s)),
+      );
+    });
+
+    // Naya message aaya
+    socket.on("message:received", (msg) => {
+      setChatMessages((prev) => ({
+        ...prev,
+        [msg.sessionId]: [...(prev[msg.sessionId] || []), msg],
+      }));
+      if (msg.senderType === "user" && activeTabRef.current !== "chatsupport") {
+        setChatBadgeCount((prev) => prev + 1);
+        addToast(
+          `${msg.senderName}: ${msg.text.slice(0, 40)}${msg.text.length > 40 ? "..." : ""}`,
+          "message",
+        );
+      }
+    });
+
+    // Session closed
+    socket.on("session:closed", ({ sessionId }) => {
+      setChatSessions((prev) =>
+        prev.map((s) =>
+          s.sessionId === sessionId ? { ...s, status: "closed" } : s,
+        ),
+      );
+    });
+
+    return () => socket.disconnect();
+  }, [token]);
+
+  // ── activeTab change hone pe ref bhi update karo ──
+  const handleTabChange = (tabId) => {
+    activeTabRef.current = tabId;
+    setActiveTab(tabId);
+    if (tabId === "chatsupport") setChatBadgeCount(0); // badge reset
+    setIsSidebarOpen(false);
+  };
 
   /* ── Fetchers ── */
   const fetchBookings = async () => {
@@ -730,7 +874,6 @@ const CustomerCareDashboard = () => {
     if (activeTab === "pandits") fetchPandits();
     if (activeTab === "users") fetchUsers();
     if (activeTab === "querys") fetchQuery();
-    setIsSidebarOpen(false);
   }, [activeTab]);
 
   useEffect(() => {
@@ -861,7 +1004,10 @@ const CustomerCareDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#060d1a] text-slate-300 flex">
-      {/* Sidebar overlay — mobile */}
+      {/* ── Global Toast Notifications ── */}
+      <ToastNotification toasts={toasts} />
+
+      {/* Sidebar overlay mobile */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
@@ -871,9 +1017,7 @@ const CustomerCareDashboard = () => {
 
       {/* ── SIDEBAR ── */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-[240px] md:w-[260px] z-50 flex flex-col
-        bg-gradient-to-b from-[#0d1829] to-[#0a1220] border-r border-blue-500/[0.07]
-        transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        className={`fixed top-0 left-0 bottom-0 w-[240px] md:w-[260px] z-50 flex flex-col bg-gradient-to-b from-[#0d1829] to-[#0a1220] border-r border-blue-500/[0.07] transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         <div className="px-5 md:px-6 py-6 md:py-7 border-b border-white/[0.04]">
           <div className="flex items-center gap-2.5 bg-gradient-to-r from-blue-500/15 to-indigo-500/10 border border-blue-400/20 rounded-xl px-3.5 py-2.5 w-fit">
@@ -891,7 +1035,7 @@ const CustomerCareDashboard = () => {
           {navItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => handleTabChange(item.id)}
               className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200
                 ${
                   activeTab === item.id
@@ -899,8 +1043,37 @@ const CustomerCareDashboard = () => {
                     : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04] border border-transparent"
                 }`}
             >
-              <item.icon size={17} />
-              <span>{item.label}</span>
+              {/* Icon + badge */}
+              <div className="relative flex-shrink-0">
+                <item.icon size={17} />
+                {/* ── RED BADGE — sirf chatsupport pe, sirf jab active nahi ── */}
+                {item.id === "chatsupport" &&
+                  chatBadgeCount > 0 &&
+                  activeTab !== "chatsupport" && (
+                    <span
+                      className="absolute -top-2 -right-2 min-w-[16px] h-4 px-1 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#0a1220] leading-none"
+                      style={{
+                        animation:
+                          "badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+                      }}
+                    >
+                      {chatBadgeCount > 9 ? "9+" : chatBadgeCount}
+                    </span>
+                  )}
+              </div>
+
+              <span className="flex-1 text-left">{item.label}</span>
+
+              {/* Glowing dot */}
+              {item.id === "chatsupport" &&
+                chatBadgeCount > 0 &&
+                activeTab !== "chatsupport" && (
+                  <span
+                    className="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0"
+                    style={{ boxShadow: "0 0 6px #f43f5e" }}
+                  />
+                )}
+
               {activeTab === item.id && (
                 <ChevronRight size={14} className="ml-auto text-blue-400" />
               )}
@@ -934,7 +1107,6 @@ const CustomerCareDashboard = () => {
               {navItems.find((n) => n.id === activeTab)?.label}
             </div>
           </div>
-
           {(activeTab === "pujas" || activeTab === "querys") && (
             <div className="relative">
               <Search
@@ -1209,8 +1381,7 @@ const CustomerCareDashboard = () => {
                             </td>
                             <td className="px-4 md:px-5 py-4">
                               <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border
-                            ${person.is_blocked ? "bg-rose-400/10 text-rose-400 border-rose-400/25" : "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"}`}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${person.is_blocked ? "bg-rose-400/10 text-rose-400 border-rose-400/25" : "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"}`}
                               >
                                 <span
                                   className={`w-1.5 h-1.5 rounded-full ${person.is_blocked ? "bg-rose-400" : "bg-emerald-400"}`}
@@ -1231,7 +1402,6 @@ const CustomerCareDashboard = () => {
           {/* ── SUPPORT QUERIES ── */}
           {activeTab === "querys" && (
             <div className="space-y-4">
-              {/* Mini stats */}
               <div className="grid grid-cols-3 gap-3">
                 {[
                   {
@@ -1271,8 +1441,6 @@ const CustomerCareDashboard = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Filter pills */}
               <div className="flex items-center gap-2 flex-wrap">
                 {[
                   {
@@ -1305,15 +1473,12 @@ const CustomerCareDashboard = () => {
                       setQueryStatusFilter(f.val);
                       setQueryPage(1);
                     }}
-                    className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all
-                      ${queryStatusFilter === f.val ? f.active : "bg-transparent text-slate-500 border-white/[0.06] hover:border-white/[0.12]"}`}
+                    className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${queryStatusFilter === f.val ? f.active : "bg-transparent text-slate-500 border-white/[0.06] hover:border-white/[0.12]"}`}
                   >
                     {f.label}
                   </button>
                 ))}
               </div>
-
-              {/* Table */}
               <TableCard title="Support Queries" count={`${queryTotal} total`}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs min-w-[700px]">
@@ -1347,11 +1512,7 @@ const CustomerCareDashboard = () => {
                         filteredQueries.map((q) => (
                           <React.Fragment key={q.id}>
                             <tr
-                              className={`transition-colors hover:bg-blue-500/[0.03] ${
-                                queryActionLoading === q.id
-                                  ? "opacity-40 pointer-events-none"
-                                  : ""
-                              }`}
+                              className={`transition-colors hover:bg-blue-500/[0.03] ${queryActionLoading === q.id ? "opacity-40 pointer-events-none" : ""}`}
                               onClick={() =>
                                 setExpandedQuery(
                                   expandedQuery === q.id ? null : q.id,
@@ -1390,11 +1551,12 @@ const CustomerCareDashboard = () => {
                                   {q.message}
                                 </p>
                                 <button
-                                  onClick={() =>
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     setExpandedQuery(
                                       expandedQuery === q.id ? null : q.id,
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="mt-1 text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-0.5 transition"
                                 >
                                   <AlignLeft size={9} />{" "}
@@ -1427,9 +1589,10 @@ const CustomerCareDashboard = () => {
                                 <div className="flex items-center justify-center gap-1.5 flex-wrap">
                                   {q.status === "Open" && (
                                     <button
-                                      onClick={() =>
-                                        updateQueryStatus(q.id, "Resolved")
-                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        updateQueryStatus(q.id, "Resolved");
+                                      }}
                                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition whitespace-nowrap"
                                     >
                                       {queryActionLoading === q.id ? (
@@ -1445,9 +1608,10 @@ const CustomerCareDashboard = () => {
                                   )}
                                   {q.status !== "Closed" && (
                                     <button
-                                      onClick={() =>
-                                        updateQueryStatus(q.id, "Closed")
-                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        updateQueryStatus(q.id, "Closed");
+                                      }}
                                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20 hover:bg-slate-500/20 transition whitespace-nowrap"
                                     >
                                       <XCircle size={11} /> Close
@@ -1546,7 +1710,16 @@ const CustomerCareDashboard = () => {
           )}
 
           {/* ── CHAT SUPPORT ── */}
-          {activeTab === "chatsupport" && <ChatSupportPanel token={token} />}
+          {activeTab === "chatsupport" && (
+            <ChatSupportPanel
+              token={token}
+              globalSocket={globalSocket}
+              initialSessions={chatSessions}
+              initialMessages={chatMessages}
+              onSessionsChange={setChatSessions}
+              onMessagesChange={setChatMessages}
+            />
+          )}
         </div>
       </main>
 
@@ -1631,6 +1804,11 @@ const CustomerCareDashboard = () => {
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes toastSlideIn { from { opacity:0; transform:translateX(60px) scale(0.95); } to { opacity:1; transform:translateX(0) scale(1); } }
+        @keyframes badgePop     { 0%{transform:scale(0)} 70%{transform:scale(1.3)} 100%{transform:scale(1)} }
+      `}</style>
     </div>
   );
 };
