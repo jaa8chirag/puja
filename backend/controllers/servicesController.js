@@ -62,6 +62,7 @@ export const bookPuja = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Get service with prices
     const [rows] = await db.query(
       `
       SELECT 
@@ -92,7 +93,29 @@ export const bookPuja = async (req, res) => {
       [id],
     );
 
-    res.status(200).json(rows[0] || null);
+    if (!rows[0]) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    // Get benefits for this service
+    const [benefits] = await db.query(
+      `SELECT id, name, description, created_at 
+       FROM benefits 
+       WHERE service_id = ? 
+       ORDER BY created_at ASC`,
+      [id],
+    );
+
+    // Combine service data with benefits
+    const serviceData = {
+      ...rows[0],
+      benefits: benefits || [],
+    };
+
+    res.status(200).json(serviceData);
   } catch (error) {
     console.error("Book Puja Error:", error);
     res.status(500).json({
@@ -101,7 +124,6 @@ export const bookPuja = async (req, res) => {
     });
   }
 };
-
 export const homeORKathaPujaBookingDetails = async (req, res) => {
   const connection = await db.getConnection();
 
@@ -400,6 +422,7 @@ export const templePuja = async (req, res) => {
 export const templePujaSingle = async (req, res) => {
   const { id } = req.params;
   try {
+    // Main service data with temple and pricing
     const [rows] = await db.query(
       `
       SELECT 
@@ -435,9 +458,31 @@ export const templePujaSingle = async (req, res) => {
       [id],
     );
 
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    // Get benefits for this service
+    const [benefits] = await db.query(
+      `SELECT id, name, description, created_at 
+       FROM benefits 
+       WHERE service_id = ? 
+       ORDER BY created_at ASC`,
+      [id],
+    );
+
+    // Combine service data with benefits
+    const serviceData = rows.map((row) => ({
+      ...row,
+      benefits: benefits || [],
+    }));
+
     res.status(200).json({
       success: true,
-      data: rows,
+      data: serviceData,
     });
   } catch (error) {
     console.error(error);
@@ -447,7 +492,6 @@ export const templePujaSingle = async (req, res) => {
     });
   }
 };
-
 export const pindDan = async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -493,10 +537,12 @@ export const pindDan = async (req, res) => {
   }
 };
 
+// Booking cancel karne ka controller
 export const PindDanSingle = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Main service data with temple and pricing
     const [rows] = await db.query(
       `
       SELECT 
@@ -529,9 +575,31 @@ export const PindDanSingle = async (req, res) => {
       [id],
     );
 
+    if (!rows[0]) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    // Get benefits for this service
+    const [benefits] = await db.query(
+      `SELECT id, name, description, created_at 
+       FROM benefits 
+       WHERE service_id = ? 
+       ORDER BY created_at ASC`,
+      [id],
+    );
+
+    // Combine service data with benefits
+    const serviceData = {
+      ...rows[0],
+      benefits: benefits || [],
+    };
+
     res.status(200).json({
       success: true,
-      data: rows[0] || null,
+      data: serviceData,
     });
   } catch (error) {
     console.error(error);
@@ -541,8 +609,6 @@ export const PindDanSingle = async (req, res) => {
     });
   }
 };
-
-// Booking cancel karne ka controller
 export const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;

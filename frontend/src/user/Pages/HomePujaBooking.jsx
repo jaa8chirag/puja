@@ -24,6 +24,49 @@ const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
+// ═══════════════════════════════════════════════════════════
+// HELPER: Icon Mapper - Benefit names ke basis pe icons assign
+// ═══════════════════════════════════════════════════════════
+const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
+  const name = benefitName?.toLowerCase() || "";
+  const iconMap = {
+    peace: <Heart />,
+    spiritual: <Heart />,
+    calm: <Heart />,
+    protection: <Shield />,
+    divine: <Shield />,
+    safety: <Shield />,
+    prosperity: <Zap />,
+    wealth: <Zap />,
+    success: <Zap />,
+    family: <Users />,
+    bond: <Users />,
+    unity: <Users />,
+    energy: <Sparkles />,
+    positive: <Sparkles />,
+    purify: <Sparkles />,
+    vastu: <MapPin />,
+    harmony: <MapPin />,
+    balance: <MapPin />,
+  };
+
+  // Check if any keyword matches
+  for (const [keyword, icon] of Object.entries(iconMap)) {
+    if (name.includes(keyword)) return icon;
+  }
+
+  // Fallback: Cycle through default icons
+  const defaultIcons = [
+    <Heart />,
+    <Shield />,
+    <Zap />,
+    <Users />,
+    <Sparkles />,
+    <MapPin />,
+  ];
+  return defaultIcons[fallbackIndex % defaultIcons.length];
+};
+
 const HomePujaBooking = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -118,6 +161,7 @@ const HomePujaBooking = () => {
     ? basePrice + getPrice("Samagri Kit")
     : basePrice;
 
+  // console.log("services-----", service);
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-6 font-sans text-gray-800 pb-28 md:pb-6">
       <div className="max-w-6xl mx-auto">
@@ -159,10 +203,11 @@ const HomePujaBooking = () => {
                   <button
                     key={tab}
                     onClick={() => scrollToSection(tab)}
-                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
-                      ? "text-orange-600 bg-orange-50/50"
-                      : "text-gray-400"
-                      }`}
+                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${
+                      activeTab === tab
+                        ? "text-orange-600 bg-orange-50/50"
+                        : "text-gray-400"
+                    }`}
                   >
                     {tab}
                     {activeTab === tab && (
@@ -204,7 +249,6 @@ const HomePujaBooking = () => {
                           </span>
                         </p>
                         <div className="flex items-center gap-2">
-                          
                           <a
                             href={SAMAGRI_PDF_URL}
                             download="Puja_Samagri_Checklist.pdf"
@@ -281,36 +325,51 @@ const HomePujaBooking = () => {
                   </div>
                   {/* grid-cols-2 lagane se mobile par 2 boxes side by side aayenge */}
                   <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
-                    <BenefitSmall
-                      icon={<Heart />}
-                      title="Spiritual Peace"
-                      desc="Inner calm through sacred rituals"
-                    />
-                    <BenefitSmall
-                      icon={<Shield />}
-                      title="Protection"
-                      desc="Divine protection"
-                    />
-                    <BenefitSmall
-                      icon={<Zap />}
-                      title="Prosperity"
-                      desc="Remove obstacles"
-                    />
-                    <BenefitSmall
-                      icon={<Users />}
-                      title="Family"
-                      desc="Strengthen bonds"
-                    />
-                    <BenefitSmall
-                      icon={<Sparkles />}
-                      title="Energy"
-                      desc="Purify home"
-                    />
-                    <BenefitSmall
-                      icon={<MapPin />}
-                      title="Vastu"
-                      desc="Harmonize space"
-                    />
+                    {/* Dynamic Benefits from Backend */}
+                    {service?.benefits && service.benefits.length > 0 ? (
+                      service.benefits.map((benefit, index) => (
+                        <BenefitSmall
+                          key={benefit.id || index}
+                          icon={getBenefitIcon(benefit.name, index)}
+                          title={benefit.name}
+                          desc={benefit.description || "Divine blessing"}
+                        />
+                      ))
+                    ) : (
+                      // Fallback: Default benefits agar backend se nahi aaye
+                      <>
+                        <BenefitSmall
+                          icon={<Heart />}
+                          title="Spiritual Peace"
+                          desc="Inner calm through sacred rituals"
+                        />
+                        <BenefitSmall
+                          icon={<Shield />}
+                          title="Protection"
+                          desc="Divine protection"
+                        />
+                        <BenefitSmall
+                          icon={<Zap />}
+                          title="Prosperity"
+                          desc="Remove obstacles"
+                        />
+                        <BenefitSmall
+                          icon={<Users />}
+                          title="Family"
+                          desc="Strengthen bonds"
+                        />
+                        <BenefitSmall
+                          icon={<Sparkles />}
+                          title="Energy"
+                          desc="Purify home"
+                        />
+                        <BenefitSmall
+                          icon={<MapPin />}
+                          title="Vastu"
+                          desc="Harmonize space"
+                        />
+                      </>
+                    )}
                   </div>
                 </section>
 
@@ -462,7 +521,7 @@ const HomePujaBooking = () => {
           </button>
         </div>
       </div>
-    </div >
+    </div>
   );
 };
 

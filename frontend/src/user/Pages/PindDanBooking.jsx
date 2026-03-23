@@ -30,6 +30,51 @@ import { useNavigate, useParams } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
+// ═══════════════════════════════════════════════════════════
+// HELPER: Icon Mapper - Benefit names ke basis pe icons assign
+// ═══════════════════════════════════════════════════════════
+const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
+  const name = benefitName?.toLowerCase() || "";
+  const iconMap = {
+    peace: <Heart />,
+    spiritual: <Heart />,
+    calm: <Heart />,
+    ancestral: <Heart />,
+    protection: <Shield />,
+    divine: <Shield />,
+    safety: <Shield />,
+    prosperity: <Zap />,
+    wealth: <Zap />,
+    success: <Zap />,
+    family: <Users />,
+    bond: <Users />,
+    unity: <Users />,
+    harmony: <Users />,
+    energy: <Sparkles />,
+    positive: <Sparkles />,
+    purify: <Sparkles />,
+    karma: <Star />,
+    liberation: <Star />,
+    soul: <Star />,
+  };
+
+  // Check if any keyword matches
+  for (const [keyword, icon] of Object.entries(iconMap)) {
+    if (name.includes(keyword)) return icon;
+  }
+
+  // Fallback: Cycle through default icons
+  const defaultIcons = [
+    <Heart />,
+    <Shield />,
+    <Zap />,
+    <Users />,
+    <Sparkles />,
+    <Star />,
+  ];
+  return defaultIcons[fallbackIndex % defaultIcons.length];
+};
+
 const PindDanBooking = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -88,6 +133,7 @@ const PindDanBooking = () => {
     };
     if (id) fetchContributions();
   }, [id]);
+
   const handlePindDanPayment = async () => {
     const token = localStorage.getItem("token");
     const currentBookingId = `BK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
@@ -97,9 +143,6 @@ const PindDanBooking = () => {
     }
     setIsBooking(true);
 
-    // const selectedDonations = Object.keys(donations)
-    //   .filter((key) => donations[key])
-    //   .join(", ");
     const selectedDonationObjects = contributionList
       .filter((item) => donations[item.id])
       .map((item) => {
@@ -201,15 +244,14 @@ const PindDanBooking = () => {
       window.scrollTo({ top: element.offsetTop - offset, behavior: "smooth" });
     }
   };
-  // const getPrice = (title) => {
-  //   const daan = Array.from(contributionOptions).filter((c) => c.name == title);
 
-  //   return Number(daan[0]?.price);
-  // };
   const getPrice = (title) => {
     const item = contributionOptions.find((c) => c.name === title);
     return item ? Number(item.price) : 0;
   };
+
+  // console.log("services", service);
+
   const contributionList = [
     {
       id: "Vastra Dan",
@@ -384,7 +426,7 @@ const PindDanBooking = () => {
 
               <div className="border-t border-orange-100" />
 
-              {/* BENEFITS */}
+              {/* BENEFITS - DYNAMIC */}
               <div className="p-5 md:p-7 bg-[#FFFDF8]">
                 <section
                   ref={sections.benefits}
@@ -394,36 +436,51 @@ const PindDanBooking = () => {
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <BenefitSmall
-                      icon={<Heart />}
-                      title="Spiritual Peace"
-                      desc="Inner calm through sacred rituals"
-                    />
-                    <BenefitSmall
-                      icon={<Shield />}
-                      title="Protection"
-                      desc="Divine protection for family"
-                    />
-                    <BenefitSmall
-                      icon={<Zap />}
-                      title="Prosperity"
-                      desc="Remove obstacles from path"
-                    />
-                    <BenefitSmall
-                      icon={<Users />}
-                      title="Harmony"
-                      desc="Strengthen family bonds"
-                    />
-                    <BenefitSmall
-                      icon={<Sparkles />}
-                      title="Positive Energy"
-                      desc="Purify soul with mantras"
-                    />
-                    <BenefitSmall
-                      icon={<Star />}
-                      title="Karma"
-                      desc="Balance spiritual energies"
-                    />
+                    {/* Dynamic Benefits from Backend */}
+                    {service?.benefits && service.benefits.length > 0 ? (
+                      service.benefits.map((benefit, index) => (
+                        <BenefitSmall
+                          key={benefit.id || index}
+                          icon={getBenefitIcon(benefit.name, index)}
+                          title={benefit.name}
+                          desc={benefit.description || "Divine blessing"}
+                        />
+                      ))
+                    ) : (
+                      // Fallback: Default benefits agar backend se nahi aaye
+                      <>
+                        <BenefitSmall
+                          icon={<Heart />}
+                          title="Spiritual Peace"
+                          desc="Inner calm through sacred rituals"
+                        />
+                        <BenefitSmall
+                          icon={<Shield />}
+                          title="Protection"
+                          desc="Divine protection for family"
+                        />
+                        <BenefitSmall
+                          icon={<Zap />}
+                          title="Prosperity"
+                          desc="Remove obstacles from path"
+                        />
+                        <BenefitSmall
+                          icon={<Users />}
+                          title="Harmony"
+                          desc="Strengthen family bonds"
+                        />
+                        <BenefitSmall
+                          icon={<Sparkles />}
+                          title="Positive Energy"
+                          desc="Purify soul with mantras"
+                        />
+                        <BenefitSmall
+                          icon={<Star />}
+                          title="Karma"
+                          desc="Balance spiritual energies"
+                        />
+                      </>
+                    )}
                   </div>
                 </section>
               </div>
@@ -600,7 +657,6 @@ const PindDanBooking = () => {
                     </span>
                   </div>
 
-                  {/* ✅ NEW TEXT BELOW */}
                   <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
                     Helps in temple upkeep, daily rituals, and serving devotees.
                   </p>
@@ -660,7 +716,7 @@ const PindDanBooking = () => {
         </div>
       </div>
 
-      {/* MOBILE STICKY BOTTOM BAR — full area clickable except CTA */}
+      {/* MOBILE STICKY BOTTOM BAR */}
       <div
         className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-orange-200 shadow-2xl shadow-orange-100 px-4 py-3 cursor-pointer active:bg-orange-50 transition-colors"
         onClick={(e) => {
@@ -787,7 +843,6 @@ const MobileSummarySection = ({
           </span>
         </div>
 
-        {/* ✅ NEW LINE BELOW */}
         <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
           Helps in temple upkeep, daily rituals, and serving devotees.
         </p>
@@ -817,8 +872,6 @@ const MobileSummarySection = ({
 
 /* ─────────────────────────────────────────────
    CONTRIBUTION CARD
-   Desktop: [icon] [title + subtitle stacked] [price]
-   Mobile:  [title + subtitle] [price] — no icon
 ───────────────────────────────────────────── */
 const ContributionCard = ({ item, selected, onToggle }) => (
   <button

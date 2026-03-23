@@ -1,6 +1,257 @@
+// import React, { useState, useEffect } from "react";
+// import { X, Trash2, Image, Tag, AlignLeft, IndianRupee, MapPin, Info, Clock, Activity } from "lucide-react";
+// import { API } from "../../services/adminApi";
+
+// const ServiceModal = ({ close, editData, refresh }) => {
+//   const [form, setForm] = useState({
+//     puja_name: "",
+//     puja_type: "home_puja",
+//     description: "",
+//     status: "",
+//     address: "",
+//     about: "",
+//     dateOfStart: "",
+//     prices: [{ pricing_type: "standard", price: "" }],
+//   });
+
+//   const [image, setImage] = useState(null);
+//   const [preview, setPreview] = useState(null);
+
+//   const isTempleType = ["temple_puja", "pind_dan"].includes(form.puja_type);
+
+//   const handleTypeChange = (newType) => {
+//     const temple = ["temple_puja"].includes(newType);
+//     setForm({
+//       ...form,
+//       puja_type: newType,
+//       prices: temple
+//         ? [
+//             { pricing_type: "single",  price: "" },
+//             { pricing_type: "couple",  price: "" },
+//             { pricing_type: "family",  price: "" },
+//           ]
+//         : [{ pricing_type: "standard", price: "" }],
+//     });
+//   };
+
+//   useEffect(() => {
+//     if (editData) {
+//       let formattedDateTime = "";
+//       if (editData.dateOfStart) {
+//         formattedDateTime = editData.dateOfStart.replace(" ", "T").substring(0, 16);
+//       }
+
+//       setForm({
+//         puja_name: editData.puja_name || "",
+//         puja_type: editData.puja_type || "home_puja",
+//         description: editData.description || "",
+//         status: editData.status || "",
+//         address: editData.address || "",
+//         about: editData.about || "",
+//         dateOfStart: formattedDateTime,
+//         prices: editData.prices?.length > 0 ? editData.prices : [{ pricing_type: "standard", price: "" }],
+//       });
+
+//       if (editData.image_url) {
+//         const baseUrl = import.meta.env.VITE_BACKEND_URL;
+//         setPreview(`${baseUrl}${editData.image_url}`);
+//       }
+//     }
+//   }, [editData]);
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const formData = new FormData();
+
+//     Object.keys(form).forEach(key => {
+//       if (key === 'prices') {
+//         const validPrices = form.prices.filter(p => p.pricing_type && p.price);
+//         formData.append(key, JSON.stringify(validPrices));
+//       } else {
+//         formData.append(key, form[key]);
+//       }
+//     });
+
+//     if (image) formData.append("image", image);
+
+//     try {
+//       if (editData) await API.put(`/services/${editData.id}`, formData);
+//       else await API.post(`/services`, formData);
+//       refresh(); close();
+//     } catch (err) {
+//       alert("Error saving service");
+//     }
+//   };
+
+//   return (
+//     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex justify-center items-center z-[100] p-4 animate-in fade-in duration-300">
+//       <div className="bg-[#131e32] w-full max-w-2xl rounded-3xl border border-slate-700/50 shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
+
+//         {/* Header */}
+//         <div className="flex justify-between items-center px-8 py-5 border-b border-slate-800 bg-[#0f172a]/50">
+//           <div>
+//             <h2 className="text-lg font-black text-white">{editData ? "Edit Service" : "Create New Service"}</h2>
+//             <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Service Management</p>
+//           </div>
+//           <button onClick={close} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 transition"><X size={20} /></button>
+//         </div>
+
+//         {/* Form Body */}
+//         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-8 py-6 space-y-6 scrollbar-hide">
+
+//           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//             <div className="space-y-4">
+//               {/* Service Name */}
+//               <div>
+//                 <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">Service Name</label>
+//                 <div className="relative">
+//                   <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+//                   <input type="text" required value={form.puja_name} onChange={(e) => setForm({ ...form, puja_name: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none" placeholder="e.g. Navratri Special Puja" />
+//                 </div>
+//               </div>
+
+//               {/* Category Type */}
+//               <div>
+//                 <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">Category Type</label>
+//                 <select
+//                   value={form.puja_type}
+//                   onChange={(e) => handleTypeChange(e.target.value)}
+//                   className="w-full px-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white outline-none focus:border-orange-500"
+//                 >
+//                   <option value="home_puja">Home Puja</option>
+//                   <option value="katha">Katha</option>
+//                   <option value="temple_puja">Temple Puja</option>
+//                   <option value="pind_dan">Pind Dan</option>
+//                 </select>
+//               </div>
+
+//               {/* Status */}
+//               <div>
+//                 <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1 flex items-center gap-2">
+//                   <Activity size={12} /> Service Status Label
+//                 </label>
+//                 <div className="relative">
+//                   <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+//                   <input
+//                     type="text"
+//                     value={form.status}
+//                     onChange={(e) => setForm({ ...form, status: e.target.value })}
+//                     className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
+//                     placeholder="e.g. Active, Coming Soon, 10% Off"
+//                   />
+//                 </div>
+//                 <p className="text-[9px] text-slate-600 mt-1 px-1">This text will be stored in the status column.</p>
+//               </div>
+//             </div>
+
+//             {/* Description */}
+//             <div className="space-y-4">
+//               <div>
+//                 <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">Description</label>
+//                 <div className="relative">
+//                   <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-slate-500" />
+//                   <textarea rows={8} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-500" />
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Conditional Fields for Temple/Pind Dan */}
+//           {isTempleType && (
+//             <div className="p-6 bg-[#0f172a] rounded-3xl border border-orange-500/20 space-y-4">
+//               <div className="flex items-center gap-2 text-orange-400 font-black text-[10px] uppercase tracking-tighter mb-2">
+//                 <MapPin size={14} /> Schedule & Location
+//               </div>
+//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                 <div className="relative">
+//                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
+//                   <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400" placeholder="Address" />
+//                 </div>
+//                 <div className="relative">
+//                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
+//                   <input type="datetime-local" value={form.dateOfStart} onChange={(e) => setForm({ ...form, dateOfStart: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400" style={{ colorScheme: 'dark' }} />
+//                 </div>
+//               </div>
+//               <div className="relative">
+//                 <Info className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
+//                 <textarea rows={3} value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-400" placeholder="About significance..." />
+//               </div>
+//             </div>
+//           )}
+
+//           {/* Pricing */}
+//           <div className="space-y-4">
+//             <div className="px-1">
+//               <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-2">
+//                 <IndianRupee size={12} /> Pricing Configurations
+//               </label>
+//             </div>
+
+//             <div className="grid grid-cols-1 gap-3">
+//               {form.prices.map((p, index) => (
+//                 <div key={index} className="flex items-center gap-2 bg-[#0b1120] p-2 rounded-2xl border border-slate-700">
+//                   <span className="text-xs text-orange-400 font-bold px-2 capitalize shrink-0 w-20">
+//                     {p.pricing_type}
+//                   </span>
+//                   <input
+//                     type="number"
+//                     value={p.price}
+//                     onChange={(e) => { const up = [...form.prices]; up[index].price = e.target.value; setForm({ ...form, prices: up }); }}
+//                     className="bg-transparent flex-1 min-w-0 text-sm text-white outline-none"
+//                     placeholder="Price"
+//                   />
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+
+//           {/* Banner */}
+//           <div className="pt-2">
+//             <label className="block group cursor-pointer">
+//               <div className={`border-2 border-dashed rounded-3xl p-6 text-center transition-all ${preview ? "border-orange-500/50 bg-orange-500/5" : "border-slate-800 hover:border-slate-600"}`}>
+//                 {preview ? <img src={preview} alt="preview" className="h-32 mx-auto rounded-2xl shadow-lg" /> : <div className="text-slate-600 flex flex-col items-center gap-2"><Image size={32} className="opacity-30" /> <span className="text-[11px] font-bold uppercase">Upload Banner</span></div>}
+//               </div>
+//               <input type="file" className="hidden" onChange={(e) => { const file = e.target.files[0]; if(file){ setImage(file); setPreview(URL.createObjectURL(file)); } }} />
+//             </label>
+//           </div>
+//         </form>
+
+//         {/* Action Buttons */}
+//         <div className="px-8 py-6 border-t border-slate-800 flex gap-4 bg-[#0f172a]/50">
+//           <button type="button" onClick={close} className="flex-1 py-4 text-[11px] font-black uppercase text-slate-400 border border-slate-800 rounded-2xl hover:bg-slate-800">Discard</button>
+//           <button onClick={handleSubmit} className="flex-[2] py-4 text-[11px] font-black uppercase text-white bg-orange-500 rounded-2xl hover:bg-orange-600 shadow-xl shadow-orange-900/40 transition-all active:scale-95">
+//             {editData ? "Update Service" : "Deploy Service"}
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ServiceModal;
 import React, { useState, useEffect } from "react";
-import { X, Trash2, Image, Tag, AlignLeft, IndianRupee, MapPin, Info, Clock, Activity } from "lucide-react"; 
-import { API } from "../../services/adminApi";
+import {
+  X,
+  Trash2,
+  Image,
+  Tag,
+  AlignLeft,
+  IndianRupee,
+  MapPin,
+  Info,
+  Clock,
+  Activity,
+  Plus,
+  Sparkles,
+  Edit,
+} from "lucide-react";
+import {
+  API,
+  createBenefit,
+  getBenefitsByService,
+  updateBenefit,
+  deleteBenefit,
+} from "../../services/adminApi";
 
 const ServiceModal = ({ close, editData, refresh }) => {
   const [form, setForm] = useState({
@@ -10,12 +261,20 @@ const ServiceModal = ({ close, editData, refresh }) => {
     status: "",
     address: "",
     about: "",
-    dateOfStart: "", 
+    dateOfStart: "",
     prices: [{ pricing_type: "standard", price: "" }],
   });
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+
+  // ── Benefits State
+  const [benefits, setBenefits] = useState([]);
+  const [newBenefits, setNewBenefits] = useState([
+    { name: "", description: "" },
+  ]); // Multiple benefits array
+  const [editingBenefit, setEditingBenefit] = useState(null);
+  const [showBenefitForm, setShowBenefitForm] = useState(false);
 
   const isTempleType = ["temple_puja", "pind_dan"].includes(form.puja_type);
 
@@ -26,19 +285,22 @@ const ServiceModal = ({ close, editData, refresh }) => {
       puja_type: newType,
       prices: temple
         ? [
-            { pricing_type: "single",  price: "" },
-            { pricing_type: "couple",  price: "" },
-            { pricing_type: "family",  price: "" },
+            { pricing_type: "single", price: "" },
+            { pricing_type: "couple", price: "" },
+            { pricing_type: "family", price: "" },
           ]
         : [{ pricing_type: "standard", price: "" }],
     });
   };
 
+  // ── Load existing benefits if editing
   useEffect(() => {
     if (editData) {
       let formattedDateTime = "";
       if (editData.dateOfStart) {
-        formattedDateTime = editData.dateOfStart.replace(" ", "T").substring(0, 16);
+        formattedDateTime = editData.dateOfStart
+          .replace(" ", "T")
+          .substring(0, 16);
       }
 
       setForm({
@@ -48,24 +310,43 @@ const ServiceModal = ({ close, editData, refresh }) => {
         status: editData.status || "",
         address: editData.address || "",
         about: editData.about || "",
-        dateOfStart: formattedDateTime, 
-        prices: editData.prices?.length > 0 ? editData.prices : [{ pricing_type: "standard", price: "" }],
+        dateOfStart: formattedDateTime,
+        prices:
+          editData.prices?.length > 0
+            ? editData.prices
+            : [{ pricing_type: "standard", price: "" }],
       });
 
       if (editData.image_url) {
         const baseUrl = import.meta.env.VITE_BACKEND_URL;
         setPreview(`${baseUrl}${editData.image_url}`);
       }
+
+      // Load benefits
+      loadBenefits(editData.id);
     }
   }, [editData]);
+
+  const loadBenefits = async (serviceId) => {
+    try {
+      const response = await getBenefitsByService(serviceId);
+      if (response.data.success) {
+        setBenefits(response.data.benefits || []);
+      }
+    } catch (error) {
+      console.error("Error loading benefits:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    
-    Object.keys(form).forEach(key => {
-      if (key === 'prices') {
-        const validPrices = form.prices.filter(p => p.pricing_type && p.price);
+
+    Object.keys(form).forEach((key) => {
+      if (key === "prices") {
+        const validPrices = form.prices.filter(
+          (p) => p.pricing_type && p.price,
+        );
         formData.append(key, JSON.stringify(validPrices));
       } else {
         formData.append(key, form[key]);
@@ -75,44 +356,174 @@ const ServiceModal = ({ close, editData, refresh }) => {
     if (image) formData.append("image", image);
 
     try {
-      if (editData) await API.put(`/services/${editData.id}`, formData);
-      else await API.post(`/services`, formData);
-      refresh(); close();
-    } catch (err) { 
-      alert("Error saving service"); 
+      let serviceId;
+
+      if (editData) {
+        // Update existing service
+        await API.put(`/services/${editData.id}`, formData);
+        serviceId = editData.id;
+      } else {
+        // Create new service
+        const response = await API.post(`/services`, formData);
+        serviceId = response.data.serviceId;
+
+        // Save benefits if any were added during creation
+        const validBenefits = newBenefits.filter((b) => b.name.trim() !== "");
+        if (validBenefits.length > 0 && serviceId) {
+          for (const benefit of validBenefits) {
+            await createBenefit(serviceId, benefit);
+          }
+        }
+      }
+
+      refresh();
+      close();
+    } catch (err) {
+      console.error("Error saving service:", err);
+      alert("Error saving service");
+    }
+  };
+
+  // ── Benefit Handlers
+  const handleAddBenefitRow = () => {
+    setNewBenefits([...newBenefits, { name: "", description: "" }]);
+  };
+
+  const handleRemoveBenefitRow = (index) => {
+    const updated = newBenefits.filter((_, i) => i !== index);
+    setNewBenefits(
+      updated.length > 0 ? updated : [{ name: "", description: "" }],
+    );
+  };
+
+  const handleBenefitChange = (index, field, value) => {
+    const updated = [...newBenefits];
+    updated[index][field] = value;
+    setNewBenefits(updated);
+  };
+
+  const handleSaveAllBenefits = async () => {
+    // Validate: At least one benefit should have a name
+    const validBenefits = newBenefits.filter((b) => b.name.trim() !== "");
+
+    if (validBenefits.length === 0) {
+      alert("Kam se kam ek benefit ka naam zaroori hai");
+      return;
+    }
+
+    // If in create mode, just keep benefits in state for preview
+    if (!editData) {
+      alert(
+        `${validBenefits.length} benefits added to preview! Service save karne par automatically database mein add ho jayenge.`,
+      );
+      return;
+    }
+
+    // If in edit mode, save benefits immediately
+    try {
+      for (const benefit of validBenefits) {
+        await createBenefit(editData.id, benefit);
+      }
+
+      await loadBenefits(editData.id);
+      setNewBenefits([{ name: "", description: "" }]);
+      setShowBenefitForm(false);
+      alert(
+        `${validBenefits.length} benefits successfully database mein add ho gaye!`,
+      );
+    } catch (error) {
+      alert("Error adding benefits");
+      console.error(error);
+    }
+  };
+
+  const handleUpdateBenefit = async () => {
+    if (!editingBenefit || !editingBenefit.name.trim()) {
+      alert("Benefit name zaroori hai");
+      return;
+    }
+
+    try {
+      const response = await updateBenefit(editingBenefit.id, {
+        name: editingBenefit.name,
+        description: editingBenefit.description,
+      });
+
+      if (response.data.success) {
+        await loadBenefits(editData.id);
+        setEditingBenefit(null);
+      }
+    } catch (error) {
+      alert("Error updating benefit");
+    }
+  };
+
+  const handleDeleteBenefit = async (benefitId) => {
+    if (!confirm("Kya aap is benefit ko delete karna chahte hain?")) return;
+
+    try {
+      const response = await deleteBenefit(benefitId);
+      if (response.data.success) {
+        await loadBenefits(editData.id);
+      }
+    } catch (error) {
+      alert("Error deleting benefit");
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex justify-center items-center z-[100] p-4 animate-in fade-in duration-300">
       <div className="bg-[#131e32] w-full max-w-2xl rounded-3xl border border-slate-700/50 shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
-
         {/* Header */}
         <div className="flex justify-between items-center px-8 py-5 border-b border-slate-800 bg-[#0f172a]/50">
           <div>
-            <h2 className="text-lg font-black text-white">{editData ? "Edit Service" : "Create New Service"}</h2>
-            <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">Service Management</p>
+            <h2 className="text-lg font-black text-white">
+              {editData ? "Edit Service" : "Create New Service"}
+            </h2>
+            <p className="text-[11px] text-slate-500 uppercase tracking-widest font-bold">
+              Service Management
+            </p>
           </div>
-          <button onClick={close} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 transition"><X size={20} /></button>
+          <button
+            onClick={close}
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 transition"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-8 py-6 space-y-6 scrollbar-hide">
-
+        <form
+          onSubmit={handleSubmit}
+          className="overflow-y-auto flex-1 px-8 py-6 space-y-6 scrollbar-hide"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               {/* Service Name */}
               <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">Service Name</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+                  Service Name
+                </label>
                 <div className="relative">
                   <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input type="text" required value={form.puja_name} onChange={(e) => setForm({ ...form, puja_name: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none" placeholder="e.g. Navratri Special Puja" />
+                  <input
+                    type="text"
+                    required
+                    value={form.puja_name}
+                    onChange={(e) =>
+                      setForm({ ...form, puja_name: e.target.value })
+                    }
+                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
+                    placeholder="e.g. Navratri Special Puja"
+                  />
                 </div>
               </div>
 
               {/* Category Type */}
               <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">Category Type</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+                  Category Type
+                </label>
                 <select
                   value={form.puja_type}
                   onChange={(e) => handleTypeChange(e.target.value)}
@@ -132,25 +543,38 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 </label>
                 <div className="relative">
                   <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input 
-                    type="text" 
-                    value={form.status} 
-                    onChange={(e) => setForm({ ...form, status: e.target.value })} 
-                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none" 
-                    placeholder="e.g. Active, Coming Soon, 10% Off" 
+                  <input
+                    type="text"
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm({ ...form, status: e.target.value })
+                    }
+                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
+                    placeholder="e.g. Active, Coming Soon, 10% Off"
                   />
                 </div>
-                <p className="text-[9px] text-slate-600 mt-1 px-1">This text will be stored in the status column.</p>
+                <p className="text-[9px] text-slate-600 mt-1 px-1">
+                  This text will be stored in the status column.
+                </p>
               </div>
             </div>
 
             {/* Description */}
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">Description</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+                  Description
+                </label>
                 <div className="relative">
                   <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-slate-500" />
-                  <textarea rows={8} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-500" />
+                  <textarea
+                    rows={8}
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-500"
+                  />
                 </div>
               </div>
             </div>
@@ -165,16 +589,38 @@ const ServiceModal = ({ close, editData, refresh }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                  <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400" placeholder="Address" />
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={(e) =>
+                      setForm({ ...form, address: e.target.value })
+                    }
+                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400"
+                    placeholder="Address"
+                  />
                 </div>
                 <div className="relative">
                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                  <input type="datetime-local" value={form.dateOfStart} onChange={(e) => setForm({ ...form, dateOfStart: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400" style={{ colorScheme: 'dark' }} />
+                  <input
+                    type="datetime-local"
+                    value={form.dateOfStart}
+                    onChange={(e) =>
+                      setForm({ ...form, dateOfStart: e.target.value })
+                    }
+                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400"
+                    style={{ colorScheme: "dark" }}
+                  />
                 </div>
               </div>
               <div className="relative">
                 <Info className="absolute left-4 top-4 w-4 h-4 text-slate-600" />
-                <textarea rows={3} value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-400" placeholder="About significance..." />
+                <textarea
+                  rows={3}
+                  value={form.about}
+                  onChange={(e) => setForm({ ...form, about: e.target.value })}
+                  className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-400"
+                  placeholder="About significance..."
+                />
               </div>
             </div>
           )}
@@ -189,14 +635,21 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
             <div className="grid grid-cols-1 gap-3">
               {form.prices.map((p, index) => (
-                <div key={index} className="flex items-center gap-2 bg-[#0b1120] p-2 rounded-2xl border border-slate-700">
+                <div
+                  key={index}
+                  className="flex items-center gap-2 bg-[#0b1120] p-2 rounded-2xl border border-slate-700"
+                >
                   <span className="text-xs text-orange-400 font-bold px-2 capitalize shrink-0 w-20">
                     {p.pricing_type}
                   </span>
                   <input
                     type="number"
                     value={p.price}
-                    onChange={(e) => { const up = [...form.prices]; up[index].price = e.target.value; setForm({ ...form, prices: up }); }}
+                    onChange={(e) => {
+                      const up = [...form.prices];
+                      up[index].price = e.target.value;
+                      setForm({ ...form, prices: up });
+                    }}
                     className="bg-transparent flex-1 min-w-0 text-sm text-white outline-none"
                     placeholder="Price"
                   />
@@ -205,21 +658,315 @@ const ServiceModal = ({ close, editData, refresh }) => {
             </div>
           </div>
 
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* BENEFITS SECTION - Show in both create and edit modes */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          <div className="p-6 bg-gradient-to-br from-purple-950/30 to-blue-950/20 rounded-3xl border border-purple-500/20 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-purple-400 font-black text-[10px] uppercase tracking-tighter">
+                <Sparkles size={14} /> Service Benefits
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBenefitForm(!showBenefitForm)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl text-[10px] font-bold text-purple-300 transition"
+              >
+                <Plus size={12} />{" "}
+                {showBenefitForm ? "Hide Form" : "Add Benefits"}
+              </button>
+            </div>
+
+            {/* Add New Benefit Form */}
+            {showBenefitForm && (
+              <div className="p-4 bg-[#0b1120] rounded-2xl border border-purple-500/20 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black text-purple-400 uppercase">
+                    Add Benefits
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAddBenefitRow}
+                    className="flex items-center gap-1 px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-[9px] font-bold text-purple-300 transition"
+                  >
+                    <Plus size={10} /> Add More
+                  </button>
+                </div>
+
+                {/* Multiple Benefit Rows */}
+                <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-hide">
+                  {newBenefits.map((benefit, index) => (
+                    <div
+                      key={index}
+                      className="p-3 bg-[#0f172a] rounded-xl border border-slate-700 space-y-2"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[9px] font-bold text-slate-500">
+                          Benefit #{index + 1}
+                        </span>
+                        {newBenefits.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBenefitRow(index)}
+                            className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-300 transition"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={benefit.name}
+                        onChange={(e) =>
+                          handleBenefitChange(index, "name", e.target.value)
+                        }
+                        className="w-full px-4 py-2.5 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white outline-none focus:border-purple-500"
+                        placeholder="Benefit name (e.g., Spiritual Peace)"
+                      />
+                      <textarea
+                        rows={2}
+                        value={benefit.description}
+                        onChange={(e) =>
+                          handleBenefitChange(
+                            index,
+                            "description",
+                            e.target.value,
+                          )
+                        }
+                        className="w-full px-4 py-2.5 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white resize-none outline-none focus:border-purple-500"
+                        placeholder="Description (optional)"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveAllBenefits}
+                    className="flex-1 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-xl text-[11px] font-bold text-white transition"
+                  >
+                    {editData ? "Save All Benefits" : "Add to Preview"} (
+                    {newBenefits.filter((b) => b.name.trim()).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editData) {
+                        // Edit mode: hide form and reset
+                        setShowBenefitForm(false);
+                        setNewBenefits([{ name: "", description: "" }]);
+                      } else {
+                        // Create mode: just clear the inputs, keep form visible
+                        setNewBenefits([{ name: "", description: "" }]);
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-400 transition"
+                  >
+                    {editData ? "Cancel" : "Clear All"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Existing Benefits List (Edit Mode) OR Preview Benefits (Create Mode) */}
+            {editData ? (
+              // EDIT MODE - Show saved benefits
+              benefits.length > 0 ? (
+                <div className="space-y-2">
+                  {benefits.map((benefit) => (
+                    <div
+                      key={benefit.id}
+                      className="p-3 bg-[#0b1120] rounded-xl border border-slate-700 group hover:border-purple-500/50 transition"
+                    >
+                      {editingBenefit?.id === benefit.id ? (
+                        // Edit Mode
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editingBenefit.name}
+                            onChange={(e) =>
+                              setEditingBenefit({
+                                ...editingBenefit,
+                                name: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-2 bg-[#0f172a] border border-slate-700 rounded-lg text-sm text-white outline-none focus:border-purple-500"
+                          />
+                          <textarea
+                            rows={2}
+                            value={editingBenefit.description || ""}
+                            onChange={(e) =>
+                              setEditingBenefit({
+                                ...editingBenefit,
+                                description: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-2 bg-[#0f172a] border border-slate-700 rounded-lg text-sm text-white resize-none outline-none focus:border-purple-500"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={handleUpdateBenefit}
+                              className="flex-1 py-1.5 bg-purple-500 hover:bg-purple-600 rounded-lg text-[10px] font-bold text-white transition"
+                            >
+                              Update
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingBenefit(null)}
+                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-400 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // View Mode
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-white mb-1">
+                              {benefit.name}
+                            </h4>
+                            {benefit.description && (
+                              <p className="text-xs text-slate-400">
+                                {benefit.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() => setEditingBenefit(benefit)}
+                              className="p-1.5 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg text-purple-300 transition"
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteBenefit(benefit.id)}
+                              className="p-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-300 transition"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 text-center py-4">
+                  Abhi koi benefits add nahi kiye gaye
+                </p>
+              )
+            ) : // CREATE MODE - Show preview of benefits that will be saved
+            newBenefits.filter((b) => b.name.trim()).length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Info size={12} className="text-purple-400" />
+                    <span className="text-[9px] text-purple-400 font-bold">
+                      Benefits Preview (
+                      {newBenefits.filter((b) => b.name.trim()).length})
+                    </span>
+                  </div>
+                  <span className="text-[8px] text-slate-500">
+                    Service save hone par add honge
+                  </span>
+                </div>
+                {newBenefits
+                  .filter((b) => b.name.trim())
+                  .map((benefit, index) => {
+                    // Find original index for removal
+                    const originalIndex = newBenefits.findIndex(
+                      (b) => b === benefit,
+                    );
+                    return (
+                      <div
+                        key={index}
+                        className="p-3 bg-[#0b1120] rounded-xl border border-purple-500/30 group hover:border-purple-500/50 transition"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-white mb-1">
+                              {benefit.name}
+                            </h4>
+                            {benefit.description && (
+                              <p className="text-xs text-slate-400">
+                                {benefit.description}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveBenefitRow(originalIndex)
+                            }
+                            className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-300 transition opacity-0 group-hover:opacity-100"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 text-center py-4">
+                Abhi koi benefits add nahi kiye gaye
+              </p>
+            )}
+          </div>
+
           {/* Banner */}
           <div className="pt-2">
             <label className="block group cursor-pointer">
-              <div className={`border-2 border-dashed rounded-3xl p-6 text-center transition-all ${preview ? "border-orange-500/50 bg-orange-500/5" : "border-slate-800 hover:border-slate-600"}`}>
-                {preview ? <img src={preview} alt="preview" className="h-32 mx-auto rounded-2xl shadow-lg" /> : <div className="text-slate-600 flex flex-col items-center gap-2"><Image size={32} className="opacity-30" /> <span className="text-[11px] font-bold uppercase">Upload Banner</span></div>}
+              <div
+                className={`border-2 border-dashed rounded-3xl p-6 text-center transition-all ${preview ? "border-orange-500/50 bg-orange-500/5" : "border-slate-800 hover:border-slate-600"}`}
+              >
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="preview"
+                    className="h-32 mx-auto rounded-2xl shadow-lg"
+                  />
+                ) : (
+                  <div className="text-slate-600 flex flex-col items-center gap-2">
+                    <Image size={32} className="opacity-30" />{" "}
+                    <span className="text-[11px] font-bold uppercase">
+                      Upload Banner
+                    </span>
+                  </div>
+                )}
               </div>
-              <input type="file" className="hidden" onChange={(e) => { const file = e.target.files[0]; if(file){ setImage(file); setPreview(URL.createObjectURL(file)); } }} />
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setImage(file);
+                    setPreview(URL.createObjectURL(file));
+                  }
+                }}
+              />
             </label>
           </div>
         </form>
 
         {/* Action Buttons */}
         <div className="px-8 py-6 border-t border-slate-800 flex gap-4 bg-[#0f172a]/50">
-          <button type="button" onClick={close} className="flex-1 py-4 text-[11px] font-black uppercase text-slate-400 border border-slate-800 rounded-2xl hover:bg-slate-800">Discard</button>
-          <button onClick={handleSubmit} className="flex-[2] py-4 text-[11px] font-black uppercase text-white bg-orange-500 rounded-2xl hover:bg-orange-600 shadow-xl shadow-orange-900/40 transition-all active:scale-95">
+          <button
+            type="button"
+            onClick={close}
+            className="flex-1 py-4 text-[11px] font-black uppercase text-slate-400 border border-slate-800 rounded-2xl hover:bg-slate-800"
+          >
+            Discard
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="flex-[2] py-4 text-[11px] font-black uppercase text-white bg-orange-500 rounded-2xl hover:bg-orange-600 shadow-xl shadow-orange-900/40 transition-all active:scale-95"
+          >
             {editData ? "Update Service" : "Deploy Service"}
           </button>
         </div>

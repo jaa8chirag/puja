@@ -29,3 +29,16 @@ export const getTransactions = (page = 1, limit = 15) =>
 export const getPanditEarnings = () => API.get("/pandit-earnings");
 export const getDateRangeRevenue = (from, to) =>
   API.get(`/date-range?from=${from}&to=${to}`);
+
+// ── Benefits routes (add after existing routes)
+export const createBenefit = (serviceId, data) =>
+  API.post(`/services/${serviceId}/benefits`, data);
+
+export const getBenefitsByService = (serviceId) =>
+  API.get(`/services/${serviceId}/benefits`);
+
+export const updateBenefit = (benefitId, data) =>
+  API.put(`/benefits/${benefitId}`, data);
+
+export const deleteBenefit = (benefitId) =>
+  API.delete(`/benefits/${benefitId}`);
