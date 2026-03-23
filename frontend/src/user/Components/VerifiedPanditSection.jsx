@@ -96,8 +96,8 @@ const VerifiedPanditSection = () => {
             🛡️ 100% Secure & Trusted
           </span>
 
-          <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#3b2a1a] mb-2">
-            Our <span className="text-orange-500">Verified Pandits</span>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#3b2a1a] text-center leading-tight mb-4">
+            Our Verified Pandits
           </h2>
 
           <p className="text-gray-500 text-sm sm:text-base md:text-lg text-center max-w-2xl leading-relaxed opacity-90">

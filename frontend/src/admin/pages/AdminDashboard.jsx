@@ -310,20 +310,6 @@ const Topbar = ({ onMenuClick }) => {
           <Icon name="menu" />
         </button>
 
-        {/* Back arrow — desktop only */}
-        <button className="hidden lg:flex p-1 bg-transparent border-none text-gray-400 cursor-pointer">
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path d="M19 12H5M12 5l-7 7 7 7" />
-          </svg>
-        </button>
-
         {/* Logo icon */}
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center text-base font-bold text-white flex-shrink-0"
@@ -338,7 +324,7 @@ const Topbar = ({ onMenuClick }) => {
             Super Admin Control
           </div>
           <div className="text-gray-500 text-[11px] hidden sm:block">
-            Sri Vedic Puja • admin@srivedicpuja.com
+            Sri Vedic Puja
           </div>
         </div>
       </div>

@@ -56,7 +56,7 @@ export default function WhyChooseUs() {
         </span>
 
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#3b2a1a] text-center leading-tight mb-4">
-          Why Families Choose <span className="text-orange-500">PujaPath</span>
+          Why Families Choose PujaPath.
         </h2>
 
         <p className="text-gray-500 text-sm sm:text-base md:text-lg text-center max-w-2xl leading-relaxed mb-12 opacity-90">

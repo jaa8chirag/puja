@@ -20,6 +20,49 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
 
+// ═══════════════════════════════════════════════════════════
+// HELPER: Icon Mapper - Benefit names ke basis pe icons assign
+// ═══════════════════════════════════════════════════════════
+const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
+  const name = benefitName?.toLowerCase() || "";
+  const iconMap = {
+    peace: <Heart />,
+    spiritual: <Heart />,
+    calm: <Heart />,
+    protection: <Shield />,
+    divine: <Shield />,
+    safety: <Shield />,
+    prosperity: <Zap />,
+    wealth: <Zap />,
+    success: <Zap />,
+    family: <Users />,
+    bond: <Users />,
+    unity: <Users />,
+    harmony: <Users />,
+    energy: <Sparkles />,
+    positive: <Sparkles />,
+    purify: <Sparkles />,
+    vastu: <MapPin />,
+    balance: <MapPin />,
+  };
+
+  // Check if any keyword matches
+  for (const [keyword, icon] of Object.entries(iconMap)) {
+    if (name.includes(keyword)) return icon;
+  }
+
+  // Fallback: Cycle through default icons
+  const defaultIcons = [
+    <Heart />,
+    <Shield />,
+    <Zap />,
+    <Users />,
+    <Sparkles />,
+    <MapPin />,
+  ];
+  return defaultIcons[fallbackIndex % defaultIcons.length];
+};
+
 const KathaPujaBooking = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -110,7 +153,7 @@ const KathaPujaBooking = () => {
   const totalAmount = samagriEnabled
     ? basePrice + getPrice("Samagri Kit")
     : basePrice;
-
+  // console.log("Services--", service);
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-6 font-sans text-gray-800 pb-28 md:pb-6">
       <div className="max-w-6xl mx-auto">
@@ -196,7 +239,6 @@ const KathaPujaBooking = () => {
                           </span>
                         </p>
                         <div className="flex items-center gap-2">
-                          
                           <a
                             href={SAMAGRI_PDF_URL}
                             download="Puja_Samagri_Checklist.pdf"
@@ -269,36 +311,51 @@ const KathaPujaBooking = () => {
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <BenefitSmall
-                      icon={<Heart />}
-                      title="Spiritual Peace"
-                      desc="Inner calm through sacred rituals"
-                    />
-                    <BenefitSmall
-                      icon={<Shield />}
-                      title="Protection"
-                      desc="Divine protection for family"
-                    />
-                    <BenefitSmall
-                      icon={<Zap />}
-                      title="Prosperity"
-                      desc="Remove obstacles from your path"
-                    />
-                    <BenefitSmall
-                      icon={<Users />}
-                      title="Harmony"
-                      desc="Strengthen family bonds"
-                    />
-                    <BenefitSmall
-                      icon={<Sparkles />}
-                      title="Positive Energy"
-                      desc="Purify home with mantras"
-                    />
-                    <BenefitSmall
-                      icon={<MapPin />}
-                      title="Vastu Benefits"
-                      desc="Harmonize living space"
-                    />
+                    {/* Dynamic Benefits from Backend */}
+                    {service?.benefits && service.benefits.length > 0 ? (
+                      service.benefits.map((benefit, index) => (
+                        <BenefitSmall
+                          key={benefit.id || index}
+                          icon={getBenefitIcon(benefit.name, index)}
+                          title={benefit.name}
+                          desc={benefit.description || "Divine blessing"}
+                        />
+                      ))
+                    ) : (
+                      // Fallback: Default benefits agar backend se nahi aaye
+                      <>
+                        <BenefitSmall
+                          icon={<Heart />}
+                          title="Spiritual Peace"
+                          desc="Inner calm through sacred rituals"
+                        />
+                        <BenefitSmall
+                          icon={<Shield />}
+                          title="Protection"
+                          desc="Divine protection for family"
+                        />
+                        <BenefitSmall
+                          icon={<Zap />}
+                          title="Prosperity"
+                          desc="Remove obstacles from your path"
+                        />
+                        <BenefitSmall
+                          icon={<Users />}
+                          title="Harmony"
+                          desc="Strengthen family bonds"
+                        />
+                        <BenefitSmall
+                          icon={<Sparkles />}
+                          title="Positive Energy"
+                          desc="Purify home with mantras"
+                        />
+                        <BenefitSmall
+                          icon={<MapPin />}
+                          title="Vastu Benefits"
+                          desc="Harmonize living space"
+                        />
+                      </>
+                    )}
                   </div>
                 </section>
 

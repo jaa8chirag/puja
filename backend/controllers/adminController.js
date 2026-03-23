@@ -1840,3 +1840,145 @@ export const updateBookingStatus = async (req, res) => {
     });
   }
 };
+// ═══════════════════════════════════════════════════════════
+// BENEFITS MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+// Create Benefit
+export const createBenefit = async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    const { name, description } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Benefit name required hai",
+      });
+    }
+
+    // Check if service exists
+    const [[service]] = await db.query(`SELECT id FROM services WHERE id = ?`, [
+      serviceId,
+    ]);
+
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: "Service nahi mili",
+      });
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO benefits (service_id, name, description) 
+       VALUES (?, ?, ?)`,
+      [serviceId, name, description || null],
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Benefit add ho gaya",
+      benefitId: result.insertId,
+    });
+  } catch (error) {
+    console.error("Create Benefit Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Get Benefits by Service
+export const getBenefitsByService = async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+
+    const [benefits] = await db.query(
+      `SELECT id, name, description, created_at 
+       FROM benefits 
+       WHERE service_id = ? 
+       ORDER BY created_at DESC`,
+      [serviceId],
+    );
+
+    res.json({
+      success: true,
+      benefits,
+    });
+  } catch (error) {
+    console.error("Get Benefits Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Update Benefit
+export const updateBenefit = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    const fields = [];
+    const values = [];
+
+    if (name !== undefined) {
+      fields.push("name = ?");
+      values.push(name);
+    }
+
+    if (description !== undefined) {
+      fields.push("description = ?");
+      values.push(description);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Koi field update karne ke liye nahi mili",
+      });
+    }
+
+    values.push(id);
+
+    const [result] = await db.query(
+      `UPDATE benefits SET ${fields.join(", ")} WHERE id = ?`,
+      values,
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Benefit nahi mila",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Benefit update ho gaya",
+    });
+  } catch (error) {
+    console.error("Update Benefit Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Delete Benefit
+export const deleteBenefit = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [result] = await db.query(`DELETE FROM benefits WHERE id = ?`, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Benefit nahi mila",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Benefit delete ho gaya",
+    });
+  } catch (error) {
+    console.error("Delete Benefit Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

@@ -44,6 +44,10 @@ import {
   adminDeleteBlog,
   adminToggleBlogStatus,
   updateBookingStatus,
+  createBenefit,
+  getBenefitsByService,
+  updateBenefit,
+  deleteBenefit,
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -162,5 +166,21 @@ router.patch(
 );
 
 router.put("/update-status/:id", verifyToken, adminOnly, updateBookingStatus);
+
+// Benefits management routes (add after service routes)
+router.post(
+  "/services/:serviceId/benefits",
+  verifyToken,
+  adminOnly,
+  createBenefit,
+);
+router.get(
+  "/services/:serviceId/benefits",
+  verifyToken,
+  adminOnly,
+  getBenefitsByService,
+);
+router.put("/benefits/:id", verifyToken, adminOnly, updateBenefit);
+router.delete("/benefits/:id", verifyToken, adminOnly, deleteBenefit);
 
 export default router;
