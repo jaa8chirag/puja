@@ -1,6 +1,46 @@
 import db from "../config/db.js";
 import pool from "../config/db.js";
 
+// export const getServicesByType = async (req, res) => {
+//   try {
+//     const { type } = req.params;
+
+//     const [rows] = await db.query(
+//       `
+//       SELECT 
+//           s.id,
+//           s.puja_name,
+//           s.puja_type,
+//           s.description,
+//           s.image_url,
+//           s.status,
+
+//           MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
+//           MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
+//           MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
+//           MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
+
+//       FROM services s
+//       LEFT JOIN service_prices p ON s.id = p.service_id
+//       WHERE s.puja_type = ?
+//       GROUP BY s.id
+//     `,
+//       [type],
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       services: rows,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error",
+//     });
+//   }
+// };
+
 export const getServicesByType = async (req, res) => {
   try {
     const { type } = req.params;
@@ -14,16 +54,16 @@ export const getServicesByType = async (req, res) => {
           s.description,
           s.image_url,
           s.status,
-
+          s.priority, -- Priority select kiya
           MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
           MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
           MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
           MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
-
       FROM services s
       LEFT JOIN service_prices p ON s.id = p.service_id
       WHERE s.puja_type = ?
       GROUP BY s.id
+      ORDER BY s.priority DESC, s.id DESC -- Pehle priority phir nayi ID
     `,
       [type],
     );
@@ -40,10 +80,28 @@ export const getServicesByType = async (req, res) => {
     });
   }
 };
+// export const getAllServices = async (req, res) => {
+//   try {
+//     const [rows] = await db.query(`SELECT * FROM services`);
+
+//     res.status(200).json({
+//       success: true,
+//       services: rows,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error",
+//     });
+//   }
+// };
+
 
 export const getAllServices = async (req, res) => {
   try {
-    const [rows] = await db.query(`SELECT * FROM services`);
+    // Priority DESC lagane se high priority upar aayegi
+    const [rows] = await db.query(`SELECT * FROM services ORDER BY priority DESC, created_at DESC`);
 
     res.status(200).json({
       success: true,
@@ -57,7 +115,6 @@ export const getAllServices = async (req, res) => {
     });
   }
 };
-
 export const bookPuja = async (req, res) => {
   try {
     const { id } = req.params;
@@ -370,6 +427,56 @@ export const getUserBookings = async (req, res) => {
   }
 };
 
+// export const templePuja = async (req, res) => {
+//   try {
+//     const [rows] = await db.query(`
+//       SELECT 
+//         s.id AS service_id,
+//         s.puja_name,
+//         s.puja_type,
+//         s.description,
+//         s.image_url,
+//         s.status,
+//         s.created_at AS service_created_at,
+
+//         t.id AS temple_id,
+//         t.about,
+//         t.address,
+//         t.dateOfStart,
+//         t.created_at AS temple_created_at,
+
+//         MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
+//         MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
+//         MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
+//         MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
+
+//       FROM services s
+
+//       LEFT JOIN temples t 
+//         ON s.id = t.service_id
+
+//       LEFT JOIN service_prices p 
+//         ON s.id = p.service_id
+
+//       WHERE s.puja_type = 'temple_puja'
+
+//       GROUP BY s.id, t.id
+//     `);
+
+//     res.status(200).json({
+//       success: true,
+//       data: rows,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error",
+//     });
+//   }
+// };
+
+
 export const templePuja = async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -380,6 +487,7 @@ export const templePuja = async (req, res) => {
         s.description,
         s.image_url,
         s.status,
+        s.priority, -- 1. Priority select ki
         s.created_at AS service_created_at,
 
         t.id AS temple_id,
@@ -404,6 +512,7 @@ export const templePuja = async (req, res) => {
       WHERE s.puja_type = 'temple_puja'
 
       GROUP BY s.id, t.id
+      ORDER BY s.priority DESC, s.id DESC -- 2. Priority ke hisab se order kiya
     `);
 
     res.status(200).json({
@@ -492,6 +601,53 @@ export const templePujaSingle = async (req, res) => {
     });
   }
 };
+// export const pindDan = async (req, res) => {
+//   try {
+//     const [rows] = await db.query(`
+//       SELECT 
+//         s.id AS service_id,
+//         s.puja_name,
+//         s.puja_type,
+//         s.description,
+//         s.image_url,
+//         s.status,
+//         s.created_at AS service_created_at,
+
+//         t.id AS temple_id,
+//         t.about,
+//         t.address,
+//         t.dateOfStart,
+//         t.created_at AS temple_created_at,
+
+//         p.price AS standard_price
+
+//       FROM services s
+
+//       LEFT JOIN temples t 
+//         ON s.id = t.service_id
+
+//       LEFT JOIN service_prices p 
+//         ON s.id = p.service_id 
+//         AND p.pricing_type = 'standard'
+
+//       WHERE s.puja_type = 'pind_dan'
+//     `);
+
+//     res.status(200).json({
+//       success: true,
+//       data: rows,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error",
+//     });
+//   }
+// };
+
+// Booking cancel karne ka controller
+
 export const pindDan = async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -502,6 +658,7 @@ export const pindDan = async (req, res) => {
         s.description,
         s.image_url,
         s.status,
+        s.priority, -- 1. Priority select ki
         s.created_at AS service_created_at,
 
         t.id AS temple_id,
@@ -522,6 +679,9 @@ export const pindDan = async (req, res) => {
         AND p.pricing_type = 'standard'
 
       WHERE s.puja_type = 'pind_dan'
+      
+      -- 2. Priority aur Created Date ke hisab se order kiya
+      ORDER BY IFNULL(s.priority, 0) DESC, s.id DESC 
     `);
 
     res.status(200).json({
@@ -537,7 +697,6 @@ export const pindDan = async (req, res) => {
   }
 };
 
-// Booking cancel karne ka controller
 export const PindDanSingle = async (req, res) => {
   const { id } = req.params;
 

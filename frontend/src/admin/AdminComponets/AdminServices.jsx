@@ -10,6 +10,8 @@ import {
   Home,
   CheckCircle2,
   XCircle,
+  Layers, // Naya Icon
+  Star,   // Naya Icon
 } from "lucide-react";
 import ServiceModal from "./ServiceModel";
 import { API } from "../../services/adminApi";
@@ -127,6 +129,7 @@ const AdminServices = () => {
             <tr className="bg-[#0f172a] border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[10px]">
               <th className="px-6 py-4 text-left font-bold">Service Info</th>
               <th className="px-6 py-4 text-center font-bold">Category</th>
+              <th className="px-6 py-4 text-center font-bold">Priority</th> {/* Naya Column Header */}
               <th className="px-6 py-4 text-center font-bold">Status</th>
               <th className="px-6 py-4 text-center font-bold">Pricing Tier</th>
               <th className="px-6 py-4 text-right font-bold">Actions</th>
@@ -136,7 +139,7 @@ const AdminServices = () => {
           <tbody className="divide-y divide-slate-800/50">
             {services.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-20 text-center text-slate-600">
+                <td colSpan={6} className="py-20 text-center text-slate-600">
                   <LayoutGrid size={40} className="mx-auto mb-3 opacity-20" />
                   <p className="text-sm">No services found in this category</p>
                 </td>
@@ -176,6 +179,23 @@ const AdminServices = () => {
                     >
                       {service.puja_type.replace("_", " ")}
                     </span>
+                  </td>
+
+                  {/* Naya Priority Cell */}
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800/50 border border-slate-700 rounded-lg">
+                        <Layers size={10} className="text-orange-500" />
+                        <span className="text-[11px] font-bold text-white">
+                          {service.priority || 0}
+                        </span>
+                      </div>
+                      {service.is_featured === 1 && (
+                        <div className="flex items-center gap-1 text-[8px] font-black text-yellow-500 uppercase">
+                          <Star size={8} fill="currentColor" /> Featured
+                        </div>
+                      )}
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 text-center">
@@ -256,9 +276,15 @@ const AdminServices = () => {
             >
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1">
-                  <p className="font-bold text-slate-200 text-sm">
-                    {service.puja_name}
-                  </p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-bold text-slate-200 text-sm">
+                      {service.puja_name}
+                    </p>
+                    {/* Featured Star on Mobile */}
+                    {service.is_featured === 1 && (
+                      <Star size={12} fill="#eab308" className="text-yellow-500" />
+                    )}
+                  </div>
                   {["temple_puja", "pind_dan"].includes(service.puja_type) ? (
                     <div className="flex items-center gap-1 text-[10px] text-orange-400/70 mt-1">
                       <MapPin size={11} />
@@ -298,6 +324,12 @@ const AdminServices = () => {
                 >
                   {service.puja_type.replace("_", " ")}
                 </span>
+                
+                {/* Priority Badge on Mobile */}
+                <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-bold text-slate-300">
+                  P: {service.priority || 0}
+                </span>
+
                 <div
                   className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-bold text-[10px] uppercase ${
                     service.status === "active"
