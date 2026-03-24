@@ -48,6 +48,10 @@ import {
   getBenefitsByService,
   updateBenefit,
   deleteBenefit,
+  getAllContributions, 
+  addContribution, 
+  updateContribution, 
+  deleteContribution
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -91,6 +95,14 @@ router.put(
   updateService,
 );
 router.delete("/services/:id", verifyToken, adminOnly, deleteService);
+
+
+
+//contributionn
+router.get("/contributions", verifyToken, adminOnly, getAllContributions);
+router.post("/createContribution", verifyToken, adminOnly, addContribution);
+router.put("/contributions/:id", verifyToken, adminOnly, updateContribution);
+router.delete("/contributions/:id", verifyToken, adminOnly, deleteUser); // Logic wise deleteContribution hoga
 
 // booking management routes for admin can be added here
 router.get("/bookings", verifyToken, adminOnly, getAllBookings);

@@ -3,6 +3,53 @@ import jwt from "jsonwebtoken";
 const otpStore = {}; // In-memory OTP store (phone: { otp, type, expires })
 import pool from "../config/db.js";
 
+
+// 1. Get All Contributions
+export const getAllContributions = async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM contribution_types ORDER BY id DESC");
+    res.status(200).json({ success: true, data: rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 2. Add New
+export const addContribution = async (req, res) => {
+  const { name, price, is_active } = req.body;
+  try {
+    const sql = "INSERT INTO contribution_types (name, price, is_active) VALUES (?, ?, ?)";
+    const [result] = await db.query(sql, [name, price, is_active ?? 1]);
+    res.status(201).json({ success: true, id: result.insertId });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 3. Update
+export const updateContribution = async (req, res) => {
+  const { id } = req.params;
+  const { name, price, is_active } = req.body;
+  try {
+    const sql = "UPDATE contribution_types SET name=?, price=?, is_active=? WHERE id=?";
+    await db.query(sql, [name, price, is_active, id]);
+    res.status(200).json({ success: true, message: "Updated" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 4. Delete
+export const deleteContribution = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("DELETE FROM contribution_types WHERE id = ?", [id]);
+    res.status(200).json({ success: true, message: "Deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Admin sign-in with OTP
 export const AdminLoginRequest = async (req, res) => {
   try {
@@ -670,80 +717,80 @@ export const deletePandit = async (req, res) => {
 //================= Service Management, CRUD operations of service =========================
 
 // get all services
-export const getAllServices = async (req, res) => {
-  try {
-    const { puja_type, category, search, status } = req.query;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 12;
-    const offset = (page - 1) * limit;
+// export const getAllServices = async (req, res) => {
+//   try {
+//     const { puja_type, category, search, status } = req.query;
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 12;
+//     const offset = (page - 1) * limit;
 
-    let whereClause = `WHERE 1=1`;
-    const params = [];
+//     let whereClause = `WHERE 1=1`;
+//     const params = [];
 
-    if (puja_type || category) {
-      whereClause += ` AND s.puja_type = ?`;
-      params.push(puja_type || category);
-    }
-    if (search) {
-      whereClause += ` AND (s.puja_name LIKE ? OR t.address LIKE ?)`;
-      params.push(`%${search}%`, `%${search}%`);
-    }
-    if (status && status !== "all") {
-      whereClause += ` AND s.status = ?`;
-      params.push(status);
-    }
+//     if (puja_type || category) {
+//       whereClause += ` AND s.puja_type = ?`;
+//       params.push(puja_type || category);
+//     }
+//     if (search) {
+//       whereClause += ` AND (s.puja_name LIKE ? OR t.address LIKE ?)`;
+//       params.push(`%${search}%`, `%${search}%`);
+//     }
+//     if (status && status !== "all") {
+//       whereClause += ` AND s.status = ?`;
+//       params.push(status);
+//     }
 
-    const [countResult] = await db.query(
-      `SELECT COUNT(DISTINCT s.id) as total FROM services s LEFT JOIN temples t ON s.id = t.service_id ${whereClause}`,
-      params,
-    );
+//     const [countResult] = await db.query(
+//       `SELECT COUNT(DISTINCT s.id) as total FROM services s LEFT JOIN temples t ON s.id = t.service_id ${whereClause}`,
+//       params,
+//     );
 
-    const [rows] = await db.query(
-      `SELECT s.*, sp.id as price_id, sp.pricing_type, sp.price,
-              t.about as temple_about, t.address as temple_address, t.dateOfStart as temple_date
-       FROM services s
-       LEFT JOIN service_prices sp ON s.id = sp.service_id
-       LEFT JOIN temples t ON s.id = t.service_id
-       ${whereClause}
-       ORDER BY s.created_at DESC LIMIT ? OFFSET ?`,
-      [...params, limit, offset],
-    );
+//     const [rows] = await db.query(
+//       `SELECT s.*, sp.id as price_id, sp.pricing_type, sp.price,
+//               t.about as temple_about, t.address as temple_address, t.dateOfStart as temple_date
+//        FROM services s
+//        LEFT JOIN service_prices sp ON s.id = sp.service_id
+//        LEFT JOIN temples t ON s.id = t.service_id
+//        ${whereClause}
+//        ORDER BY s.created_at DESC LIMIT ? OFFSET ?`,
+//       [...params, limit, offset],
+//     );
 
-    const serviceMap = {};
-    rows.forEach((row) => {
-      if (!serviceMap[row.id]) {
-        serviceMap[row.id] = {
-          ...row, // Isme s.status automatically aa jayega
-          about: row.temple_about,
-          address: row.temple_address,
-          dateOfStart: row.temple_date,
-          prices: [],
-        };
-        delete serviceMap[row.id].temple_about;
-        delete serviceMap[row.id].temple_address;
-        delete serviceMap[row.id].temple_date;
-      }
-      if (row.price_id) {
-        serviceMap[row.id].prices.push({
-          price_id: row.price_id,
-          pricing_type: row.pricing_type,
-          price: row.price,
-        });
-      }
-    });
+//     const serviceMap = {};
+//     rows.forEach((row) => {
+//       if (!serviceMap[row.id]) {
+//         serviceMap[row.id] = {
+//           ...row, // Isme s.status automatically aa jayega
+//           about: row.temple_about,
+//           address: row.temple_address,
+//           dateOfStart: row.temple_date,
+//           prices: [],
+//         };
+//         delete serviceMap[row.id].temple_about;
+//         delete serviceMap[row.id].temple_address;
+//         delete serviceMap[row.id].temple_date;
+//       }
+//       if (row.price_id) {
+//         serviceMap[row.id].prices.push({
+//           price_id: row.price_id,
+//           pricing_type: row.pricing_type,
+//           price: row.price,
+//         });
+//       }
+//     });
 
-    res.json({
-      success: true,
-      totalServices: countResult[0].total,
-      totalPages: Math.ceil(countResult[0].total / limit),
-      services: Object.values(serviceMap),
-    });
-  } catch (error) {
-    res.status(500).json({ success: false });
-  }
-};
+//     res.json({
+//       success: true,
+//       totalServices: countResult[0].total,
+//       totalPages: Math.ceil(countResult[0].total / limit),
+//       services: Object.values(serviceMap),
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false });
+//   }
+// };
 
-//get serviceById
+// //get serviceById
 export const getServiceById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -775,7 +822,226 @@ export const getServiceById = async (req, res) => {
   }
 };
 
-//create sevice
+// //create sevice
+// export const createService = async (req, res) => {
+//   const connection = await db.getConnection();
+//   try {
+//     const {
+//       puja_name,
+//       puja_type,
+//       description,
+//       about,
+//       address,
+//       dateOfStart,
+//       status,
+//     } = req.body;
+//     const prices = JSON.parse(req.body.prices || "[]");
+//     const image_url = req.file ? `${req.file.filename}` : null;
+//     console.log(image_url);
+
+//     await connection.beginTransaction();
+
+//     const [result] = await connection.query(
+//       `INSERT INTO services (puja_name, puja_type, description, image_url, status) VALUES (?, ?, ?, ?, ?)`,
+//       [puja_name, puja_type, description, image_url, status || "active"],
+//     );
+
+//     const serviceId = result.insertId;
+//     for (let p of prices) {
+//       await connection.query(
+//         `INSERT INTO service_prices (service_id, pricing_type, price) VALUES (?, ?, ?)`,
+//         [serviceId, p.pricing_type, p.price],
+//       );
+//     }
+
+//     if (["temple_puja", "pind_dan"].includes(puja_type)) {
+//       await connection.query(
+//         `INSERT INTO temples (service_id, about, address, dateOfStart) VALUES (?, ?, ?, ?)`,
+//         [serviceId, about, address, dateOfStart],
+//       );
+//     }
+
+//     await connection.commit();
+//     res.json({ success: true, serviceId });
+//   } catch (error) {
+//     await connection.rollback();
+//     res.status(500).json({ success: false });
+//   } finally {
+//     connection.release();
+//   }
+// };
+
+// //update service
+// export const updateService = async (req, res) => {
+//   const connection = await db.getConnection();
+//   try {
+//     const { id } = req.params;
+//     let {
+//       puja_name,
+//       puja_type,
+//       description,
+//       prices,
+//       status,
+//       about,
+//       address,
+//       dateOfStart,
+//     } = req.body;
+//     if (typeof prices === "string") prices = JSON.parse(prices);
+
+//     await connection.beginTransaction();
+//     let image_url = req.file ? `${req.file.filename}` : null;
+
+//     // 1. Update Services Table
+//     const fields = [];
+//     const vals = [];
+//     if (puja_name) {
+//       fields.push("puja_name=?");
+//       vals.push(puja_name);
+//     }
+//     if (puja_type) {
+//       fields.push("puja_type=?");
+//       vals.push(puja_type);
+//     }
+//     if (description) {
+//       fields.push("description=?");
+//       vals.push(description);
+//     }
+//     if (status) {
+//       fields.push("status=?");
+//       vals.push(status);
+//     }
+//     if (image_url) {
+//       fields.push("image_url=?");
+//       vals.push(image_url);
+//     }
+
+//     if (fields.length > 0) {
+//       vals.push(id);
+//       await connection.query(
+//         `UPDATE services SET ${fields.join(", ")} WHERE id=?`,
+//         vals,
+//       );
+//     }
+
+//     // 2. Update Prices
+//     if (Array.isArray(prices)) {
+//       await connection.query(`DELETE FROM service_prices WHERE service_id=?`, [
+//         id,
+//       ]);
+//       for (let p of prices) {
+//         await connection.query(
+//           `INSERT INTO service_prices (service_id, pricing_type, price) VALUES (?, ?, ?)`,
+//           [id, p.pricing_type, p.price],
+//         );
+//       }
+//     }
+
+//     // 3. Update/Insert Temple Details
+//     if (["temple_puja", "pind_dan"].includes(puja_type)) {
+//       const [exists] = await connection.query(
+//         `SELECT id FROM temples WHERE service_id=?`,
+//         [id],
+//       );
+//       if (exists.length > 0) {
+//         await connection.query(
+//           `UPDATE temples SET about=?, address=?, dateOfStart=? WHERE service_id=?`,
+//           [about, address, dateOfStart, id],
+//         );
+//       } else {
+//         await connection.query(
+//           `INSERT INTO temples (service_id, about, address, dateOfStart) VALUES (?, ?, ?, ?)`,
+//           [id, about, address, dateOfStart],
+//         );
+//       }
+//     } else {
+//       await connection.query(`DELETE FROM temples WHERE service_id=?`, [id]);
+//     }
+
+//     await connection.commit();
+//     res.json({ success: true, message: "Updated successfully" });
+//   } catch (error) {
+//     await connection.rollback();
+//     res.status(500).json({ success: false });
+//   } finally {
+//     connection.release();
+//   }
+// };
+
+export const getAllServices = async (req, res) => {
+  try {
+    const { puja_type, category, search, status } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const offset = (page - 1) * limit;
+
+    let whereClause = `WHERE 1=1`;
+    const params = [];
+
+    if (puja_type || category) {
+      whereClause += ` AND s.puja_type = ?`;
+      params.push(puja_type || category);
+    }
+    if (search) {
+      whereClause += ` AND (s.puja_name LIKE ? OR t.address LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    if (status && status !== "all") {
+      whereClause += ` AND s.status = ?`;
+      params.push(status);
+    }
+
+    const [countResult] = await db.query(
+      `SELECT COUNT(DISTINCT s.id) as total FROM services s LEFT JOIN temples t ON s.id = t.service_id ${whereClause}`,
+      params,
+    );
+
+    // UPDATED: Added s.priority and s.is_featured in SELECT and ORDER BY
+    const [rows] = await db.query(
+      `SELECT s.*, sp.id as price_id, sp.pricing_type, sp.price,
+              t.about as temple_about, t.address as temple_address, t.dateOfStart as temple_date
+       FROM services s
+       LEFT JOIN service_prices sp ON s.id = sp.service_id
+       LEFT JOIN temples t ON s.id = t.service_id
+       ${whereClause}
+       ORDER BY s.priority DESC, s.created_at DESC LIMIT ? OFFSET ?`, 
+      [...params, limit, offset],
+    );
+
+    const serviceMap = {};
+    rows.forEach((row) => {
+      if (!serviceMap[row.id]) {
+        serviceMap[row.id] = {
+          ...row,
+          about: row.temple_about,
+          address: row.temple_address,
+          dateOfStart: row.temple_date,
+          prices: [],
+        };
+        delete serviceMap[row.id].temple_about;
+        delete serviceMap[row.id].temple_address;
+        delete serviceMap[row.id].temple_date;
+      }
+      if (row.price_id) {
+        serviceMap[row.id].prices.push({
+          price_id: row.price_id,
+          pricing_type: row.pricing_type,
+          price: row.price,
+        });
+      }
+    });
+
+    res.json({
+      success: true,
+      totalServices: countResult[0].total,
+      totalPages: Math.ceil(countResult[0].total / limit),
+      services: Object.values(serviceMap),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+
 export const createService = async (req, res) => {
   const connection = await db.getConnection();
   try {
@@ -787,44 +1053,47 @@ export const createService = async (req, res) => {
       address,
       dateOfStart,
       status,
+      priority,     // New
+      is_featured   // New
     } = req.body;
+    
     const prices = JSON.parse(req.body.prices || "[]");
     const image_url = req.file ? `${req.file.filename}` : null;
-    console.log(image_url);
 
     await connection.beginTransaction();
 
+    // UPDATED: Added priority and is_featured in INSERT
     const [result] = await connection.query(
-      `INSERT INTO services (puja_name, puja_type, description, image_url, status) VALUES (?, ?, ?, ?, ?)`,
-      [puja_name, puja_type, description, image_url, status || "active"],
+      `INSERT INTO services (puja_name, puja_type, description, image_url, status, priority, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [puja_name, puja_type, description, image_url, status || "active", priority || 0, is_featured || 0],
     );
 
     const serviceId = result.insertId;
+    // ... rest of the code (prices and temple logic) remains same as yours
     for (let p of prices) {
-      await connection.query(
-        `INSERT INTO service_prices (service_id, pricing_type, price) VALUES (?, ?, ?)`,
-        [serviceId, p.pricing_type, p.price],
-      );
-    }
-
-    if (["temple_puja", "pind_dan"].includes(puja_type)) {
-      await connection.query(
-        `INSERT INTO temples (service_id, about, address, dateOfStart) VALUES (?, ?, ?, ?)`,
-        [serviceId, about, address, dateOfStart],
-      );
-    }
+        await connection.query(
+          `INSERT INTO service_prices (service_id, pricing_type, price) VALUES (?, ?, ?)`,
+          [serviceId, p.pricing_type, p.price],
+        );
+      }
+  
+      if (["temple_puja", "pind_dan"].includes(puja_type)) {
+        await connection.query(
+          `INSERT INTO temples (service_id, about, address, dateOfStart) VALUES (?, ?, ?, ?)`,
+          [serviceId, about, address, dateOfStart],
+        );
+      }
 
     await connection.commit();
     res.json({ success: true, serviceId });
   } catch (error) {
     await connection.rollback();
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, error: error.message });
   } finally {
     connection.release();
   }
 };
 
-//update service
 export const updateService = async (req, res) => {
   const connection = await db.getConnection();
   try {
@@ -838,35 +1107,28 @@ export const updateService = async (req, res) => {
       about,
       address,
       dateOfStart,
+      priority,      // Naya field
+      is_featured,   // Naya field
     } = req.body;
+
     if (typeof prices === "string") prices = JSON.parse(prices);
 
     await connection.beginTransaction();
     let image_url = req.file ? `${req.file.filename}` : null;
 
-    // 1. Update Services Table
+    // 1. Update Services Table (Dynamic Fields)
     const fields = [];
     const vals = [];
-    if (puja_name) {
-      fields.push("puja_name=?");
-      vals.push(puja_name);
-    }
-    if (puja_type) {
-      fields.push("puja_type=?");
-      vals.push(puja_type);
-    }
-    if (description) {
-      fields.push("description=?");
-      vals.push(description);
-    }
-    if (status) {
-      fields.push("status=?");
-      vals.push(status);
-    }
-    if (image_url) {
-      fields.push("image_url=?");
-      vals.push(image_url);
-    }
+
+    if (puja_name) { fields.push("puja_name=?"); vals.push(puja_name); }
+    if (puja_type) { fields.push("puja_type=?"); vals.push(puja_type); }
+    if (description) { fields.push("description=?"); vals.push(description); }
+    if (status) { fields.push("status=?"); vals.push(status); }
+    if (image_url) { fields.push("image_url=?"); vals.push(image_url); }
+    
+    // Priority aur is_featured ko check kar rahe hain (0 bhi valid value ho sakti hai isliye undefined check kiya hai)
+    if (priority !== undefined) { fields.push("priority=?"); vals.push(priority); }
+    if (is_featured !== undefined) { fields.push("is_featured=?"); vals.push(is_featured); }
 
     if (fields.length > 0) {
       vals.push(id);
@@ -876,11 +1138,9 @@ export const updateService = async (req, res) => {
       );
     }
 
-    // 2. Update Prices
+    // 2. Update Prices (Delete old and Insert new)
     if (Array.isArray(prices)) {
-      await connection.query(`DELETE FROM service_prices WHERE service_id=?`, [
-        id,
-      ]);
+      await connection.query(`DELETE FROM service_prices WHERE service_id=?`, [id]);
       for (let p of prices) {
         await connection.query(
           `INSERT INTO service_prices (service_id, pricing_type, price) VALUES (?, ?, ?)`,
@@ -890,6 +1150,7 @@ export const updateService = async (req, res) => {
     }
 
     // 3. Update/Insert Temple Details
+    // Agar puja_type change hokar temple_puja/pind_dan hua hai toh check karenge
     if (["temple_puja", "pind_dan"].includes(puja_type)) {
       const [exists] = await connection.query(
         `SELECT id FROM temples WHERE service_id=?`,
@@ -898,7 +1159,7 @@ export const updateService = async (req, res) => {
       if (exists.length > 0) {
         await connection.query(
           `UPDATE temples SET about=?, address=?, dateOfStart=? WHERE service_id=?`,
-          [about, address, dateOfStart, id],
+          [about || null, address || null, dateOfStart || null, id],
         );
       } else {
         await connection.query(
@@ -906,19 +1167,22 @@ export const updateService = async (req, res) => {
           [id, about, address, dateOfStart],
         );
       }
-    } else {
+    } else if (puja_type) {
+      // Agar puja_type change hokar simple puja ban gaya hai toh temple details delete kar denge
       await connection.query(`DELETE FROM temples WHERE service_id=?`, [id]);
     }
 
     await connection.commit();
-    res.json({ success: true, message: "Updated successfully" });
+    res.json({ success: true, message: "Service updated successfully with priority" });
   } catch (error) {
     await connection.rollback();
-    res.status(500).json({ success: false });
+    console.error("Update Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   } finally {
     connection.release();
   }
 };
+
 
 //delete service
 export const deleteService = async (req, res) => {
