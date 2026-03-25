@@ -345,7 +345,7 @@ const TransactionsTab = () => {
                 </thead>
                 <tbody>
                   {txData.length === 0 && (
-                    <tr><td colSpan={7} className="py-12 text-center text-white/20 text-sm">Koi transaction nahi mila</td></tr>
+                    <tr><td colSpan={7} className="py-12 text-center text-white/20 text-sm">No transactions found.</td></tr>
                   )}
                   {txData.map((t, i) => (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
@@ -414,7 +414,7 @@ const PanditsTab = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-white/20">Koi data nahi</td></tr>}
+                {data.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-white/20">No Data found.</td></tr>}
                 {data.map((p, i) => (
                   <tr key={i} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group">
                     <td className="py-3.5 pr-6 text-white/20 font-mono text-xs">{String(i + 1).padStart(2, "0")}</td>

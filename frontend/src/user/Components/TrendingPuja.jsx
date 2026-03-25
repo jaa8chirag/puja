@@ -49,7 +49,7 @@ export default function TrendingPuja() {
       <section className="relative max-w-7xl mx-auto p-5 md:p-10">
 
         {/* HEADER SECTION */}
-        <div className="mb-8 md:mb-12 flex flex-row items-center justify-between pb-4 md:pb-6 border-b border-orange-200 lg:border-none">
+        <div className="mb-6 md:mb-6 flex flex-row items-center justify-between pb-4 md:pb-6 border-b border-orange-200 lg:border-none">
           <div className="flex flex-col">
             <h2 className="text-2xl md:text-4xl font-serif font-bold text-[#3b2a1a]">
               Trending Pujas

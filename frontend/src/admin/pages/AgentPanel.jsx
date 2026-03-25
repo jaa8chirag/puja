@@ -143,7 +143,7 @@ export default function AgentPanel() {
           {sessions.length === 0 ? (
             <div style={{ textAlign: "center", padding: "50px 20px", color: "#475569" }}>
               <div style={{ fontSize: "40px", marginBottom: "12px" }}>💬</div>
-              <div>Koi user nahi abhi</div>
+              <div>No users found.</div>
             </div>
           ) : (
             sessions.map((session) => (
@@ -189,7 +189,7 @@ export default function AgentPanel() {
               {activeMessages.length === 0 && (
                 <div style={{ textAlign: "center", color: "#475569", marginTop: "80px" }}>
                   <div style={{ fontSize: "50px", marginBottom: "12px" }}>💬</div>
-                  <div style={{ color: "#94a3b8" }}>Koi message nahi</div>
+                  <div style={{ color: "#94a3b8" }}>No messages yet.</div>
                   {activeSession.status === "waiting" && <div style={{ marginTop: "8px", color: "#818cf8", fontSize: "14px" }}>Accept karo chat shuru karne ke liye</div>}
                 </div>
               )}
@@ -224,7 +224,7 @@ export default function AgentPanel() {
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#475569" }}>
             <div style={{ fontSize: "64px", marginBottom: "16px" }}>🎧</div>
             <div style={{ fontSize: "20px", fontWeight: "700", color: "#e2e8f0", marginBottom: "8px" }}>Customer Care Panel</div>
-            <div>Left side se koi session select karein</div>
+            <div>Choose a session from the left menu.</div>
             {waitingCount > 0 && <div style={{ marginTop: "12px", color: "#fbbf24", fontWeight: "600" }}>{waitingCount} user{waitingCount > 1 ? "s" : ""} intezaar mein hain!</div>}
           </div>
         )}

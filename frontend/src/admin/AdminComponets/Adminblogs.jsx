@@ -188,14 +188,14 @@ const Adminblogs = () => {
         {loading ? (
           <div className="flex items-center justify-center py-20 gap-3">
             <span className="animate-spin w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full inline-block" />
-            <span className="text-gray-500 text-sm">Load ho raha hai...</span>
+            <span className="text-gray-500 text-sm">Loading...</span>
           </div>
         ) : blogs.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-3">📭</div>
-            <p className="text-gray-500 text-sm">Koi blog nahi mila</p>
+            <p className="text-gray-500 text-sm">No blogs found.</p>
             <button onClick={openCreate} className="mt-3 text-orange-400 text-sm hover:underline bg-transparent border-none cursor-pointer">
-              Pehla blog create karein →
+              Create your first blog.
             </button>
           </div>
         ) : (

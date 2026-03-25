@@ -115,7 +115,7 @@ router.put('/:id', async (req, res) => {
       if (req.body[f] !== undefined) { updates.push(`${f} = ?`); params.push(req.body[f]); }
     });
 
-    if (updates.length === 0) return res.status(400).json({ success: false, error: 'Kuch update karne ke liye nahi hai' });
+    if (updates.length === 0) return res.status(400).json({ success: false, error: 'Nothing to update.' });
 
     params.push(id);
     await pool.query(`UPDATE blogs SET ${updates.join(', ')} WHERE id = ?`, params);
