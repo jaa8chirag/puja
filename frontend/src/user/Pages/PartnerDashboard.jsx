@@ -921,14 +921,22 @@ const PartnerDashboard = () => {
                 />
               </button>
             </div>
-            <LogOut
-              size={22}
-              className="text-[#6b5840] cursor-pointer hover:text-red-500 transition"
+            <div
               onClick={() => {
                 localStorage.clear();
                 navigate("/partnerSignIn");
               }}
-            />
+              className="group flex items-center gap-3 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer transition-all duration-300 hover:bg-red-50 hover:border-red-200 shadow-sm active:scale-[0.98]"
+            >
+              <LogOut
+                size={18}
+                className="text-gray-500 group-hover:text-red-600 transition-colors"
+                strokeWidth={2}
+              />
+              <span className="text-[14px] font-bold text-gray-600 group-hover:text-red-600 transition-colors">
+                Logout
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -963,7 +971,7 @@ const PartnerDashboard = () => {
             },
             {
               key: "earnings",
-              label: "Earnings",
+              label: "My Earnings",
               icon: <IndianRupee size={16} />,
             },
           ].map((t) => (

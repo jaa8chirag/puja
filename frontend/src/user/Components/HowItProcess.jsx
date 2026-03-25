@@ -101,7 +101,7 @@ const Slide3 = () => (
       <span className="text-2xl">📲</span>
       <div>
         <p className="text-white font-bold text-xs">Shared on WhatsApp</p>
-        <p className="text-white/70 text-xs">Within 24 hours of Puja</p>
+        <p className="text-white/70 text-xs">Within 48 hours or more</p>
       </div>
     </div>
   </div>

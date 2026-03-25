@@ -197,10 +197,10 @@ export default function Blog() {
             {blogs.length === 0 && (
               <div className="text-center py-20">
                 <div className="text-5xl mb-3">🔍</div>
-                <p className="text-amber-500/60">Koi blog nahi mila</p>
+                <p className="text-amber-500/60">No blogs found.</p>
                 <button onClick={() => { setActive("All"); setSearchInput(""); }}
                   className="mt-4 text-xs text-amber-600 hover:text-amber-400 underline">
-                  Reset karein
+                  Reset All
                 </button>
               </div>
             )}

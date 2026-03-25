@@ -2007,7 +2007,7 @@ export const updateBenefit = async (req, res) => {
     if (fields.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Koi field update karne ke liye nahi mili",
+        message: "No fields found to update.",
       });
     }
 

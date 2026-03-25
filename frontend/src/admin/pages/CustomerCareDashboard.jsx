@@ -463,7 +463,7 @@ const ChatSupportPanel = ({
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-600 gap-3 py-16">
             <MessageSquare size={32} className="opacity-40" />
-            <span className="text-xs">Koi user nahi abhi</span>
+            <span className="text-xs">No users found.</span>
           </div>
         ) : (
           sessions.map((session) => (

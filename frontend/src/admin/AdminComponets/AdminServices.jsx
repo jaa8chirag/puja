@@ -4,7 +4,7 @@ import {
   Pencil,
   Trash2,
   ChevronLeft,
-  ChevronRight,
+  ChevronDown,
   LayoutGrid,
   MapPin,
   Home,
@@ -93,20 +93,30 @@ const AdminServices = () => {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <select
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setPage(1);
-            }}
-            className="bg-[#131e32] border border-slate-700 text-slate-300 text-xs px-4 py-2.5 rounded-xl outline-none focus:border-orange-500 transition-all"
-          >
-            <option value="">All Categories</option>
-            <option value="home_puja">Home Puja</option>
-            <option value="katha">Katha</option>
-            <option value="temple_puja">Temple Puja</option>
-            <option value="pind_dan">Pind Dan</option>
-          </select>
+          <div className="relative group">
+            <select
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(1);
+              }}
+              /* appearance-none: default arrow ko gayab karne ke liye */
+              /* pr-10: right side mein space rakhne ke liye taaki text arrow ke niche na jaye */
+              className="appearance-none bg-[#131e32] border border-slate-700 text-slate-300 text-xs px-4 pr-10 py-2.5 rounded-xl outline-none focus:border-orange-500 transition-all cursor-pointer w-full min-w-[150px]"
+            >
+              <option value="">All Categories</option>
+              <option value="home_puja">Home Puja</option>
+              <option value="katha">Katha</option>
+              <option value="temple_puja">Temple Puja</option>
+              <option value="pind_dan">Pind Dan</option>
+            </select>
+
+            {/* Custom Arrow Icon */}
+            {/* 'right-5' ko badha kar 'right-8' ya 'right-10' karoge toh arrow aur left chala jayega */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-focus-within:text-orange-500 transition-colors">
+              <ChevronDown size={14} strokeWidth={3} />
+            </div>
+          </div>
 
           <button
             onClick={() => {
@@ -200,11 +210,10 @@ const AdminServices = () => {
 
                   <td className="px-6 py-4 text-center">
                     <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase ${
-                        service.status === "active"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase ${service.status === "active"
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                           : "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                      }`}
+                        }`}
                     >
                       {service.status === "active" ? (
                         <CheckCircle2 size={10} />
@@ -324,18 +333,17 @@ const AdminServices = () => {
                 >
                   {service.puja_type.replace("_", " ")}
                 </span>
-                
+
                 {/* Priority Badge on Mobile */}
                 <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-bold text-slate-300">
                   P: {service.priority || 0}
                 </span>
 
                 <div
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-bold text-[10px] uppercase ${
-                    service.status === "active"
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-bold text-[10px] uppercase ${service.status === "active"
                       ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                       : "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                  }`}
+                    }`}
                 >
                   {service.status === "active" ? (
                     <CheckCircle2 size={9} />

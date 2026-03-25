@@ -256,7 +256,7 @@ export default function AnalyticsDashboard() {
             <div className="space-y-3">
               {data.top_pujas.length === 0 ? (
                 <p className="text-slate-600 text-sm text-center py-8">
-                  Koi data nahi mila
+                  No Data found.
                 </p>
               ) : (
                 data.top_pujas.map((puja, index) => (
@@ -305,7 +305,7 @@ export default function AnalyticsDashboard() {
           </div>
         ) : data.most_active_cities.length === 0 ? (
           <p className="text-slate-600 text-sm text-center py-8">
-            Koi data nahi mila
+            No Data found.
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
