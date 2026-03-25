@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
+import { LifeBuoy } from "lucide-react";
 
 export default function AIPanditBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -240,14 +241,23 @@ export default function AIPanditBot() {
         >
           <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping group-hover:bg-amber-500/30"></div>
 
-          <div className="relative w-14 h-14 md:w-20 md:h-20 bg-gradient-to-t from-[#78350f] via-[#92400e] to-[#b45309] rounded-full shadow-[0_10px_40px_rgba(120,53,15,0.5)] border-[3px] md:border-4 border-amber-200 flex flex-col items-center justify-center transition-all group-hover:rotate-12 group-hover:scale-110">
-            <span className="text-xl md:text-2xl filter drop-shadow-md">
-              🔱
-            </span>
-            <span className="text-[8px] md:text-[8px] font-bold text-amber-100 mt-0.5 uppercase tracking-tighter">
-              Live Pandit
-            </span>
-          </div>
+          <div className="group cursor-pointer flex flex-col items-center gap-2">
+  <div className="relative w-14 h-14 md:w-16 md:h-16 bg-[#1e293b]/40 backdrop-blur-md border border-slate-700/50 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:bg-indigo-600/10 group-hover:border-indigo-500/50 group-hover:shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+    
+    {/* Inner Glow Effect */}
+    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-indigo-500/10 to-transparent"></div>
+
+    <LifeBuoy 
+      className="text-slate-400 group-hover:text-indigo-400 group-hover:rotate-45 transition-all duration-500" 
+      size={26} 
+      strokeWidth={1.5} 
+    />
+  </div>
+  
+  <span className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase transition-colors duration-300 group-hover:text-slate-300">
+    Support
+  </span>
+</div>
 
           <div className="hidden md:block absolute right-24 bg-white/90 backdrop-blur-sm border-l-4 border-amber-600 px-4 py-2 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none transform translate-x-4 group-hover:translate-x-0">
             <p className="text-amber-900 font-bold text-sm whitespace-nowrap">
