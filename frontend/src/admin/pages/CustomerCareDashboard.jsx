@@ -710,6 +710,7 @@ const CustomerCareDashboard = () => {
   const [querySearch, setQuerySearch] = useState("");
   const [queryActionLoading, setQueryActionLoading] = useState(null);
   const [expandedQuery, setExpandedQuery] = useState(null);
+  const [selectedPanditPrice, setSelectedPanditPrice] = useState({});
 
   // ── Global notification + socket state ──
   const [toasts, setToasts] = useState([]);
@@ -911,16 +912,21 @@ const CustomerCareDashboard = () => {
       setQueryActionLoading(null);
     }
   };
-  const assignPandit = async (panditId) => {
+  const assignPandit = async (panditId, price) => {
     if (!selectedBookingId) return;
+    if (!price || price <= 0) {
+      alert("Please enter a valid price");
+      return;
+    }
     try {
       await axios.patch(
         `${API_BASE_URL}/customerCare/assign-pandit/${selectedBookingId}`,
-        { panditId },
+        { panditId, price },
         config,
       );
       setAssignModalOpen(false);
       setSelectedBookingId(null);
+      setSelectedPanditPrice({});
       fetchBookings();
     } catch (err) {
       alert("Assign Failed");
@@ -1217,6 +1223,7 @@ const CustomerCareDashboard = () => {
                       <Th>Schedule</Th>
                       <Th>Price</Th>
                       <Th>Status</Th>
+                      <Th>Pandit Info</Th>
                       <Th center>Actions</Th>
                     </tr>
                   </thead>
@@ -1272,6 +1279,22 @@ const CustomerCareDashboard = () => {
                           </td>
                           <td className="px-4 md:px-5 py-4">
                             <StatusBadge status={puja.status} />
+                          </td>
+                          <td className="px-4 md:px-5 py-4">
+                            {puja.pandit_name ? (
+                              <div>
+                                <p className="font-semibold text-slate-200 text-[11px]">
+                                  {puja.pandit_name}
+                                </p>
+                                <p className="text-[10px] text-emerald-400 font-mono mt-0.5">
+                                  ₹{puja.pandit_price || "—"}
+                                </p>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-600 italic">
+                                Not assigned
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 md:px-5 py-4">
                             <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -1759,6 +1782,17 @@ const CustomerCareDashboard = () => {
                 className="w-full bg-[#05080f]/80 border border-white/[0.06] rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/25"
               />
             </div>
+
+            {/* ✅ Price input — ADD KARO */}
+            <div className="relative mb-4">
+              <input
+                type="number"
+                placeholder="Enter pandit price (₹)"
+                value={assignPrice}
+                onChange={(e) => setAssignPrice(e.target.value)}
+                className="w-full bg-[#05080f]/80 border border-white/[0.06] rounded-xl px-4 py-2.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500/25"
+              />
+            </div>
             <div className="max-h-64 md:max-h-72 overflow-y-auto space-y-2 pr-1">
               {filteredPandits.length === 0 ? (
                 <div className="py-10 text-center text-xs text-slate-600">
@@ -1783,12 +1817,33 @@ const CustomerCareDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => assignPandit(pandit.id)}
-                      className="ml-3 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition flex-shrink-0"
-                    >
-                      Select
-                    </button>
+
+                    {/* ✅ Price input + Select button */}
+                    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                      <input
+                        type="number"
+                        placeholder="₹ Price"
+                        value={selectedPanditPrice[pandit.id] || ""}
+                        onChange={(e) =>
+                          setSelectedPanditPrice((prev) => ({
+                            ...prev,
+                            [pandit.id]: e.target.value,
+                          }))
+                        }
+                        className="w-20 bg-[#05080f]/80 border border-white/[0.06] rounded-lg px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/25 focus:border-emerald-500/25"
+                      />
+                      <button
+                        onClick={() =>
+                          assignPandit(
+                            pandit.id,
+                            selectedPanditPrice[pandit.id],
+                          )
+                        }
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
+                      >
+                        Select
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

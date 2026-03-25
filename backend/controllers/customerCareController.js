@@ -217,7 +217,6 @@ export const customerVerifyOtp = async (req, res) => {
 
 export const getAllPujaRequests = async (req, res) => {
   try {
-    // 1️⃣ All bookings
     const bookingsQuery = `
       SELECT
         b.id,
@@ -237,16 +236,18 @@ export const getAllPujaRequests = async (req, res) => {
         s.puja_name,
         s.puja_type,
 
-        u.name AS user_name,
+        u.name  AS user_name,
         u.phone AS user_phone,
 
-        pu.name AS pandit_name
+        pu.name AS pandit_name,
+        ra.price AS pandit_price
 
       FROM puja_requests b
 
-      LEFT JOIN services s ON b.service_id = s.id
-      LEFT JOIN users u ON b.user_id = u.id
-      LEFT JOIN users pu ON b.pandit_id = pu.id
+      LEFT JOIN services          s  ON b.service_id  = s.id
+      LEFT JOIN users             u  ON b.user_id      = u.id
+      LEFT JOIN request_assignments ra ON ra.request_id = b.id
+      LEFT JOIN users             pu ON pu.id           = ra.pandit_id
       WHERE s.puja_type IN ('home_puja', 'katha')
       ORDER BY b.preferred_date ASC
     `;
@@ -489,61 +490,10 @@ export const getAllUsers = async (req, res) => {
 
 // show all querys
 
-// export const assignPandit = async (req, res) => {
-//   try {
-//     const { bookingId } = req.params;
-//     const { panditId } = req.body;
-
-//     // 1️⃣ Check booking exist
-//     const [booking] = await db.query(
-//       "SELECT * FROM puja_requests WHERE id = ?",
-//       [bookingId],
-//     );
-
-//     if (booking.length === 0) {
-//       return res.status(404).json({ message: "Booking not found" });
-//     }
-
-//     // 2️⃣ Check pandit exist and role = pandit
-//     const [pandit] = await db.query(
-//       "SELECT * FROM users WHERE id = ? AND role = 'pandit'",
-//       [panditId],
-//     );
-
-//     if (pandit.length === 0) {
-//       return res.status(404).json({ message: "Pandit not found" });
-//     }
-
-//     // 3️⃣ 30% discounted price calculate karo
-//     const originalPrice = parseFloat(booking[0].total_price || 0);
-//     const discountedPrice = parseFloat((originalPrice * 0.7).toFixed(2));
-
-//     // 5️⃣ request_assignments mein price save karo
-//     await db.query(
-//       `INSERT INTO request_assignments (request_id, pandit_id, status, price)
-//        VALUES (?, ?, 'pending', ?)
-//        ON DUPLICATE KEY UPDATE pandit_id = ?, status = 'pending', price = ?`,
-//       [bookingId, panditId, discountedPrice, panditId, discountedPrice],
-//     );
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Pandit assigned successfully",
-//       data: {
-//         originalPrice,
-//         discountedPrice,
-//         discountApplied: "30%",
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Assign Error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
 export const assignPandit = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { panditId } = req.body;
+    const { panditId, price } = req.body; // ✅ price body se lo
 
     // 1️⃣ Check booking exist
     const [booking] = await db.query(
@@ -565,19 +515,17 @@ export const assignPandit = async (req, res) => {
       return res.status(404).json({ message: "Pandit not found" });
     }
 
-    // 3️⃣ 30% discounted price calculate karo
-    const originalPrice = parseFloat(booking[0].total_price || 0);
-    const discountedPrice = parseFloat((originalPrice * 0.7).toFixed(2));
+    const finalPrice = parseFloat(price || 0);
 
-    // 4️⃣ request_assignments mein pending status ke saath insert karo
+    // 3️⃣ request_assignments mein insert karo
     await db.query(
       `INSERT INTO request_assignments (request_id, pandit_id, status, price)
        VALUES (?, ?, 'pending', ?)
        ON DUPLICATE KEY UPDATE pandit_id = ?, status = 'pending', price = ?`,
-      [bookingId, panditId, discountedPrice, panditId, discountedPrice],
+      [bookingId, panditId, finalPrice, panditId, finalPrice],
     );
 
-    // 5️⃣ puja_requests mein status accepted karo
+    // 4️⃣ puja_requests mein status accepted karo
     await db.query(
       `UPDATE puja_requests SET status = 'accepted' WHERE id = ?`,
       [bookingId],
@@ -586,11 +534,7 @@ export const assignPandit = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Pandit assigned successfully",
-      data: {
-        originalPrice,
-        discountedPrice,
-        discountApplied: "30%",
-      },
+      data: { price: finalPrice },
     });
   } catch (error) {
     console.error("Assign Error:", error);
