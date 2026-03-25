@@ -167,7 +167,7 @@ const FullTemplePage = () => {
 
         {!loading && filteredTemples.length === 0 && (
           <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-400 font-bold text-lg">Kshama karein! Is city mein abhi koi mandir nahi mila.</p>
+            <p className="text-gray-400 font-bold text-lg">Sorry! No temples were found in this city.</p>
             <button onClick={() => {setActiveCity("All"); setSearchTerm("");}} className="text-orange-600 font-bold mt-2 underline">Sabhi mandir dekhein</button>
           </div>
         )}
