@@ -42,6 +42,10 @@ const HomePujaPaymentDetails = () => {
     ? JSON.parse(atob(token.split(".")[1])).name
     : "Guest User";
   const bookingId = generateBookingId();
+  // const generateOTP = () => {
+  //   return Math.floor(100000 + Math.random() * 900000).toString();
+  // };
+  // const otp = generateOTP();
 
   const [formData, setFormData] = useState({
     date: "",
@@ -122,6 +126,7 @@ const HomePujaPaymentDetails = () => {
       donations: selectedDonations,
       total_price: grandTotal,
       samagriKit: isSamagriSelected,
+      // otp,
     };
     try {
       const response = await fetch(
@@ -207,13 +212,7 @@ const HomePujaPaymentDetails = () => {
   const basePrice = Number(puja?.standard_price || 0);
   const samagriPrice = isSamagriSelected ? getPrice("Samagri Kit") : 0;
   const dharmicTotal = getDharmicTotal();
-  // const templeDonation = donations["Temple Donation"]
-  //   ? Number(
-  //       Array.from(contributionOptions2).filter(
-  //         (c) => c.name == "Temple Donation",
-  //       )[0].price,
-  //     )
-  //   : 0;
+
   const grandTotal = basePrice + samagriPrice + dharmicTotal;
 
   const inputBaseClass =
@@ -277,7 +276,8 @@ const HomePujaPaymentDetails = () => {
                   <div className="grid grid-cols-2 gap-3 md:gap-6">
                     <div className="space-y-1">
                       <label className={labelClass}>
-                        <Calendar size={12} /> Date
+                        <Calendar size={12} /> Date{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -289,7 +289,8 @@ const HomePujaPaymentDetails = () => {
                     </div>
                     <div className="space-y-1">
                       <label className={labelClass}>
-                        <Clock size={12} /> Time
+                        <Clock size={12} /> Time{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="time"
@@ -304,7 +305,8 @@ const HomePujaPaymentDetails = () => {
                   {/* Address */}
                   <div className="space-y-1">
                     <label className={labelClass}>
-                      <MapPin size={12} /> Full Address
+                      <MapPin size={12} /> Full Address{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="location"
@@ -319,7 +321,9 @@ const HomePujaPaymentDetails = () => {
                   {/* State / City / Pincode */}
                   <div className="grid grid-cols-3 gap-2 md:gap-6">
                     <div className="space-y-1">
-                      <label className={labelClass}>State</label>
+                      <label className={labelClass}>
+                        State<span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
                         name="state"
@@ -330,7 +334,9 @@ const HomePujaPaymentDetails = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className={labelClass}>City</label>
+                      <label className={labelClass}>
+                        City<span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
                         name="city"
@@ -341,7 +347,9 @@ const HomePujaPaymentDetails = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className={labelClass}>PIN</label>
+                      <label className={labelClass}>
+                        PIN<span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
                         name="pincode"

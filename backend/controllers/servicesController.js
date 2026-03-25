@@ -1,46 +1,6 @@
 import db from "../config/db.js";
 import pool from "../config/db.js";
 
-// export const getServicesByType = async (req, res) => {
-//   try {
-//     const { type } = req.params;
-
-//     const [rows] = await db.query(
-//       `
-//       SELECT 
-//           s.id,
-//           s.puja_name,
-//           s.puja_type,
-//           s.description,
-//           s.image_url,
-//           s.status,
-
-//           MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
-//           MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
-//           MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
-//           MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
-
-//       FROM services s
-//       LEFT JOIN service_prices p ON s.id = p.service_id
-//       WHERE s.puja_type = ?
-//       GROUP BY s.id
-//     `,
-//       [type],
-//     );
-
-//     res.status(200).json({
-//       success: true,
-//       services: rows,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
-
 export const getServicesByType = async (req, res) => {
   try {
     const { type } = req.params;
@@ -80,28 +40,13 @@ export const getServicesByType = async (req, res) => {
     });
   }
 };
-// export const getAllServices = async (req, res) => {
-//   try {
-//     const [rows] = await db.query(`SELECT * FROM services`);
-
-//     res.status(200).json({
-//       success: true,
-//       services: rows,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
-
 
 export const getAllServices = async (req, res) => {
   try {
     // Priority DESC lagane se high priority upar aayegi
-    const [rows] = await db.query(`SELECT * FROM services ORDER BY priority DESC, created_at DESC`);
+    const [rows] = await db.query(
+      `SELECT * FROM services ORDER BY priority DESC, created_at DESC`,
+    );
 
     res.status(200).json({
       success: true,
@@ -201,7 +146,8 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       total_price,
       samagriKit,
     } = req.body;
-
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("home or katha booking details--", req.body);
     const userId = req.user.id;
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]
@@ -221,8 +167,8 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
     const [result] = await connection.query(
       `
       INSERT INTO puja_requests 
-      (user_id, service_id, preferred_date, preferred_time, address, city, state, status, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
+      (user_id, service_id, preferred_date, preferred_time, address, city, state, status,otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending',?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -232,6 +178,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
         location,
         city || "N/A",
         state || "N/A",
+        otp,
         bookingId,
         ticket_type || null,
         0, // 👈 temporarily 0 (later update karenge)
@@ -313,7 +260,7 @@ export const bookingDetails = async (req, res) => {
       bookingId,
       total_price,
     } = req.body;
-    // console.log("req body", req.body);
+    console.log("booking details", req.body);
     const userId = req.user.id;
 
     const formattedDate = date
@@ -340,6 +287,7 @@ export const bookingDetails = async (req, res) => {
         address,
         city || "N/A",
         state || "N/A",
+
         bookingId,
         ticket_type,
         totalDonationAmount,
@@ -385,6 +333,7 @@ export const bookingDetails = async (req, res) => {
     connection.release();
   }
 };
+
 export const getUserBookings = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -403,11 +352,16 @@ export const getUserBookings = async (req, res) => {
 
         s.puja_name, 
         s.image_url, 
-        s.puja_type
+        s.puja_type,
+
+        COALESCE(ra.status, b.status) AS assignment_status,
+        u.name AS pandit_name
 
       FROM puja_requests b
       JOIN services s ON b.service_id = s.id
       LEFT JOIN temples t ON b.service_id = t.service_id
+      LEFT JOIN request_assignments ra ON ra.request_id = b.id
+      LEFT JOIN users u ON u.id = ra.pandit_id
       WHERE b.user_id = ?
       ORDER BY b.created_at DESC
     `;
@@ -426,57 +380,6 @@ export const getUserBookings = async (req, res) => {
     });
   }
 };
-
-// export const templePuja = async (req, res) => {
-//   try {
-//     const [rows] = await db.query(`
-//       SELECT 
-//         s.id AS service_id,
-//         s.puja_name,
-//         s.puja_type,
-//         s.description,
-//         s.image_url,
-//         s.status,
-//         s.created_at AS service_created_at,
-
-//         t.id AS temple_id,
-//         t.about,
-//         t.address,
-//         t.dateOfStart,
-//         t.created_at AS temple_created_at,
-
-//         MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
-//         MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
-//         MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
-//         MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
-
-//       FROM services s
-
-//       LEFT JOIN temples t 
-//         ON s.id = t.service_id
-
-//       LEFT JOIN service_prices p 
-//         ON s.id = p.service_id
-
-//       WHERE s.puja_type = 'temple_puja'
-
-//       GROUP BY s.id, t.id
-//     `);
-
-//     res.status(200).json({
-//       success: true,
-//       data: rows,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
-
-
 export const templePuja = async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -601,52 +504,6 @@ export const templePujaSingle = async (req, res) => {
     });
   }
 };
-// export const pindDan = async (req, res) => {
-//   try {
-//     const [rows] = await db.query(`
-//       SELECT 
-//         s.id AS service_id,
-//         s.puja_name,
-//         s.puja_type,
-//         s.description,
-//         s.image_url,
-//         s.status,
-//         s.created_at AS service_created_at,
-
-//         t.id AS temple_id,
-//         t.about,
-//         t.address,
-//         t.dateOfStart,
-//         t.created_at AS temple_created_at,
-
-//         p.price AS standard_price
-
-//       FROM services s
-
-//       LEFT JOIN temples t 
-//         ON s.id = t.service_id
-
-//       LEFT JOIN service_prices p 
-//         ON s.id = p.service_id 
-//         AND p.pricing_type = 'standard'
-
-//       WHERE s.puja_type = 'pind_dan'
-//     `);
-
-//     res.status(200).json({
-//       success: true,
-//       data: rows,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
-
-// Booking cancel karne ka controller
 
 export const pindDan = async (req, res) => {
   try {

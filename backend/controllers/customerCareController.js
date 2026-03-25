@@ -247,7 +247,7 @@ export const getAllPujaRequests = async (req, res) => {
       LEFT JOIN services s ON b.service_id = s.id
       LEFT JOIN users u ON b.user_id = u.id
       LEFT JOIN users pu ON b.pandit_id = pu.id
-
+      WHERE s.puja_type IN ('home_puja', 'katha')
       ORDER BY b.preferred_date ASC
     `;
 
@@ -485,6 +485,61 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+// customercare resolve query show query and change status
+
+// show all querys
+
+// export const assignPandit = async (req, res) => {
+//   try {
+//     const { bookingId } = req.params;
+//     const { panditId } = req.body;
+
+//     // 1️⃣ Check booking exist
+//     const [booking] = await db.query(
+//       "SELECT * FROM puja_requests WHERE id = ?",
+//       [bookingId],
+//     );
+
+//     if (booking.length === 0) {
+//       return res.status(404).json({ message: "Booking not found" });
+//     }
+
+//     // 2️⃣ Check pandit exist and role = pandit
+//     const [pandit] = await db.query(
+//       "SELECT * FROM users WHERE id = ? AND role = 'pandit'",
+//       [panditId],
+//     );
+
+//     if (pandit.length === 0) {
+//       return res.status(404).json({ message: "Pandit not found" });
+//     }
+
+//     // 3️⃣ 30% discounted price calculate karo
+//     const originalPrice = parseFloat(booking[0].total_price || 0);
+//     const discountedPrice = parseFloat((originalPrice * 0.7).toFixed(2));
+
+//     // 5️⃣ request_assignments mein price save karo
+//     await db.query(
+//       `INSERT INTO request_assignments (request_id, pandit_id, status, price)
+//        VALUES (?, ?, 'pending', ?)
+//        ON DUPLICATE KEY UPDATE pandit_id = ?, status = 'pending', price = ?`,
+//       [bookingId, panditId, discountedPrice, panditId, discountedPrice],
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Pandit assigned successfully",
+//       data: {
+//         originalPrice,
+//         discountedPrice,
+//         discountApplied: "30%",
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Assign Error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 export const assignPandit = async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -510,15 +565,32 @@ export const assignPandit = async (req, res) => {
       return res.status(404).json({ message: "Pandit not found" });
     }
 
-    // 3️⃣ Assign + auto accept
+    // 3️⃣ 30% discounted price calculate karo
+    const originalPrice = parseFloat(booking[0].total_price || 0);
+    const discountedPrice = parseFloat((originalPrice * 0.7).toFixed(2));
+
+    // 4️⃣ request_assignments mein pending status ke saath insert karo
     await db.query(
-      "UPDATE puja_requests SET pandit_id = ?, status = 'accepted' WHERE id = ?",
-      [panditId, bookingId],
+      `INSERT INTO request_assignments (request_id, pandit_id, status, price)
+       VALUES (?, ?, 'pending', ?)
+       ON DUPLICATE KEY UPDATE pandit_id = ?, status = 'pending', price = ?`,
+      [bookingId, panditId, discountedPrice, panditId, discountedPrice],
+    );
+
+    // 5️⃣ puja_requests mein status accepted karo
+    await db.query(
+      `UPDATE puja_requests SET status = 'accepted' WHERE id = ?`,
+      [bookingId],
     );
 
     res.status(200).json({
       success: true,
       message: "Pandit assigned successfully",
+      data: {
+        originalPrice,
+        discountedPrice,
+        discountApplied: "30%",
+      },
     });
   } catch (error) {
     console.error("Assign Error:", error);
@@ -526,9 +598,6 @@ export const assignPandit = async (req, res) => {
   }
 };
 
-// customercare resolve query show query and change status
-
-// show all querys
 export const getAllSupportQueries = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;

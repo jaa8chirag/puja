@@ -673,6 +673,7 @@ const TemplePujaBooking = () => {
   const handleTemplePayment = async () => {
     const token = localStorage.getItem("token");
     const currentBookingId = `BK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
     if (!token) {
       navigate("/signin");
       return;
@@ -703,9 +704,14 @@ const TemplePujaBooking = () => {
         });
       }
     }
+    // const generateOTP = () => {
+    //   return Math.floor(100000 + Math.random() * 900000).toString();
+    // };
+    // const otp = generateOTP();
 
     const bookingData = {
       bookingId: currentBookingId,
+      // otp,
       puja_id: id,
       date: service?.dateOfStart
         ? new Date(service.dateOfStart).toLocaleDateString("en-CA")
@@ -717,8 +723,10 @@ const TemplePujaBooking = () => {
           })
         : "10:00 AM",
       address: service?.address || "N/A",
-      city: "default city",
-      state: service.address.split(",")[service.address.split(",").length - 1],
+      // city: "default city",
+      city: service?.address?.split(",").at(-2)?.trim() ?? "N/A",
+      // state: service?.address.split(",")[service.address.split(",").length - 1],
+      state: service?.address?.split(",").at(-1) ?? "N/A",
       devoteeName: token
         ? JSON.parse(atob(token.split(".")[1])).name
         : "Guest User",
