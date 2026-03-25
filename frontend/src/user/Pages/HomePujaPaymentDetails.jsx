@@ -341,7 +341,7 @@ const HomePujaPaymentDetails = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className={labelClass}>PIN</label>
+                      <label className={labelClass}>PINCODE</label>
                       <input
                         type="text"
                         name="pincode"
@@ -526,7 +526,7 @@ const HomePujaPaymentDetails = () => {
                     <h4 className="text-sm font-black text-gray-900">
                       {puja?.puja_name}
                     </h4>
-                    <div className="flex items-center justify-between mt-2">
+                    {/* <div className="flex items-center justify-between mt-2">
                       <span className="text-xs font-bold text-gray-700">
                         Samagri Kit
                       </span>
@@ -535,7 +535,7 @@ const HomePujaPaymentDetails = () => {
                       >
                         {isSamagriSelected ? "Included ✓" : "Not Selected"}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div
@@ -568,10 +568,10 @@ const HomePujaPaymentDetails = () => {
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] font-bold text-gray-700 uppercase">
-                      <span>Samagri Kit</span>
+                      {/* <span>Samagri Kit</span>
                       <span className="text-gray-900 font-black">
                         +₹{samagriPrice}
-                      </span>
+                      </span> */}
                     </div>
 
                     <div className="flex flex-col py-2 border-y border-orange-200">
@@ -612,7 +612,7 @@ const HomePujaPaymentDetails = () => {
                       onClick={handlePayment}
                       className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 text-white font-bold py-3.5 rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
                     >
-                      <ArrowRight size={16} /> Pay ₹{grandTotal}
+                       Pay ₹{grandTotal} <ArrowRight size={16} />
                     </button>
 
                     <div className="bg-gray-100/50 py-2 rounded-lg text-center">
@@ -696,12 +696,12 @@ const MobileSummaryInline = ({
     <div className="pb-3 border-b border-orange-100">
       <h4 className="text-sm font-black text-gray-900">{puja?.puja_name}</h4>
       <div className="flex items-center justify-between mt-1.5">
-        <span className="text-xs font-bold text-gray-500">Samagri Kit</span>
+        {/* <span className="text-xs font-bold text-gray-500">Samagri Kit</span>
         <span
           className={`text-xs font-bold ${isSamagriSelected ? "text-green-600" : "text-gray-400"}`}
         >
           {isSamagriSelected ? "Included ✓" : "Not Selected"}
-        </span>
+        </span> */}
       </div>
     </div>
 
@@ -710,10 +710,10 @@ const MobileSummaryInline = ({
         <span className="text-gray-500">Base Price</span>
         <span className="text-gray-900">₹{basePrice}</span>
       </div>
-      <div className="flex justify-between items-center text-[13px] font-bold">
+      {/* <div className="flex justify-between items-center text-[13px] font-bold">
         <span className="text-gray-500">Samagri Kit</span>
         <span className="text-gray-900">+₹{samagriPrice}</span>
-      </div>
+      </div> */}
 
       {/* Dharmic contributions button */}
       <button

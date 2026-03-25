@@ -193,11 +193,10 @@ const KathaPujaBooking = () => {
                   <button
                     key={tab}
                     onClick={() => scrollToSection(tab)}
-                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${
-                      activeTab === tab
-                        ? "text-orange-600 bg-orange-50/50"
-                        : "text-gray-400"
-                    }`}
+                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
+                      ? "text-orange-600 bg-orange-50/50"
+                      : "text-gray-400"
+                      }`}
                   >
                     {tab}
                     {activeTab === tab && (
@@ -209,7 +208,46 @@ const KathaPujaBooking = () => {
             </nav>
 
             {/* SAMAGRI TOGGLE */}
-            <div
+
+            <div className="bg-white rounded-xl p-5 border border-orange-200 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+
+                {/* Left Side: Icon & Text */}
+                <div className="flex items-start gap-4">
+                  {/* Icon Box */}
+                  <div className="p-3 rounded-lg bg-orange-50 text-orange-600">
+                    <Box size={24} />
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-[16px] text-gray-800 tracking-tight">
+                      All-in-One Samagri Kit
+                    </h3>
+                    <p className="text-gray-500 text-[13px]">
+                      You'll need to buy{" "}
+                      <span className="text-red-500 font-bold">
+                        30+ items.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Side: Download Button */}
+                <div className="flex-shrink-0">
+                  <a
+                    href={SAMAGRI_PDF_URL}
+                    download="Puja_Samagri_Checklist.pdf"
+                    className="flex items-center gap-2 px-4 py-2 border border-orange-200 rounded-lg text-[12px] font-bold text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-all shadow-sm active:scale-95"
+                  >
+                    <Download size={15} className="text-orange-600" />
+                    Download List
+                  </a>
+                </div>
+
+              </div>
+            </div>
+            {/* <div
               className={`bg-white rounded-xl p-5 border transition-all duration-300 shadow-sm ${samagriEnabled ? "border-orange-400" : "border-orange-200"}`}
             >
               <div className="flex items-start justify-between">
@@ -268,7 +306,7 @@ const KathaPujaBooking = () => {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* CONTENT CONTAINER */}
             <div className="bg-white rounded-2xl border border-orange-200 overflow-hidden shadow-sm">
