@@ -27,7 +27,7 @@ router.get("/allServices", getAllServices);
 router.get("/bookPuja/:id", bookPuja);
 
 router.get("/online_pind/:puja_type", bookOnlinePindDan);
-router.post("/online_pindan_booking", onlinePinddanBookingDetails);
+router.post("/online_pindan_booking", verifyToken, onlinePinddanBookingDetails);
 
 //jo user puja book kar rha hai vo sabhi booking puja requests mai ja rahi hai
 router.post("/bookingDetails", verifyToken, bookingDetails);

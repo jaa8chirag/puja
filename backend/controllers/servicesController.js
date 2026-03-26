@@ -245,7 +245,6 @@ export const bookOnlinePindDan = async (req, res) => {
   try {
     const { puja_type } = req.params;
 
-    // Get service with prices
     const [rows] = await db.query(
       `
       SELECT 
@@ -254,6 +253,7 @@ export const bookOnlinePindDan = async (req, res) => {
         s.puja_type,
         s.description,
         s.image_url,
+        s.priority,
 
         MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
         MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
@@ -271,37 +271,40 @@ export const bookOnlinePindDan = async (req, res) => {
         s.puja_name,
         s.puja_type,
         s.description,
-        s.image_url
+        s.image_url,
+        s.priority
+
+      ORDER BY s.priority DESC, s.id DESC
       `,
       [puja_type],
     );
 
-    if (!rows[0]) {
+    if (!rows.length) {
       return res.status(404).json({
         success: false,
-        message: "Service not found",
+        message: "No services found",
       });
     }
 
-    // ⚠️ IMPORTANT CHANGE HERE
-    // benefits ke liye hume service_id chahiye (id nahi mila params se)
-    const serviceId = rows[0].id;
+    // ✅ Sirf highest priority service
+    const service = rows[0];
 
-    // Get benefits for this service
+    // ✅ Benefits fetch
     const [benefits] = await db.query(
       `SELECT id, name, description, created_at 
        FROM benefits 
        WHERE service_id = ? 
        ORDER BY created_at ASC`,
-      [serviceId],
+      [service.id],
     );
 
-    const serviceData = {
-      ...rows[0],
+    const finalData = {
+      ...service,
       benefits: benefits || [],
     };
 
-    res.status(200).json(serviceData);
+    // ✅ Direct object send (no array)
+    res.status(200).json(finalData);
   } catch (error) {
     console.error("Book Puja Error:", error);
     res.status(500).json({
