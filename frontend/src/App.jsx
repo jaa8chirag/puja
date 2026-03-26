@@ -55,6 +55,10 @@ import NotFound from "./user/Components/NotFound";
 import Blog from "./user/Pages/Blog";
 import BlogDetail from "./user/Pages/BlogDetails";
 
+import PrivacyPolicy from "./user/Pages/PrivacyPolice";
+import ContactUs from "./user/Pages/ContactUs";
+import AboutUs from "./user/Pages/AboutUs";
+
 import AIPanditBot from "./user/Pages/AIPanditBot";
 
 function App() {
@@ -97,6 +101,9 @@ function App() {
           <Route path="/temples/:id" element={<MandirDetailsPage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/aarti" element={<AartiPage />} />
+
+          <Route path="/aboutUs" element={<AboutUs/>}/>
+          <Route path="/pricaypolicy" element={<PrivacyPolicy/>}/>
 
           {/* Home Puja */}
           <Route path="/homePuja">

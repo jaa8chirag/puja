@@ -10,10 +10,10 @@ const Footer = () => {
       { label: "Katha/Jaap", to: "/katha-jaap" },
     ],
     support: [
-      { label: "About Us", to: "/about" },
+      { label: "About Us", to: "/aboutUs" },
       { label: "Contact Us", to: "/help" },
       { label: "FAQs", to: "/help" },
-      { label: "Privacy Policy", to: "/privacy" },
+      { label: "Privacy Policy", to: "/pricaypolicy" },
     ],
     community: [
       { label: "Temple Gallery", to: "/temples" },
