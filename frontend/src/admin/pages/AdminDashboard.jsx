@@ -13,6 +13,7 @@ import FinancialDashboard from "../AdminComponets/financialDashboard";
 import Adminblogs from "../AdminComponets/Adminblogs";
 import AnalyticsDashboard from "../AdminComponets/Analyticsdashboard";
 import AdminContributions from "../AdminComponets/AdminContributions";
+import AdminPages from "../AdminComponets/AdminPages";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Icon = ({ name }) => {
@@ -115,6 +116,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Finance", icon: "financial" },
     { label: "Analytics", icon: "analytics" },
     { label: "Blogs", icon: "bookings" },
+    { label: "Pages", icon: "services" },
   ];
   return (
     <>
@@ -291,6 +293,7 @@ const AdminDashboard = () => {
             {active === "Finance" && <FinancialDashboard />}
             {active === "Analytics" && <AnalyticsDashboard />}
             {active === "Blogs" && <Adminblogs />}
+            {active === "Pages" && <AdminPages />}
           </div>
         </div>
       </div>

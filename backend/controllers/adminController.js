@@ -2058,3 +2058,70 @@ export const deleteBenefit = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// Get All Pages (About Us & Privacy Policy)
+export const getPages = async (req, res) => {
+  try {
+    const [pages] = await db.query(`SELECT * FROM pages WHERE slug != 'contact-us'`);
+
+    res.json({
+      success: true,
+      data: pages,
+    });
+  } catch (error) {
+    console.error("Get Pages Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Get Single Page by Slug
+export const getPageBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const [rows] = await db.query(`SELECT * FROM pages WHERE slug = ?`, [slug]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Page nahi mila",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: rows[0],
+    });
+  } catch (error) {
+    console.error("Get Page Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Update Page by Slug
+export const updatePage = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { title, sections } = req.body;
+
+    const [result] = await db.query(
+      `UPDATE pages SET title = ?, sections = ?, updated_by = ? WHERE slug = ?`,
+      [title, JSON.stringify(sections), req.admin?.name || "admin", slug]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Page nahi mila",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Page update ho gaya",
+    });
+  } catch (error) {
+    console.error("Update Page Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

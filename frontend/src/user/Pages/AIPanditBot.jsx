@@ -237,33 +237,41 @@ export default function AIPanditBot() {
       {!isOpen && (
         <button
           onClick={toggleChat}
-          className="group relative flex items-center justify-center"
+          className="group relative flex items-center justify-center p-2 rounded-full transition-all duration-300 transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2 ring-offset-orange-50"
+          aria-label="Connect with Pandit Ji"
         >
-          <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping group-hover:bg-amber-500/30"></div>
+          {/* 1. Bahut Halka Saffron Aura (Soft Glow) */}
+          <div className="absolute inset-0 bg-orange-600/10 rounded-full animate-pulse blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
-          <div className="group cursor-pointer flex flex-col items-center gap-2">
-  <div className="relative w-14 h-14 md:w-16 md:h-16 bg-[#1e293b]/40 backdrop-blur-md border border-slate-700/50 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:bg-indigo-600/10 group-hover:border-indigo-500/50 group-hover:shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-    
-    {/* Inner Glow Effect */}
-    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-indigo-500/10 to-transparent"></div>
+          {/* 2. Soft Outer Pulse (Border Only) */}
+          <div className="absolute inset-[-4px] rounded-full border border-orange-500/10 group-hover:border-orange-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 
-    <LifeBuoy 
-      className="text-slate-400 group-hover:text-indigo-400 group-hover:rotate-45 transition-all duration-500" 
-      size={26} 
-      strokeWidth={1.5} 
-    />
-  </div>
-  
-  <span className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase transition-colors duration-300 group-hover:text-slate-300">
-    Support
-  </span>
-</div>
+          {/* 3. Main Premium Picture Container */}
+          <div className="relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-b from-orange-500 to-orange-700 rounded-full p-[3px] shadow-2xl transition-all duration-700 ease-out border-2 border-orange-600 group-hover:border-orange-800 group-hover:scale-110 group-hover:shadow-[0_15px_40px_rgba(194,65,12,0.4)]">
 
-          <div className="hidden md:block absolute right-24 bg-white/90 backdrop-blur-sm border-l-4 border-amber-600 px-4 py-2 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none transform translate-x-4 group-hover:translate-x-0">
-            <p className="text-amber-900 font-bold text-sm whitespace-nowrap">
-              🙏 Dear seeker, share your concerns!
-            </p>
+            {/* Inner Saffron Ring */}
+            <div className="w-full h-full rounded-full border-2 border-orange-700/50 group-hover:border-orange-900 transition-colors duration-500 overflow-hidden relative bg-orange-50">
+
+              {/* 4. The Real Pandit Ji Photograph (Aapki Vector Image) */}
+              <img
+                src="https://www.creativehatti.com/wp-content/uploads/2022/12/Pandit-ji-vector-mascot-logo-template-23-small.jpg"
+                alt="Pandit Ji Avatar"
+                // YAHAN BADLAV KIYE HAIN:
+                // 1. 'scale-125' joda gaya hai image ko 25% zoom karne ke liye.
+                // 2. 'group-hover:scale-135' lagaya hai taaki hover par aur 10% zoom ho.
+                className="w-full h-full object-cover scale-125 grayscale-[10%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-135"
+              />
+
+              {/* 5. Subtle Orange Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-orange-950/20 via-transparent to-orange-500/10 opacity-70 group-hover:opacity-100 transition-opacity duration-700"></div>
+            </div>
+
+            {/* 6. Shubh Tilak Dot (Status Indicator) */}
+            <div className="absolute top-1 right-2 w-4 h-4 bg-orange-600 border-2 border-white rounded-full shadow-lg"></div>
           </div>
+
+          {/* Glossy Overlay */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/10 via-transparent to-transparent opacity-40"></div>
         </button>
       )}
 
@@ -315,11 +323,10 @@ export default function AIPanditBot() {
                 className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"} items-end`}
               >
                 <div
-                  className={`max-w-[88%] md:max-w-[85%] px-4 md:px-5 py-3 md:py-4 rounded-[1.8rem] text-[14px] md:text-[15px] leading-relaxed shadow-sm pf ${
-                    m.sender === "user"
-                      ? "bg-[#78350f] text-amber-50 rounded-br-none"
-                      : "bg-white text-slate-800 rounded-tl-none border-l-[6px] border-amber-600 shadow-amber-900/5"
-                  }`}
+                  className={`max-w-[88%] md:max-w-[85%] px-4 md:px-5 py-3 md:py-4 rounded-[1.8rem] text-[14px] md:text-[15px] leading-relaxed shadow-sm pf ${m.sender === "user"
+                    ? "bg-[#78350f] text-amber-50 rounded-br-none"
+                    : "bg-white text-slate-800 rounded-tl-none border-l-[6px] border-amber-600 shadow-amber-900/5"
+                    }`}
                 >
                   {/* Normal text */}
                   {formatText(m.text)}
