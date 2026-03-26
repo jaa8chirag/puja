@@ -60,6 +60,8 @@ import ContactUs from "./user/Pages/ContactUs";
 import AboutUs from "./user/Pages/AboutUs";
 
 import AIPanditBot from "./user/Pages/AIPanditBot";
+import OnlineRitual from "./user/Pages/OnlineRitual";
+import OnlineRitualPaymentDetails from "./user/Pages/OnlineRitualPaymentDetails";
 
 function App() {
   const location = useLocation();
@@ -98,12 +100,18 @@ function App() {
           <Route path="/blogs/:id" element={<BlogDetail />} />
 
           <Route path="/temples" element={<FullTemplePage />} />
+
+          <Route path="/online-ritual" element={<OnlineRitual />} />
+          <Route
+            path="/online-ritual-paymentdetails/:id"
+            element={<OnlineRitualPaymentDetails />}
+          />
           <Route path="/temples/:id" element={<MandirDetailsPage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/aarti" element={<AartiPage />} />
 
-          <Route path="/aboutUs" element={<AboutUs/>}/>
-          <Route path="/pricaypolicy" element={<PrivacyPolicy/>}/>
+          <Route path="/aboutUs" element={<AboutUs />} />
+          <Route path="/pricaypolicy" element={<PrivacyPolicy />} />
 
           {/* Home Puja */}
           <Route path="/homePuja">

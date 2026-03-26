@@ -16,6 +16,8 @@ import {
   getAllServices,
   savePujaRequestMembers,
   getPujaRequestMembers,
+  bookOnlinePindDan,
+  onlinePinddanBookingDetails,
 } from "../controllers/servicesController.js";
 
 const router = express.Router();
@@ -23,6 +25,9 @@ const router = express.Router();
 router.get("/allServices/:type", getServicesByType);
 router.get("/allServices", getAllServices);
 router.get("/bookPuja/:id", bookPuja);
+
+router.get("/online_pind/:puja_type", bookOnlinePindDan);
+router.post("/online_pindan_booking", onlinePinddanBookingDetails);
 
 //jo user puja book kar rha hai vo sabhi booking puja requests mai ja rahi hai
 router.post("/bookingDetails", verifyToken, bookingDetails);

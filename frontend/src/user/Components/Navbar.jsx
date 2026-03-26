@@ -169,7 +169,7 @@ const Navbar = () => {
                   <div className="bg-white shadow-2xl rounded-2xl border border-orange-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     <button
                       onClick={() => {
-                        navigate("/pind-dan/temple-ritual");
+                        navigate("/pind-dan");
                         setPindDanOpen(false);
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-all group/item"
@@ -181,7 +181,7 @@ const Navbar = () => {
                     </button>
                     <button
                       onClick={() => {
-                        navigate("/pind-dan/online-ritual");
+                        navigate("/online-ritual");
                         setPindDanOpen(false);
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-all group/item"
@@ -410,7 +410,7 @@ const Navbar = () => {
                 <div className="ml-4 mt-1 space-y-1 border-l-2 border-orange-100 pl-3">
                   <button
                     onClick={() => {
-                      navigate("/pind-dan/temple-ritual");
+                      navigate("/pind-dan");
                       setMenuOpen(false);
                       setMobilePindDanOpen(false);
                     }}
@@ -423,7 +423,7 @@ const Navbar = () => {
                   </button>
                   <button
                     onClick={() => {
-                      navigate("/pind-dan/online-ritual");
+                      navigate("/online-ritual");
                       setMenuOpen(false);
                       setMobilePindDanOpen(false);
                     }}

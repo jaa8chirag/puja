@@ -248,7 +248,7 @@ export const getAllPujaRequests = async (req, res) => {
       LEFT JOIN users             u  ON b.user_id      = u.id
       LEFT JOIN request_assignments ra ON ra.request_id = b.id
       LEFT JOIN users             pu ON pu.id           = ra.pandit_id
-      WHERE s.puja_type IN ('home_puja', 'katha')
+      WHERE s.puja_type IN ('home_puja', 'katha', 'online_pind_dan')
       ORDER BY b.preferred_date ASC
     `;
 
