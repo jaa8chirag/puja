@@ -110,8 +110,12 @@ export const getPanditProfile = async (req, res) => {
     const panditId = req.user.id;
 
     // 1️⃣ Basic user info
+    // const [userRows] = await db.query(
+    //   "SELECT id, name, phone, email, gotra FROM users WHERE id = ?",
+    //   [panditId],
+    // );
     const [userRows] = await db.query(
-      "SELECT id, name, phone, email, gotra FROM users WHERE id = ?",
+      "SELECT id, name, phone, email, gotra, is_online FROM users WHERE id = ?",
       [panditId],
     );
 
@@ -192,42 +196,7 @@ export const markPujaComplete = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-// export const verifyPujaOtp = async (req, res) => {
-//   try {
-//     const panditId = req.user.id;
-//     const { request_id, otp } = req.body;
 
-//     const [rows] = await db.query(
-//       "SELECT otp FROM puja_requests WHERE id = ?",
-//       [request_id],
-//     );
-
-//     if (rows.length === 0)
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "Booking not found" });
-
-//     if (!rows[0].otp)
-//       return res.status(400).json({ success: false, message: "No OTP found" });
-
-//     if (String(rows[0].otp).trim() !== String(otp).trim())
-//       return res.status(400).json({ success: false, message: "Invalid OTP" });
-
-//     // ✅ OTP sahi — request_assignments status accepted karo
-//     await db.query(
-//       "UPDATE request_assignments SET status = 'accepted', updated_at = NOW() WHERE request_id = ? AND pandit_id = ?",
-//       [request_id, panditId],
-//     );
-//     await db.query(
-//       "UPDATE puja_requests SET status = 'accepted' WHERE id = ?",
-//       [request_id],
-//     );
-//     res.json({ success: true, message: "OTP Verified" });
-//   } catch (error) {
-//     console.error("OTP Verify Error:", error);
-//     res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
 export const verifyPujaOtp = async (req, res) => {
   try {
     const panditId = req.user.id;
@@ -258,6 +227,27 @@ export const verifyPujaOtp = async (req, res) => {
     res.json({ success: true, message: "OTP Verified" });
   } catch (error) {
     console.error("OTP Verify Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const toggleOnlineStatus = async (req, res) => {
+  try {
+    const panditId = req.user.id;
+    const { is_online } = req.body;
+
+    await db.query("UPDATE users SET is_online = ? WHERE id = ?", [
+      is_online ? 1 : 0,
+      panditId,
+    ]);
+
+    res.json({
+      success: true,
+      is_online: is_online ? 1 : 0,
+      message: is_online ? "You are now Online" : "You are now Offline",
+    });
+  } catch (error) {
+    console.error("Toggle Status Error:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };

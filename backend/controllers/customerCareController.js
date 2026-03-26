@@ -416,7 +416,8 @@ export const getAllPandits = async (req, res) => {
         u.gotra,
         u.email,
         u.phone,
-
+        u.is_online,
+        
         a.id AS address_id,
         a.address_line1,
         a.city,
