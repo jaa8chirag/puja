@@ -241,6 +241,189 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
   }
 };
 
+export const bookOnlinePindDan = async (req, res) => {
+  try {
+    const { puja_type } = req.params;
+
+    // Get service with prices
+    const [rows] = await db.query(
+      `
+      SELECT 
+        s.id,
+        s.puja_name,
+        s.puja_type,
+        s.description,
+        s.image_url,
+
+        MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
+        MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
+        MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
+        MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
+
+      FROM services s
+      LEFT JOIN service_prices p 
+        ON s.id = p.service_id
+
+      WHERE s.puja_type = ?
+
+      GROUP BY 
+        s.id,
+        s.puja_name,
+        s.puja_type,
+        s.description,
+        s.image_url
+      `,
+      [puja_type],
+    );
+
+    if (!rows[0]) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    // ⚠️ IMPORTANT CHANGE HERE
+    // benefits ke liye hume service_id chahiye (id nahi mila params se)
+    const serviceId = rows[0].id;
+
+    // Get benefits for this service
+    const [benefits] = await db.query(
+      `SELECT id, name, description, created_at 
+       FROM benefits 
+       WHERE service_id = ? 
+       ORDER BY created_at ASC`,
+      [serviceId],
+    );
+
+    const serviceData = {
+      ...rows[0],
+      benefits: benefits || [],
+    };
+
+    res.status(200).json(serviceData);
+  } catch (error) {
+    console.error("Book Puja Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch puja",
+    });
+  }
+};
+export const onlinePinddanBookingDetails = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const {
+      puja_id,
+      date,
+      time,
+      location,
+      city,
+      state,
+      devoteeName,
+      ticket_type,
+      donations, // 👈 string aayegi
+      bookingId,
+      total_price,
+      samagriKit,
+    } = req.body;
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    console.log("home or katha booking details--", req.body);
+    const userId = req.body.userId;
+    const formattedDate = date
+      ? new Date(date).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+
+    // ==============================
+    // ✅ HANDLE DONATIONS (STRING)
+    // ==============================
+
+    let totalDonationAmount = 0;
+
+    const donationNames = donations
+      ? donations.split(",").map((d) => d.trim())
+      : [];
+
+    // 1️⃣ Insert puja request first
+    const [result] = await connection.query(
+      `
+      INSERT INTO puja_requests 
+      (user_id, service_id, preferred_date, preferred_time, address, city, state, status,otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending',?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        userId,
+        puja_id,
+        formattedDate,
+        time || "Morning Slot",
+        location,
+        city || "N/A",
+        state || "N/A",
+        otp,
+        bookingId,
+        ticket_type || null,
+        0, // 👈 temporarily 0 (later update karenge)
+        devoteeName || "User",
+        total_price,
+        samagriKit ? 1 : 0,
+      ],
+    );
+
+    const pujaRequestId = result.insertId;
+
+    // 2️⃣ Fetch price from DB & insert contributions
+    for (let name of donationNames) {
+      const [rows] = await connection.query(
+        `SELECT id, price FROM contribution_types 
+         WHERE name LIKE ? AND is_active = 1`,
+        [`%${name}%`],
+      );
+
+      if (rows.length) {
+        const contribution = rows[0];
+
+        totalDonationAmount += Number(contribution.price);
+
+        await connection.query(
+          `
+          INSERT INTO service_contributions
+          (puja_request_id, service_id, contribution_type_id, amount)
+          VALUES (?, ?, ?, ?)
+          `,
+          [pujaRequestId, puja_id, contribution.id, contribution.price],
+        );
+      }
+    }
+
+    // 3️⃣ Update donation total in puja_requests
+    await connection.query(
+      `UPDATE puja_requests SET donations = ? WHERE id = ?`,
+      [totalDonationAmount, pujaRequestId],
+    );
+
+    await connection.commit();
+
+    res.status(201).json({
+      success: true,
+      message: "Home/Katha Booking Stored Successfully",
+      bookingId: pujaRequestId,
+      totalDonationAmount,
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error("Booking Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  } finally {
+    connection.release();
+  }
+};
 export const bookingDetails = async (req, res) => {
   const connection = await db.getConnection();
 
