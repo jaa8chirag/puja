@@ -146,8 +146,8 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       total_price,
       samagriKit,
     } = req.body;
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("home or katha booking details--", req.body);
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    // console.log("home or katha booking details--", req.body);
     const userId = req.user.id;
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]

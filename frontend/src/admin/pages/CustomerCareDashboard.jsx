@@ -701,7 +701,7 @@ const CustomerCareDashboard = () => {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [panditSearch, setPanditSearch] = useState("");
-
+  const [assignPrice, setAssignPrice] = useState();
   const [queries, setQueries] = useState([]);
   const [queryPage, setQueryPage] = useState(1);
   const [queryTotalPages, setQueryTotalPages] = useState(1);
@@ -1341,6 +1341,7 @@ const CustomerCareDashboard = () => {
           )}
 
           {/* ── PANDITS / USERS ── */}
+
           {(activeTab === "pandits" || activeTab === "users") && (
             <TableCard
               title={activeTab === "pandits" ? "All Pandits" : "All Users"}
@@ -1402,15 +1403,46 @@ const CustomerCareDashboard = () => {
                                 <MapPin size={9} /> {person.city} {person.state}
                               </div>
                             </td>
+
+                            {/* ── STATUS COLUMN ── */}
                             <td className="px-4 md:px-5 py-4">
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${person.is_blocked ? "bg-rose-400/10 text-rose-400 border-rose-400/25" : "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"}`}
-                              >
+                              {activeTab === "pandits" ? (
+                                // Pandit — Online / Offline
                                 <span
-                                  className={`w-1.5 h-1.5 rounded-full ${person.is_blocked ? "bg-rose-400" : "bg-emerald-400"}`}
-                                />
-                                {person.is_blocked ? "Blocked" : "Active"}
-                              </span>
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                                    person.is_online
+                                      ? "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"
+                                      : "bg-slate-400/10 text-slate-400 border-slate-400/25"
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      person.is_online
+                                        ? "bg-emerald-400"
+                                        : "bg-red-400"
+                                    }`}
+                                  />
+                                  {person.is_online ? "Online" : "Offline"}
+                                </span>
+                              ) : (
+                                // User — Active / Blocked
+                                <span
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                                    person.is_blocked
+                                      ? "bg-rose-400/10 text-rose-400 border-rose-400/25"
+                                      : "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      person.is_blocked
+                                        ? "bg-rose-400"
+                                        : "bg-emerald-400"
+                                    }`}
+                                  />
+                                  {person.is_blocked ? "Blocked" : "Active"}
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ),
@@ -1754,7 +1786,7 @@ const CustomerCareDashboard = () => {
             e.target === e.currentTarget && setAssignModalOpen(false)
           }
         >
-          <div className="bg-gradient-to-br from-[#0d1829] to-[#080f1c] border border-blue-400/12 rounded-2xl p-5 md:p-6 w-full max-w-sm shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
+          <div className="bg-gradient-to-br from-[#0d1829] to-[#080f1c] border border-blue-400/12 rounded-2xl p-5 md:p-6 w-full max-w-4xl shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center">
@@ -1769,6 +1801,7 @@ const CustomerCareDashboard = () => {
                 <X size={16} />
               </button>
             </div>
+
             <div className="relative mb-4">
               <Search
                 size={13}
@@ -1783,16 +1816,6 @@ const CustomerCareDashboard = () => {
               />
             </div>
 
-            {/* ✅ Price input — ADD KARO */}
-            <div className="relative mb-4">
-              <input
-                type="number"
-                placeholder="Enter pandit price (₹)"
-                value={assignPrice}
-                onChange={(e) => setAssignPrice(e.target.value)}
-                className="w-full bg-[#05080f]/80 border border-white/[0.06] rounded-xl px-4 py-2.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500/25"
-              />
-            </div>
             <div className="max-h-64 md:max-h-72 overflow-y-auto space-y-2 pr-1">
               {filteredPandits.length === 0 ? (
                 <div className="py-10 text-center text-xs text-slate-600">
@@ -1805,20 +1828,39 @@ const CustomerCareDashboard = () => {
                     className="flex items-center justify-between bg-[#05080f]/60 border border-white/[0.04] rounded-xl px-3.5 py-3 hover:border-blue-500/20 hover:bg-blue-500/[0.04] transition"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-[11px] flex-shrink-0">
-                        {pandit.name?.charAt(0).toUpperCase()}
+                      <div className="relative w-7 h-7 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-[11px]">
+                          {pandit.name?.charAt(0).toUpperCase()}
+                        </div>
+                        {/* ✅ Online/Offline dot on avatar */}
+                        <span
+                          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#080f1c] ${
+                            pandit.is_online ? "bg-emerald-400" : "bg-slate-500"
+                          }`}
+                        />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-200 truncate">
                           {pandit.name}
                         </p>
-                        <p className="text-[10px] text-slate-500">
-                          {pandit.phone}
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-[10px] text-slate-500">
+                            {pandit.phone}
+                          </p>
+                          {/* ✅ Online/Offline badge */}
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                              pandit.is_online
+                                ? "bg-emerald-400/10 text-emerald-400"
+                                : "bg-slate-400/10 text-slate-400"
+                            }`}
+                          >
+                            {pandit.is_online ? "Online" : "Offline"}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* ✅ Price input + Select button */}
                     <div className="flex items-center gap-2 ml-3 flex-shrink-0">
                       <input
                         type="number"
@@ -1833,12 +1875,26 @@ const CustomerCareDashboard = () => {
                         className="w-20 bg-[#05080f]/80 border border-white/[0.06] rounded-lg px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/25 focus:border-emerald-500/25"
                       />
                       <button
-                        onClick={() =>
-                          assignPandit(
-                            pandit.id,
-                            selectedPanditPrice[pandit.id],
-                          )
-                        }
+                        onClick={() => {
+                          // ✅ Offline hai to confirm popup, online hai to seedha assign
+                          if (!pandit.is_online) {
+                            if (
+                              window.confirm(
+                                `⚠️ ${pandit.name} He is currently offline. Do you still want to assign it?`,
+                              )
+                            ) {
+                              assignPandit(
+                                pandit.id,
+                                selectedPanditPrice[pandit.id],
+                              );
+                            }
+                          } else {
+                            assignPandit(
+                              pandit.id,
+                              selectedPanditPrice[pandit.id],
+                            );
+                          }
+                        }}
                         className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
                       >
                         Select
@@ -1848,6 +1904,7 @@ const CustomerCareDashboard = () => {
                 ))
               )}
             </div>
+
             <div className="mt-5 pt-4 border-t border-white/[0.04] flex justify-end">
               <button
                 onClick={() => setAssignModalOpen(false)}
@@ -1859,7 +1916,6 @@ const CustomerCareDashboard = () => {
           </div>
         </div>
       )}
-
       <style>{`
         @keyframes toastSlideIn { from { opacity:0; transform:translateX(60px) scale(0.95); } to { opacity:1; transform:translateX(0) scale(1); } }
         @keyframes badgePop     { 0%{transform:scale(0)} 70%{transform:scale(1.3)} 100%{transform:scale(1)} }

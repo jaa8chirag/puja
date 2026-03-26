@@ -5,6 +5,7 @@ import {
   getMyAssignedPujas,
   getPanditProfile,
   markPujaComplete,
+  toggleOnlineStatus,
   updatePanditProfile,
   verifyPujaOtp,
 } from "../controllers/partnerController.js";
@@ -23,4 +24,7 @@ router.put("/complete-puja/:id", verifyToken, markPujaComplete);
 
 //verify otp routes
 router.post("/verify-otp", verifyToken, verifyPujaOtp);
+
+// ablity
+router.put("/toggle-status", verifyToken, toggleOnlineStatus);
 export default router;
