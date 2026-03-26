@@ -25,6 +25,7 @@ import { Groq } from "groq-sdk";
 import fetch from "node-fetch";
 import { generatePDF } from "./controllers/pdfReport.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getPageBySlug } from "./controllers/adminController.js";
 
 dotenv.config();
 
@@ -544,6 +545,8 @@ app.use("/api/chat", chatRouter);
 app.use("/api/contributions", contribution);
 app.use("/api/blogs", blogsRouter);
 app.use("/api/admin/verify-pandit", verifypandiRoutes);
+// Public Pages Route (no auth needed)
+app.get("/api/pages/:slug", getPageBySlug);
 
 const startServer = async () => {
   try {

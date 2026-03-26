@@ -5,7 +5,7 @@ import { ShieldCheck } from "lucide-react";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function PrivacyPolicy() {
-  const [data,    setData]    = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,9 +13,9 @@ export default function PrivacyPolicy() {
       .then(r => r.json())
       .then(d => {
         if (d.success) setData(
-          typeof d.page.sections === "string"
-            ? JSON.parse(d.page.sections)
-            : d.page.sections
+          typeof d.data.sections === "string"
+            ? JSON.parse(d.data.sections)
+            : d.data.sections
         );
       })
       .finally(() => setLoading(false));
@@ -40,10 +40,10 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="min-h-screen bg-[#FFF4E1] text-[#2D1A00]">
-      <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #e8892200, #e88922 30%, #f59e0b 50%, #e88922 70%, #e8892200)' }} />
+      {/* <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #e8892200, #e88922 30%, #f59e0b 50%, #e88922 70%, #e8892200)' }} /> */}
 
       {/* Hero */}
-      <div className="max-w-3xl mx-auto px-4 py-14 text-center">
+      <div className="max-w-3xl mx-auto px-4 py-8 text-center">
         <div className="flex justify-center mb-4">
           <div className="bg-orange-100 p-4 rounded-2xl">
             <ShieldCheck size={32} className="text-orange-600" />
