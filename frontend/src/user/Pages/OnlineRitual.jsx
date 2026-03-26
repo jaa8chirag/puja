@@ -211,7 +211,7 @@ const OnlineRitual = () => {
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
               <div className="relative h-64 md:h-80">
                 <img
-                  src={`${API_BASE_URL}${service?.image_url}`}
+                  src={`${API_BASE_URL}/uploads/${service?.image_url}`}
                   className="w-full h-full object-cover"
                   alt="Pind Dan Puja"
                   onError={(e) => {

@@ -102,10 +102,14 @@ function App() {
           <Route path="/temples" element={<FullTemplePage />} />
 
           <Route path="/online-ritual" element={<OnlineRitual />} />
-          <Route
-            path="/online-ritual-paymentdetails/:id"
-            element={<OnlineRitualPaymentDetails />}
-          />
+
+          <Route element={<ProtectedLayout />}>
+            <Route
+              path="/online-ritual-paymentdetails/:id"
+              element={<OnlineRitualPaymentDetails />}
+            />
+          </Route>
+
           <Route path="/temples/:id" element={<MandirDetailsPage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/aarti" element={<AartiPage />} />

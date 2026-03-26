@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   XCircle,
   Layers, // Naya Icon
-  Star,   // Naya Icon
+  Star, // Naya Icon
 } from "lucide-react";
 import ServiceModal from "./ServiceModel";
 import { API } from "../../services/adminApi";
@@ -108,7 +108,8 @@ const AdminServices = () => {
               <option value="home_puja">Home Puja</option>
               <option value="katha">Katha</option>
               <option value="temple_puja">Temple Puja</option>
-              <option value="pind_dan">Pind Dan</option>
+              <option value="pind_dan">Temple Pind Dan</option>
+              <option value="online_pind_dan">Online Pind Dan</option>
             </select>
 
             {/* Custom Arrow Icon */}
@@ -139,7 +140,8 @@ const AdminServices = () => {
             <tr className="bg-[#0f172a] border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[10px]">
               <th className="px-6 py-4 text-left font-bold">Service Info</th>
               <th className="px-6 py-4 text-center font-bold">Category</th>
-              <th className="px-6 py-4 text-center font-bold">Priority</th> {/* Naya Column Header */}
+              <th className="px-6 py-4 text-center font-bold">Priority</th>{" "}
+              {/* Naya Column Header */}
               <th className="px-6 py-4 text-center font-bold">Status</th>
               <th className="px-6 py-4 text-center font-bold">Pricing Tier</th>
               <th className="px-6 py-4 text-right font-bold">Actions</th>
@@ -210,10 +212,11 @@ const AdminServices = () => {
 
                   <td className="px-6 py-4 text-center">
                     <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase ${service.status === "active"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase ${
+                        service.status === "active"
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                           : "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                        }`}
+                      }`}
                     >
                       {service.status === "active" ? (
                         <CheckCircle2 size={10} />
@@ -291,7 +294,11 @@ const AdminServices = () => {
                     </p>
                     {/* Featured Star on Mobile */}
                     {service.is_featured === 1 && (
-                      <Star size={12} fill="#eab308" className="text-yellow-500" />
+                      <Star
+                        size={12}
+                        fill="#eab308"
+                        className="text-yellow-500"
+                      />
                     )}
                   </div>
                   {["temple_puja", "pind_dan"].includes(service.puja_type) ? (
@@ -340,10 +347,11 @@ const AdminServices = () => {
                 </span>
 
                 <div
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-bold text-[10px] uppercase ${service.status === "active"
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-bold text-[10px] uppercase ${
+                    service.status === "active"
                       ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                       : "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                    }`}
+                  }`}
                 >
                   {service.status === "active" ? (
                     <CheckCircle2 size={9} />
