@@ -217,7 +217,6 @@ export const customerVerifyOtp = async (req, res) => {
 
 export const getAllPujaRequests = async (req, res) => {
   try {
-    // 1️⃣ All bookings
     const bookingsQuery = `
       SELECT
         b.id,
@@ -237,17 +236,19 @@ export const getAllPujaRequests = async (req, res) => {
         s.puja_name,
         s.puja_type,
 
-        u.name AS user_name,
+        u.name  AS user_name,
         u.phone AS user_phone,
 
-        pu.name AS pandit_name
+        pu.name AS pandit_name,
+        ra.price AS pandit_price
 
       FROM puja_requests b
 
-      LEFT JOIN services s ON b.service_id = s.id
-      LEFT JOIN users u ON b.user_id = u.id
-      LEFT JOIN users pu ON b.pandit_id = pu.id
-
+      LEFT JOIN services          s  ON b.service_id  = s.id
+      LEFT JOIN users             u  ON b.user_id      = u.id
+      LEFT JOIN request_assignments ra ON ra.request_id = b.id
+      LEFT JOIN users             pu ON pu.id           = ra.pandit_id
+      WHERE s.puja_type IN ('home_puja', 'katha')
       ORDER BY b.preferred_date ASC
     `;
 
@@ -485,10 +486,14 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+// customercare resolve query show query and change status
+
+// show all querys
+
 export const assignPandit = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { panditId } = req.body;
+    const { panditId, price } = req.body; // ✅ price body se lo
 
     // 1️⃣ Check booking exist
     const [booking] = await db.query(
@@ -510,15 +515,26 @@ export const assignPandit = async (req, res) => {
       return res.status(404).json({ message: "Pandit not found" });
     }
 
-    // 3️⃣ Assign + auto accept
+    const finalPrice = parseFloat(price || 0);
+
+    // 3️⃣ request_assignments mein insert karo
     await db.query(
-      "UPDATE puja_requests SET pandit_id = ?, status = 'accepted' WHERE id = ?",
-      [panditId, bookingId],
+      `INSERT INTO request_assignments (request_id, pandit_id, status, price)
+       VALUES (?, ?, 'pending', ?)
+       ON DUPLICATE KEY UPDATE pandit_id = ?, status = 'pending', price = ?`,
+      [bookingId, panditId, finalPrice, panditId, finalPrice],
+    );
+
+    // 4️⃣ puja_requests mein status accepted karo
+    await db.query(
+      `UPDATE puja_requests SET status = 'accepted' WHERE id = ?`,
+      [bookingId],
     );
 
     res.status(200).json({
       success: true,
       message: "Pandit assigned successfully",
+      data: { price: finalPrice },
     });
   } catch (error) {
     console.error("Assign Error:", error);
@@ -526,9 +542,6 @@ export const assignPandit = async (req, res) => {
   }
 };
 
-// customercare resolve query show query and change status
-
-// show all querys
 export const getAllSupportQueries = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;

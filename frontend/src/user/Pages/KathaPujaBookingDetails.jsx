@@ -39,7 +39,10 @@ const KathaPujaPaymentDetails = () => {
   const token = localStorage.getItem("token");
   const userName = token ? JSON.parse(atob(token.split(".")[1])).name : "Guest";
   const bookingId = generateBookingId();
-
+  // const generateOTP = () => {
+  //   return Math.floor(100000 + Math.random() * 900000).toString();
+  // };
+  // const otp = generateOTP();
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -117,6 +120,7 @@ const KathaPujaPaymentDetails = () => {
       pincode: formData.pincode,
       devoteeName: formData.devoteeName,
       bookingId,
+      // otp,
       donations: selectedDonations,
       total_price: grandTotal,
       samagriKit: isSamagriSelected,
@@ -288,7 +292,8 @@ const KathaPujaPaymentDetails = () => {
                   <div className="grid grid-cols-2 gap-3 md:gap-6">
                     <div className="space-y-1">
                       <label className={labelClass}>
-                        <Calendar size={12} /> Date
+                        <Calendar size={12} /> Date{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -300,7 +305,8 @@ const KathaPujaPaymentDetails = () => {
                     </div>
                     <div className="space-y-1">
                       <label className={labelClass}>
-                        <Clock size={12} /> Time
+                        <Clock size={12} /> Time{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="time"
@@ -315,7 +321,8 @@ const KathaPujaPaymentDetails = () => {
                   {/* Address */}
                   <div className="space-y-1">
                     <label className={labelClass}>
-                      <MapPin size={12} /> Full Address
+                      <MapPin size={12} /> Full Address{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="location"
@@ -330,7 +337,9 @@ const KathaPujaPaymentDetails = () => {
                   {/* State / City / Pincode */}
                   <div className="grid grid-cols-3 gap-2 md:gap-6">
                     <div className="space-y-1">
-                      <label className={labelClass}>State</label>
+                      <label className={labelClass}>
+                        State <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
                         name="state"
@@ -341,7 +350,9 @@ const KathaPujaPaymentDetails = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className={labelClass}>City</label>
+                      <label className={labelClass}>
+                        City <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
                         name="city"
@@ -627,7 +638,7 @@ const KathaPujaPaymentDetails = () => {
                       onClick={handlePayment}
                       className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 text-white font-bold py-3.5 rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
                     >
-                       Pay ₹{grandTotal} <ArrowRight size={16} />
+                      Pay ₹{grandTotal} <ArrowRight size={16} />
                     </button>
 
                     <div className="bg-gray-100/50 py-2 rounded-lg text-center">

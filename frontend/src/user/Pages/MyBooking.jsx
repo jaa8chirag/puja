@@ -50,7 +50,7 @@ const MyBookings = () => {
     };
     fetchMyBookings();
   }, []);
-
+  console.log("bookings----", bookings);
   const handleCancelBooking = async (bookingId) => {
     const token = localStorage.getItem("token");
     try {
@@ -206,7 +206,10 @@ const MyBookings = () => {
               const mergedDateTime = new Date(`${bookingDate}T${time24}:00`);
 
               const isEventExpired = mergedDateTime < new Date();
-              const canCancel = b.status === "pending" && !isEventExpired && b.puja_type !== "temple_puja";
+              const canCancel =
+                b.assignment_status === "pending" &&
+                !isEventExpired &&
+                b.puja_type !== "temple_puja";
 
               return (
                 <div
@@ -233,7 +236,6 @@ const MyBookings = () => {
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2 pr-24">
                       {b.puja_name}
                     </h3>
-
                     <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-3 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
                         <Calendar
@@ -256,7 +258,6 @@ const MyBookings = () => {
                         </span>
                       </div>
                     </div>
-
                     {/* ✅ SAMAGRI KIT BADGE - Attractive separate row */}
                     {b.samagrikit === 1 && (
                       <div className="mt-3">
@@ -275,7 +276,6 @@ const MyBookings = () => {
                         </div>
                       </div>
                     )}
-
                     {isTemplePuja && (
                       <div className="mt-3 p-3 bg-white/60 rounded-xl border border-orange-100 text-xs sm:text-sm">
                         <div className="flex items-center gap-2 mb-1">
@@ -290,6 +290,43 @@ const MyBookings = () => {
                       </div>
                     )}
 
+                    {b.otp &&
+                      b.assignment_status !== "completed" &&
+                      (b.assignment_status === "accepted" ? (
+                        <div className="mt-3 inline-flex items-center gap-2.5 bg-green-50 border border-green-300 rounded-2xl px-3.5 py-2 shadow-sm">
+                          <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-br from-green-400 to-green-600 rounded-full shrink-0 shadow-sm">
+                            <span className="text-white text-[10px] font-black">
+                              ✓
+                            </span>
+                          </div>
+                          <div className="flex flex-col leading-tight">
+                            <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest">
+                              Booking Accepted
+                            </span>
+                            <span className="text-[13px] font-black text-green-700 tracking-tight">
+                              {b.pandit_name
+                                ? `Pandit: ${b.pandit_name}`
+                                : "Pandit assigned"}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-3 inline-flex items-center gap-2.5 bg-orange-50 border border-orange-300 rounded-2xl px-3.5 py-2 shadow-sm">
+                          <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full shrink-0 shadow-sm">
+                            <span className="text-white text-[10px] font-black">
+                              🔐
+                            </span>
+                          </div>
+                          <div className="flex flex-col leading-tight">
+                            <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest">
+                              Entry OTP
+                            </span>
+                            <span className="text-[15px] font-black text-orange-700 tracking-[0.2em]">
+                              {b.otp}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     <div className="mt-4 flex items-center justify-between gap-2 md:hidden">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter shrink-0">
                         ID:{" "}
@@ -299,14 +336,14 @@ const MyBookings = () => {
                       <div className="flex items-center gap-2 shrink-0">
                         <div
                           className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                            b.status === "pending"
+                            b.assignment_status === "pending"
                               ? "bg-orange-100 text-orange-600 border border-orange-200"
-                              : b.status === "declined"
+                              : b.assignment_status === "declined"
                                 ? "text-red-500 bg-red-100 border border-red-200"
                                 : "bg-green-100 text-green-600 border border-green-200"
                           }`}
                         >
-                          {b.status}
+                          {b.assignment_status}
                         </div>
 
                         {canCancel && (
@@ -332,14 +369,14 @@ const MyBookings = () => {
                     </p>
                     <div
                       className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                        b.status === "pending"
+                        b.assignment_status === "pending"
                           ? "bg-orange-100 text-orange-600 border border-orange-200"
-                          : b.status === "declined"
+                          : b.assignment_status === "declined"
                             ? "text-red-500 bg-red-100 border border-red-200"
                             : "bg-green-100 text-green-600 border border-green-200"
                       }`}
                     >
-                      {b.status}
+                      {b.assignment_status}
                     </div>
                     {canCancel && (
                       <button

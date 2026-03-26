@@ -137,6 +137,10 @@ const PindDanBooking = () => {
   const handlePindDanPayment = async () => {
     const token = localStorage.getItem("token");
     const currentBookingId = `BK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // const generateOTP = () => {
+    //   return Math.floor(100000 + Math.random() * 900000).toString();
+    // };
+    // const otp = generateOTP();
     if (!token) {
       navigate("/signin");
       return;
@@ -171,6 +175,7 @@ const PindDanBooking = () => {
     }
     const bookingData = {
       bookingId: currentBookingId,
+      // otp,
       puja_id: id,
       date: service?.dateOfStart
         ? new Date(service.dateOfStart).toISOString().split("T")[0]

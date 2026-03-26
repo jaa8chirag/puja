@@ -1,64 +1,36 @@
 import db from "../config/db.js"; // <--- Sabse pehle ye check karein
 
-// export const getMyAssignedPujas = async (req, res) => {
-//   try {
-//     const panditId = req.user.id;
-
-//     const query = `
-//       SELECT
-//         b.*,
-//         s.puja_name,
-//         u.name AS customer_name,
-//         u.phone AS customer_phone,
-//         b.total_price AS price
-//       FROM puja_requests b
-//       LEFT JOIN services s ON b.service_id = s.id
-//       LEFT JOIN users u ON b.user_id = u.id
-//       WHERE b.pandit_id = ?
-//       ORDER BY b.preferred_date ASC
-//     `;
-
-//     const [rows] = await db.query(query, [panditId]);
-
-//     res.status(200).json({
-//       success: true,
-//       count: rows.length,
-//       bookings: rows,
-//     });
-//   } catch (error) {
-//     console.error("Pandit Fetch Error:", error.message);
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
 export const getMyAssignedPujas = async (req, res) => {
   try {
     const panditId = req.user.id;
 
     const query = `
       SELECT 
-        b.id,
+        ra.id,
+        ra.request_id,
+        ra.pandit_id,
+        ra.status,
+        ra.price,
+        ra.verify_otp,
+        ra.assigned_at,
+        ra.updated_at,
         b.bookingId,
         b.preferred_date,
         b.preferred_time,
-        b.status,
         b.address,
         b.city,
         b.state,
-         b.samagrikit,
-        b.total_price AS price,
+        b.samagrikit,
         s.puja_name,
         s.puja_type,
         u.name AS customer_name,
         u.phone AS customer_phone
-      FROM puja_requests b
-      LEFT JOIN services s ON b.service_id = s.id
-      LEFT JOIN users u ON b.user_id = u.id
-      WHERE b.pandit_id = ?
-      ORDER BY b.preferred_date ASC
+      FROM request_assignments ra
+      LEFT JOIN puja_requests b ON b.id = ra.request_id
+      LEFT JOIN services s ON s.id = b.service_id
+      LEFT JOIN users u ON u.id = b.user_id
+      WHERE ra.pandit_id = ?
+      ORDER BY ra.assigned_at DESC
     `;
 
     const [rows] = await db.query(query, [panditId]);
@@ -70,7 +42,6 @@ export const getMyAssignedPujas = async (req, res) => {
     });
   } catch (error) {
     console.error("Pandit Fetch Error:", error.message);
-
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -184,41 +155,109 @@ export const markPujaComplete = async (req, res) => {
     const panditId = req.user.id;
     const bookingId = req.params.id;
 
-    // Check booking belongs to this pandit
     const [rows] = await db.query(
-      "SELECT id, status FROM puja_requests WHERE id = ? AND pandit_id = ?",
+      "SELECT * FROM request_assignments WHERE request_id = ? AND pandit_id = ?",
       [bookingId, panditId],
     );
 
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Booking not found",
-      });
-    }
+    if (rows.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
 
-    if (rows[0].status === "completed") {
-      return res.status(400).json({
-        success: false,
-        message: "Puja already completed",
-      });
-    }
+    if (rows[0].status === "completed")
+      return res
+        .status(400)
+        .json({ success: false, message: "Puja already completed" });
 
-    // Update status to completed
+    if (rows[0].status !== "accepted")
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP verify karo pehle" });
+
+    // ✅ Dono tables update
     await db.query(
       "UPDATE puja_requests SET status = 'completed', completed_at = NOW() WHERE id = ?",
       [bookingId],
     );
 
-    res.json({
-      success: true,
-      message: "Puja completed successfully",
-    });
+    await db.query(
+      "UPDATE request_assignments SET status = 'completed', updated_at = NOW() WHERE request_id = ? AND pandit_id = ?",
+      [bookingId, panditId],
+    );
+
+    res.json({ success: true, message: "Puja completed successfully" });
   } catch (error) {
     console.error("Mark Complete Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+// export const verifyPujaOtp = async (req, res) => {
+//   try {
+//     const panditId = req.user.id;
+//     const { request_id, otp } = req.body;
+
+//     const [rows] = await db.query(
+//       "SELECT otp FROM puja_requests WHERE id = ?",
+//       [request_id],
+//     );
+
+//     if (rows.length === 0)
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Booking not found" });
+
+//     if (!rows[0].otp)
+//       return res.status(400).json({ success: false, message: "No OTP found" });
+
+//     if (String(rows[0].otp).trim() !== String(otp).trim())
+//       return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+//     // ✅ OTP sahi — request_assignments status accepted karo
+//     await db.query(
+//       "UPDATE request_assignments SET status = 'accepted', updated_at = NOW() WHERE request_id = ? AND pandit_id = ?",
+//       [request_id, panditId],
+//     );
+//     await db.query(
+//       "UPDATE puja_requests SET status = 'accepted' WHERE id = ?",
+//       [request_id],
+//     );
+//     res.json({ success: true, message: "OTP Verified" });
+//   } catch (error) {
+//     console.error("OTP Verify Error:", error);
+//     res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+export const verifyPujaOtp = async (req, res) => {
+  try {
+    const panditId = req.user.id;
+    const { request_id, otp } = req.body;
+
+    const [rows] = await db.query(
+      "SELECT otp FROM puja_requests WHERE id = ?",
+      [request_id],
+    );
+
+    if (rows.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
+
+    if (!rows[0].otp)
+      return res.status(400).json({ success: false, message: "No OTP found" });
+
+    if (String(rows[0].otp).trim() !== String(otp).trim())
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+    // ✅ sirf request_assignments = accepted
+    await db.query(
+      "UPDATE request_assignments SET status = 'accepted', updated_at = NOW() WHERE request_id = ? AND pandit_id = ?",
+      [request_id, panditId],
+    );
+
+    res.json({ success: true, message: "OTP Verified" });
+  } catch (error) {
+    console.error("OTP Verify Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };

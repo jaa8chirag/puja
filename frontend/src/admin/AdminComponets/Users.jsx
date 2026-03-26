@@ -159,7 +159,11 @@ const Users = () => {
               : "bg-emerald-950/40 text-emerald-400 border-emerald-800/50 backdrop-blur-md"
           }`}
         >
-          {toast.type === "error" ? <XCircle size={16} /> : <CheckCircle2 size={16} />}
+          {toast.type === "error" ? (
+            <XCircle size={16} />
+          ) : (
+            <CheckCircle2 size={16} />
+          )}
           {toast.message}
         </div>
       )}
@@ -174,7 +178,9 @@ const Users = () => {
             <h1 className="text-base font-extrabold text-white leading-tight">
               User Management
             </h1>
-            <p className="text-[11px] text-slate-500">Manage all registered users</p>
+            <p className="text-[11px] text-slate-500">
+              Manage all registered users
+            </p>
           </div>
         </div>
         <button
@@ -188,11 +194,15 @@ const Users = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="flex items-center justify-between px-4 py-3 rounded-2xl border bg-[#131e32] text-orange-500 border-orange-500/20 shadow-xl">
-          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Total</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
+            Total
+          </span>
           <span className="text-lg font-black">{total}</span>
         </div>
         <div className="flex items-center justify-between px-4 py-3 rounded-2xl border bg-[#131e32] text-emerald-500 border-emerald-500/20 shadow-xl">
-          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Current</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
+            Current
+          </span>
           <span className="text-lg font-black">{filteredUsers.length}</span>
         </div>
       </div>
@@ -226,12 +236,16 @@ const Users = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-500">
               <Loader2 size={32} className="animate-spin text-orange-500" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">Accessing Records...</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold">
+                Accessing Records...
+              </span>
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-600">
               <UsersIcon size={48} className="mb-3 opacity-20" />
-              <p className="text-xs font-bold uppercase tracking-widest">No matching users</p>
+              <p className="text-xs font-bold uppercase tracking-widest">
+                No matching users
+              </p>
             </div>
           ) : (
             <table className="w-full text-xs text-left">
@@ -239,8 +253,11 @@ const Users = () => {
                 <tr className="bg-[#0f172a] border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[10px]">
                   <th className="px-5 py-4 font-bold">User Identity</th>
                   <th className="px-5 py-4 font-bold">Contact Channel</th>
-                  <th className="px-5 py-4 text-center font-bold">Permissions</th>
+                  <th className="px-5 py-4 text-center font-bold">
+                    Permissions
+                  </th>
                   <th className="px-5 py-4 font-bold">Registered</th>
+                  <th className="px-5 py-4 text-center font-bold">Bookings</th>
                   <th className="px-5 py-4 text-right font-bold">Actions</th>
                 </tr>
               </thead>
@@ -268,10 +285,14 @@ const Users = () => {
                     </td>
 
                     <td className="px-5 py-4">
-                       <div className="space-y-1">
-                          <p className="text-slate-400 font-medium">{u.email || "No Email"}</p>
-                          <p className="text-orange-500/80 font-mono text-[10px]">{u.phone}</p>
-                       </div>
+                      <div className="space-y-1">
+                        <p className="text-slate-400 font-medium">
+                          {u.email || "No Email"}
+                        </p>
+                        <p className="text-orange-500/80 font-mono text-[10px]">
+                          {u.phone}
+                        </p>
+                      </div>
                     </td>
 
                     <td className="px-5 py-4 text-center">
@@ -290,10 +311,16 @@ const Users = () => {
 
                     <td className="px-5 py-4 text-slate-500 font-medium">
                       {new Date(u.created_at).toLocaleDateString("en-IN", {
-                        day: '2-digit', month: 'short', year: 'numeric'
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
                       })}
                     </td>
-
+                    <td className="px-5 py-4 text-center">
+                      <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black border bg-orange-500/10 text-orange-400 border-orange-500/20">
+                        {u.total_bookings || 0}
+                      </span>
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
                         <button
@@ -345,24 +372,37 @@ const Users = () => {
 
       {/* ADD/EDIT MODAL UI SHARED STYLE */}
       {(showAddModal || editingUser) && (
-        <ModalWrapper onClose={() => { setShowAddModal(false); setEditingUser(null); }}>
+        <ModalWrapper
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingUser(null);
+          }}
+        >
           <div className="px-6 py-5 border-b border-slate-800 bg-[#0f172a]/50">
-             <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                      <User size={18} className="text-orange-500" />
-                   </div>
-                   <div>
-                      <h3 className="text-sm font-black text-white uppercase tracking-tight">
-                        {showAddModal ? "New User" : "Update Identity"}
-                      </h3>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Database Record</p>
-                   </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                  <User size={18} className="text-orange-500" />
                 </div>
-                <button onClick={() => { setShowAddModal(false); setEditingUser(null); }} className="text-slate-500 hover:text-white transition">
-                   <X size={20} />
-                </button>
-             </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-tight">
+                    {showAddModal ? "New User" : "Update Identity"}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                    Database Record
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingUser(null);
+                }}
+                className="text-slate-500 hover:text-white transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div className="p-6 space-y-4">
@@ -370,39 +410,58 @@ const Users = () => {
               icon={User}
               placeholder="Display Name *"
               value={showAddModal ? newUser.name : editingUser?.name}
-              onChange={(e) => showAddModal ? setNewUser({ ...newUser, name: e.target.value }) : setEditingUser({ ...editingUser, name: e.target.value })}
+              onChange={(e) =>
+                showAddModal
+                  ? setNewUser({ ...newUser, name: e.target.value })
+                  : setEditingUser({ ...editingUser, name: e.target.value })
+              }
             />
             <ModalField
               icon={Mail}
               placeholder="Email Address"
               type="email"
               value={showAddModal ? newUser.email : editingUser?.email}
-              onChange={(e) => showAddModal ? setNewUser({ ...newUser, email: e.target.value }) : setEditingUser({ ...editingUser, email: e.target.value })}
+              onChange={(e) =>
+                showAddModal
+                  ? setNewUser({ ...newUser, email: e.target.value })
+                  : setEditingUser({ ...editingUser, email: e.target.value })
+              }
             />
             <ModalField
               icon={Phone}
               placeholder="Phone Number *"
               type="tel"
               value={showAddModal ? newUser.phone : editingUser?.phone}
-              onChange={(e) => showAddModal ? setNewUser({ ...newUser, phone: e.target.value }) : setEditingUser({ ...editingUser, phone: e.target.value })}
+              onChange={(e) =>
+                showAddModal
+                  ? setNewUser({ ...newUser, phone: e.target.value })
+                  : setEditingUser({ ...editingUser, phone: e.target.value })
+              }
             />
           </div>
 
           <div className="px-6 py-5 bg-[#0f172a]/50 border-t border-slate-800 flex gap-3">
-             <button
-               onClick={() => { setShowAddModal(false); setEditingUser(null); }}
-               className="flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-700 text-slate-400 hover:bg-slate-800 transition"
-             >
-               Discard
-             </button>
-             <button
-               onClick={showAddModal ? addUser : updateUser}
-               disabled={actionLoading === "add" || actionLoading === "edit"}
-               className="flex-1 flex items-center justify-center gap-2 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-900/20 transition disabled:opacity-50"
-             >
-               {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-               Commit
-             </button>
+            <button
+              onClick={() => {
+                setShowAddModal(false);
+                setEditingUser(null);
+              }}
+              className="flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-700 text-slate-400 hover:bg-slate-800 transition"
+            >
+              Discard
+            </button>
+            <button
+              onClick={showAddModal ? addUser : updateUser}
+              disabled={actionLoading === "add" || actionLoading === "edit"}
+              className="flex-1 flex items-center justify-center gap-2 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-900/20 transition disabled:opacity-50"
+            >
+              {actionLoading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Plus size={14} />
+              )}
+              Commit
+            </button>
           </div>
         </ModalWrapper>
       )}

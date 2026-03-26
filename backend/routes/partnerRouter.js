@@ -6,6 +6,7 @@ import {
   getPanditProfile,
   markPujaComplete,
   updatePanditProfile,
+  verifyPujaOtp,
 } from "../controllers/partnerController.js";
 
 const router = express.Router();
@@ -19,4 +20,7 @@ router.put("/update-profile", verifyToken, updatePanditProfile);
 
 // mark complete puja
 router.put("/complete-puja/:id", verifyToken, markPujaComplete);
+
+//verify otp routes
+router.post("/verify-otp", verifyToken, verifyPujaOtp);
 export default router;
