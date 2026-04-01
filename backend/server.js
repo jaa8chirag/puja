@@ -8,7 +8,6 @@ import servicesRouter from "./routes/servicesRoutes.js";
 import partnerRouter from "./routes/partnerRouter.js";
 import adminRouter from "./routes/adminRouter.js";
 import customerCare from "./routes/customerCareRouter.js";
-import mandirRouter from "./routes/mandirRouter.js";
 import kundliRouter from "./routes/kundliRouter.js";
 import blogsRouter from "./routes/blogsRouter.js";
 import { debugSweph, generateKundli } from "./controllers/kundliController.js";
@@ -27,6 +26,7 @@ import { generatePDF } from "./controllers/pdfReport.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getPageBySlug } from "./controllers/adminController.js";
 import paymentRouter from "./routes/payment.routes.js"
+import dataRouter from "./routes/aartiAndEventRoutes.js"
 
 dotenv.config();
 
@@ -536,7 +536,6 @@ app.post("/api/name/pdf-report", async (req, res) => {
 
 app.use("/api/kundli", kundliRouter);
 app.use("/api/name", nameCorrectionRouter);
-app.use("/api/mandir", mandirRouter);
 app.use("/api/user", authRouter);
 app.use("/api/puja", servicesRouter);
 app.use("/api/partner", partnerRouter);
@@ -549,6 +548,7 @@ app.use("/api/admin/verify-pandit", verifypandiRoutes);
 // Public Pages Route (no auth needed)
 app.get("/api/pages/:slug", getPageBySlug);
 app.use("/api/payment", paymentRouter);
+app.use("/api/content",dataRouter)
 
 const startServer = async () => {
   try {

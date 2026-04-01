@@ -15,6 +15,7 @@ import AnalyticsDashboard from "../AdminComponets/Analyticsdashboard";
 import AdminContributions from "../AdminComponets/AdminContributions";
 import AdminPages from "../AdminComponets/AdminPages";
 import VerifyPanditModal from "../AdminComponets/VerifyPanditModal";
+import Gallery from "../AdminComponets/AdminEventsAartis"
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Icon = ({ name }) => {
