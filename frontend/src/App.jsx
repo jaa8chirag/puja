@@ -59,11 +59,10 @@ import PrivacyPolicy from "./user/Pages/PrivacyPolice";
 import AboutUs from "./user/Pages/AboutUs";
 import CancelationPolicy from "./user/Pages/CancelationPolice";
 
-
 import AIPanditBot from "./user/Pages/AIPanditBot";
 import OnlineRitual from "./user/Pages/OnlineRitual";
 import OnlineRitualPaymentDetails from "./user/Pages/OnlineRitualPaymentDetails";
-
+import NameCorrectionDummy from "./user/Pages/NameCorrectionDummy";
 function App() {
   const location = useLocation();
 
@@ -95,8 +94,7 @@ function App() {
 
           <Route path="/chat" element={<Chatwidget />} />
           <Route path="/aiPandit" element={<AIPanditBot />} />
-          
-          <Route path="/nameCorrection" element={<NameCorrection />} />
+
           <Route path="/blogs" element={<Blog />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />
 
@@ -104,11 +102,13 @@ function App() {
 
           <Route path="/online-ritual" element={<OnlineRitual />} />
 
-
           <Route element={<ProtectedLayout />}>
             <Route path="/kundli" element={<KundliPortal />} />
           </Route>
-
+          <Route element={<ProtectedLayout />}>
+            <Route path="/nameCorrection" element={<NameCorrectionDummy />} />
+          </Route>
+          <Route path="/nameCorrect" element={<NameCorrection />} />
           <Route element={<ProtectedLayout />}>
             <Route
               path="/online-ritual-paymentdetails/:id"
@@ -204,7 +204,6 @@ function App() {
         {/* admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        
 
         {/* ================= 404 ================= */}
         <Route path="*" element={<NotFound />} />

@@ -1005,11 +1005,14 @@ export const deleteService = async (req, res) => {
 
     // puja_requests mein service_id null karo (history safe rahegi)
     await connection.query(
-      `UPDATE puja_requests SET service_id = NULL WHERE service_id = ?`, [id]
+      `UPDATE puja_requests SET service_id = NULL WHERE service_id = ?`,
+      [id],
     );
 
     // ab child tables delete karo
-    await connection.query(`DELETE FROM service_prices WHERE service_id = ?`, [id]);
+    await connection.query(`DELETE FROM service_prices WHERE service_id = ?`, [
+      id,
+    ]);
     await connection.query(`DELETE FROM temples WHERE service_id = ?`, [id]);
 
     // ab main service delete karo
@@ -1017,7 +1020,6 @@ export const deleteService = async (req, res) => {
 
     await connection.commit();
     res.json({ success: true, message: "Service deleted successfully" });
-
   } catch (error) {
     if (connection) await connection.rollback();
     console.error("Delete Service Error:", error.message);
@@ -2142,5 +2144,45 @@ export const updatePage = async (req, res) => {
   } catch (error) {
     console.error("Update Page Error:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getAllNameCorrections = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const [[{ total }]] = await db.execute(
+      "SELECT COUNT(*) as total FROM name_correction",
+    );
+
+    const [rows] = await db.execute(
+      `SELECT 
+        nc.id,
+        nc.name,
+        nc.dob,
+        nc.userid,
+        u.name  AS user_name,
+        u.email AS user_email,
+        u.phone AS user_phone
+      FROM name_correction nc
+      LEFT JOIN users u ON u.id = nc.userid
+      ORDER BY nc.id DESC
+      LIMIT ${limit} OFFSET ${offset}`,
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: rows,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("❌ getAllNameCorrections Error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error: " + error.message,
+    });
   }
 };

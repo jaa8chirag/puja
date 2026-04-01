@@ -48,11 +48,14 @@ import {
   getBenefitsByService,
   updateBenefit,
   deleteBenefit,
-  getAllContributions, 
-  addContribution, 
-  updateContribution, 
-  getPages, getPageBySlug, updatePage,
-  deleteContribution
+  getAllContributions,
+  addContribution,
+  updateContribution,
+  getPages,
+  getPageBySlug,
+  updatePage,
+  deleteContribution,
+  getAllNameCorrections,
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -97,12 +100,10 @@ router.put(
 );
 router.delete("/services/:id", verifyToken, adminOnly, deleteService);
 
-
 // ── Pages Routes (About Us & Privacy Policy)
 router.get("/pages", verifyToken, adminOnly, getPages);
 router.get("/pages/:slug", verifyToken, adminOnly, getPageBySlug);
 router.put("/pages/:slug", verifyToken, adminOnly, updatePage);
-
 
 //contributionn
 router.get("/contributions", verifyToken, adminOnly, getAllContributions);
@@ -200,5 +201,12 @@ router.get(
 );
 router.put("/benefits/:id", verifyToken, adminOnly, updateBenefit);
 router.delete("/benefits/:id", verifyToken, adminOnly, deleteBenefit);
+// ── Name Correction Routes
+router.get(
+  "/name/name-correction/all",
+  verifyToken,
+  adminOnly,
+  getAllNameCorrections,
+);
 
 export default router;
