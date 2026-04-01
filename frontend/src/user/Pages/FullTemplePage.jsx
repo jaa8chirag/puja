@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react'; // 1. useMemo add kiya
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { MapPin, Search, ChevronRight, Sparkles } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL; // Component ke bahar rakha hai performance ke liye
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const FullTemplePage = () => {
-  const [temples, setTemples] = useState([]);
+  const [temples, setTemples] = useState([]); // Humesha empty array se start karein
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCity, setActiveCity] = useState("All");
@@ -16,35 +16,45 @@ const FullTemplePage = () => {
   useEffect(() => {
     const fetchTemples = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/mandir/all`);
-        setTemples(response.data);
-        setLoading(false);
+        const response = await axios.get(`${API_BASE_URL}/content/mandir/all`);
+        
+        // FIX: Agar backend se { success: true, data: [...] } aa raha hai
+        if (response.data && response.data.success) {
+          setTemples(response.data.data); 
+        } else if (Array.isArray(response.data)) {
+          // Backup check agar seedha array aa raha ho
+          setTemples(response.data);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
+        setTemples([]); // Error par empty array rakhein taaki filter crash na ho
+      } finally {
         setLoading(false);
       }
     };
     fetchTemples();
   }, []);
 
-  // 2. Filter Logic ko Memoize kiya (Isse hang hona band ho jayega)
+  // Filter Logic with Safety Check
   const filteredTemples = useMemo(() => {
+    if (!Array.isArray(temples)) return []; // Safety check
+
     return temples.filter(t => {
-      const matchesSearch = 
-        t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        t.location.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCity = 
-        activeCity === "All" || 
-        t.location.toLowerCase().includes(activeCity.toLowerCase());
+      const name = t.name?.toLowerCase() || "";
+      const location = t.location?.toLowerCase() || "";
+      const search = searchTerm.toLowerCase();
+      
+      const matchesSearch = name.includes(search) || location.includes(search);
+      const matchesCity = activeCity === "All" || location.includes(activeCity.toLowerCase());
       
       return matchesSearch && matchesCity;
     });
-  }, [temples, searchTerm, activeCity]); // Sirf tabhi chalega jab data ya filter badlega
+  }, [temples, searchTerm, activeCity]);
 
   return (
     <div className="bg-[#FFF4E1] min-h-screen font-sans">
       
-      {/* 1. HERO SECTION */}
+      {/* HERO SECTION */}
       <section className="bg-[#FFF4E1] pt-16 pb-24 px-6 relative overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
           <div className="space-y-6">
@@ -59,32 +69,26 @@ const FullTemplePage = () => {
               Discover the history, timings, and spiritual essence of India's most sacred pilgrimages.
             </p>
           </div>
-
           <div className="hidden lg:flex justify-end">
-            <img 
-              src="/img/img_hero_artwork_en.webp" 
-              className="w-full max-w-lg drop-shadow-2xl animate-float" 
-              alt="Temple Map" 
-            />
+            <img src="/img/img_hero_artwork_en.webp" className="w-full max-w-lg drop-shadow-2xl animate-float" alt="Hero" />
           </div>
         </div>
       </section>
 
-      {/* 2. SEARCH & CITY FILTERS (Sticky) */}
+      {/* SEARCH & FILTERS */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex flex-col md:flex-row gap-6 items-center">
-            
             <div className="relative w-full md:w-80">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input 
                 type="text" 
                 placeholder="Search temples..." 
                 className="w-full pl-11 pr-4 py-2.5 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-500/20 transition-all text-sm font-medium"
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-
             <div className="flex flex-1 gap-3 overflow-x-auto no-scrollbar pb-1 w-full">
               {cities.map((city) => (
                 <button
@@ -104,7 +108,7 @@ const FullTemplePage = () => {
         </div>
       </div>
 
-      {/* 3. CARDS GRID */}
+      {/* CARDS GRID */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         {loading ? (
           <div className="flex flex-col items-center py-20 gap-4">
@@ -113,47 +117,34 @@ const FullTemplePage = () => {
           </div>
         ) : (
           <>
-            <div className="mb-8 flex justify-between items-end">
-               <div>
-                 <h2 className="text-2xl font-black text-gray-800">Prasiddh Mandir</h2>
-                 <p className="text-gray-400 text-sm font-medium">Showing {filteredTemples.length} temples in {activeCity}</p>
-               </div>
+            <div className="mb-8">
+              <h2 className="text-2xl font-black text-gray-800">Prasiddh Mandir</h2>
+              <p className="text-gray-400 text-sm font-medium">Showing {filteredTemples.length} temples</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {filteredTemples.map((temple) => (
                 <Link to={`/temples/${temple.id}`} key={temple.id} className="group">
                   <div className="bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full flex flex-col">
-                    
-                    {/* Image Optimized with Loading Lazy */}
                     <div className="relative aspect-[4/3] m-2 overflow-hidden rounded-[1rem] bg-gray-100">
                       <img 
                         src={`${API_BASE_URL}/uploads/${temple.image_url_1}`}
-                        loading="lazy" // 3. Lazy loading add kiya
+                        loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         alt={temple.name}
+                        onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Temple"; }}
                       />
                     </div>
-
                     <div className="p-6 pt-2 flex flex-col flex-1">
                       <div className="flex items-center gap-1.5 text-gray-400 mb-2">
                         <MapPin size={12} className="text-orange-500" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">
-                          {temple.location}
-                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{temple.location}</span>
                       </div>
-                      
-                      <h3 className="text-lg font-extrabold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors">
-                        {temple.name}
-                      </h3>
-
-                      <p className="text-gray-500 text-xs leading-relaxed line-clamp-2 mb-4">
-                        {temple.about}
-                      </p>
-
+                      <h3 className="text-lg font-extrabold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors">{temple.name}</h3>
+                      <p className="text-gray-500 text-xs line-clamp-2 mb-4">{temple.about}</p>
                       <div className="mt-auto flex items-center justify-between">
                          <span className="text-[11px] font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">Explore Now</span>
-                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300">
+                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-orange-600 group-hover:text-white transition-all">
                             <ChevronRight size={18} />
                          </div>
                       </div>
@@ -167,8 +158,8 @@ const FullTemplePage = () => {
 
         {!loading && filteredTemples.length === 0 && (
           <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-400 font-bold text-lg">Sorry! No temples were found in this city.</p>
-            <button onClick={() => {setActiveCity("All"); setSearchTerm("");}} className="text-orange-600 font-bold mt-2 underline">Sabhi mandir dekhein</button>
+            <p className="text-gray-400 font-bold text-lg">No temples found!</p>
+            <button onClick={() => {setActiveCity("All"); setSearchTerm("");}} className="text-orange-600 font-bold mt-2 underline">View All Temples</button>
           </div>
         )}
       </section>
