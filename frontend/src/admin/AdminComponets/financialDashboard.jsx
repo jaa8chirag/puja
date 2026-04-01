@@ -544,15 +544,27 @@ export default function FinancialDashboard() {
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/20 flex items-center justify-center text-xl">
+
+          
+          {/* <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xl">
               🕉️
             </div>
             <div>
               <h1 className="text-base font-black text-white tracking-tight">Financial Dashboard</h1>
-              <p className="text-[11px] text-white/30 tracking-widest uppercase">Financial Overview</p>
+              <p className="text-[12px] text-white/30 tracking-widest uppercase">Financial Overview</p>
             </div>
-          </div>
+
+          </div> */}
+
+          <div>
+          <h1 className="text-xl font-black font-bold text-white  flex items-center gap-2">
+            🕉️ Financial Dashboard
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium">Manage donation types & pricing</p>
+        </div>
+
+
           <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse inline-block" />
             <span className="text-xs text-emerald-400 font-semibold">Live</span>

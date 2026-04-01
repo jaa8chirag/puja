@@ -170,7 +170,7 @@ const Users = () => {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-900/20">
             <UsersIcon size={20} className="text-white" />
           </div>
@@ -182,6 +182,13 @@ const Users = () => {
               Manage all registered users
             </p>
           </div>
+        </div> */}
+
+        <div>
+          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <UsersIcon className="text-orange-500" /> User Management
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium">Manage all registered users</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}

@@ -3,7 +3,7 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ChevronLeft,
+  SquareChartGantt ,
   ChevronDown,
   LayoutGrid,
   MapPin,
@@ -85,12 +85,10 @@ const AdminServices = () => {
       {/* ── Header ── */}
       <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
         <div>
-          <h1 className="text-xl font-black text-white tracking-tight">
-            Product & CMS
+          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <SquareChartGantt  className="text-orange-500" /> Contributions
           </h1>
-          <p className="text-[12px] text-slate-500">
-            Manage spiritual services and temple data
-          </p>
+          <p className="text-[12px] text-slate-500 font-medium">Manage donation types & pricing</p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
@@ -398,11 +396,11 @@ const AdminServices = () => {
             <div className="text-center mb-5">
               <div className="text-5xl mb-3">🗑️</div>
               <h2 className="text-gray-100 font-bold text-lg m-0">
-                Service Delete Karein?
+                Do you want to delete the service?
               </h2>
               <p className="text-gray-500 text-sm mt-2">
                 "<span className="text-orange-400">{deleteTarget.name}</span>"
-                permanently delete ho jayega. Yeh action undo nahi ho sakta.
+                It will be permanently deleted. This action cannot be undone.
               </p>
             </div>
             <div className="flex gap-3">

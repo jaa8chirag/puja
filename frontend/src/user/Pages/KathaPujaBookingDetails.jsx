@@ -453,45 +453,60 @@ const KathaPujaPaymentDetails = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {contributionOptions.map((option) => (
-                    <ContributionCard
-                      key={option.id}
-                      option={option}
-                      selected={donations[option.id]}
-                      onToggle={() => toggleDonation(option.id)}
-                    />
-                  ))}
-                </div>
+                {/* Cards Grid (Top 4) */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+  {contributionOptions.map((option) => (
+    <ContributionCard
+      key={option.id}
+      option={option}
+      selected={donations[option.id]}
+      onToggle={() => toggleDonation(option.id)}
+    />
+  ))}
+</div>
 
-                {/* Gau Seva */}
-                <div
-                  onClick={() => toggleDonation("Gau Seva")}
-                  className={`p-4 flex items-center gap-4 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
-                    ? "border-orange-500 bg-orange-50/30"
-                    : "border-orange-200 bg-white hover:border-orange-300"
-                    }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${donations["Gau Seva"] ? "bg-orange-500 border-orange-500" : "border-orange-200"}`}
-                  >
-                    {donations["Gau Seva"] && (
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    )}
-                  </div>
-                  <span className="text-xl shrink-0">🐄</span>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-sm text-gray-900 leading-tight">
-                      Complete your Sankalp with Gau Seva
-                    </h4>
-                    <p className="text-[11px] text-gray-500 font-medium">
-                      Feed a cow on your behalf — an auspicious addition
-                    </p>
-                  </div>
-                  <span className="text-orange-600 font-black text-sm whitespace-nowrap">
-                    +₹{getPrice("Gau Seva")}
-                  </span>
-                </div>
+{/* ✅ GAU SEVA - Now in a matching Box Style */}
+<div className="mt-3"> 
+  <div
+    onClick={() => toggleDonation("Gau Seva")}
+    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${
+      donations["Gau Seva"]
+        ? "border-orange-500 bg-orange-50/30 shadow-sm"
+        : "border-orange-200 bg-white hover:border-orange-300"
+    }`}
+  >
+    {/* Checkbox */}
+    <div
+      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+        donations["Gau Seva"] ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
+      }`}
+    >
+      {donations["Gau Seva"] && (
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-3.5 h-3.5">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      )}
+    </div>
+
+    {/* Emoji/Icon */}
+    <span className="text-xl shrink-0 ml-1">🐄</span>
+
+    {/* Text Details */}
+    <div className="flex-1 min-w-0">
+      <h4 className="font-bold text-sm text-gray-900 leading-tight">
+        Complete your Sankalp with Gau Seva
+      </h4>
+      <p className="text-[10px] text-gray-500 font-medium">
+        Feed a cow on your behalf as a sacred gesture
+      </p>
+    </div>
+
+    {/* Price */}
+    <span className="text-orange-600 font-black text-sm whitespace-nowrap">
+      +₹{getPrice("Gau Seva") || 0}
+    </span>
+  </div>
+</div>
 
                 {/* Guarantees */}
                 <div className="space-y-3 pt-1">
@@ -816,25 +831,41 @@ const MobileSummaryInline = ({
 const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
-    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
-      ? "border-orange-500 bg-orange-50/30"
-      : "border-orange-200 hover:border-orange-300"
-      }`}
+    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${
+      selected
+        ? "border-orange-500 bg-orange-50/30 shadow-sm"
+        : "border-orange-200 hover:border-orange-300 bg-white"
+    }`}
   >
+    {/* ✅ CHECKBOX STYLE (Radio dot ki jagah) */}
     <div
-      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? "bg-orange-500 border-orange-500" : "border-orange-200"}`}
+      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+        selected ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
+      }`}
     >
-      {selected && <div className="w-2 h-2 bg-white rounded-full" />}
+      {selected && (
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-3.5 h-3.5">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      )}
     </div>
-    <div className="text-orange-500 shrink-0">{option.icon}</div>
+
+    {/* Icon */}
+    <div className="text-orange-500 shrink-0 opacity-80">{option.icon}</div>
+
+    {/* Text */}
     <div className="flex-1 min-w-0">
       <h4 className="font-bold text-sm text-gray-900 leading-tight">
         {option.name}
       </h4>
-      <p className="text-[10px] text-gray-500 font-medium">{option.desc}</p>
+      <p className="text-[10px] text-gray-500 font-medium line-clamp-1">
+        {option.desc}
+      </p>
     </div>
+
+    {/* Price */}
     <span className="text-orange-600 font-black text-sm whitespace-nowrap shrink-0">
-      ₹{option.price}
+      ₹{option.price || 0}
     </span>
   </div>
 );

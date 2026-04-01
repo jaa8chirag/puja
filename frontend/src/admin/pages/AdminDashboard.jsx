@@ -14,6 +14,7 @@ import Adminblogs from "../AdminComponets/Adminblogs";
 import AnalyticsDashboard from "../AdminComponets/Analyticsdashboard";
 import AdminContributions from "../AdminComponets/AdminContributions";
 import AdminPages from "../AdminComponets/AdminPages";
+import VerifyPanditModal from "../AdminComponets/VerifyPanditModal";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Icon = ({ name }) => {
@@ -112,6 +113,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Bookings", icon: "bookings" },
     { label: "Users", icon: "users" },
     { label: "Pandits", icon: "pandits" },
+    { label: "Verified Pandits", icon: "pandits" },
     { label: "Contributions", icon: "heart" },
     { label: "Finance", icon: "financial" },
     { label: "Analytics", icon: "analytics" },
@@ -257,7 +259,7 @@ const AdminDashboard = () => {
 
       <div className="flex bg-[#0d1117] min-h-screen">
         <Sidebar active={active} setActive={setActive} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
+
         <div className="flex-1 flex flex-col lg:ml-[220px] min-w-0" style={{ fontFamily: "'DM Sans', sans-serif" }}>
           <Topbar onMenuClick={() => setSidebarOpen(true)} />
 
@@ -289,6 +291,11 @@ const AdminDashboard = () => {
             {active === "Bookings" && <Bookings />}
             {active === "Users" && <Users />}
             {active === "Pandits" && <Pandit />}
+            {active === "Verified Pandits" && (
+              <div className="animate-in fade-in zoom-in duration-300">
+                <VerifyPanditModal onClose={() => setActive("Pandits")} />
+              </div>
+            )}
             {active === "Contributions" && <AdminContributions />}
             {active === "Finance" && <FinancialDashboard />}
             {active === "Analytics" && <AnalyticsDashboard />}

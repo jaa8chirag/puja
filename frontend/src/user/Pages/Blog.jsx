@@ -84,7 +84,7 @@ export default function Blog() {
             <input
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="Blog dhundhen..."
+              placeholder="Search Blog..."
               className="w-full bg-white/70 border border-orange-200 rounded-2xl px-5 py-3.5 text-[#3d1500] placeholder-orange-300/70 focus:outline-none focus:border-orange-400 focus:bg-white text-sm shadow-sm transition-all"
               style={{ fontFamily: "'Georgia', serif" }}
             />
@@ -120,7 +120,7 @@ export default function Blog() {
             <p className="text-red-600 font-semibold mb-1">{error}</p>
             <button onClick={() => { setActive("All"); setSearchInput(""); }}
               className="mt-4 px-5 py-2 rounded-xl text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 transition-colors">
-              Dobara Try Karein
+              Try again
             </button>
           </div>
         )}

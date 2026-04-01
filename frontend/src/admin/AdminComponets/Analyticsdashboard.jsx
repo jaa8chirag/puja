@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ChartNoAxesCombined } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -114,25 +115,11 @@ export default function AnalyticsDashboard() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-sm">
-              ✦
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Analytics & God View
-            </h1>
-          </div>
-          <p className="text-slate-500 text-sm ml-11">
-            Business health and performance metrics
-          </p>
+          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <ChartNoAxesCombined className="text-orange-500" /> Contributions
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium">Manage donation types & pricing</p>
         </div>
-        <button
-          onClick={fetchAnalytics}
-          disabled={loading}
-          className="px-3 py-2 rounded-xl bg-[#0f1623] border border-white/5 text-slate-400 text-xs hover:border-violet-500/30 hover:text-white transition-all duration-200 disabled:opacity-50"
-        >
-          {loading ? "⏳ Loading..." : "🔄 Refresh"}
-        </button>
       </div>
 
       {/* Stat Cards */}

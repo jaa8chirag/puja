@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { View, EyeOff, Code2 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const CATEGORIES = ["Jyotish", "Vastu", "Puja Vidhi", "Rashifal", "Upay"];
@@ -147,8 +148,10 @@ const Adminblogs = () => {
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-50 m-0">Blog Management</h1>
-          <p className="text-[13px] text-gray-500 mt-1 mb-0">Blogs create, edit aur manage karein</p>
+          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <View className="text-orange-500" /> Contributions
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium">Manage donation types & pricing</p>
         </div>
         <button onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity border-none cursor-pointer"
@@ -168,7 +171,7 @@ const Adminblogs = () => {
       {/* ── Filters ── */}
       <div className="flex flex-wrap gap-3 mb-4">
         <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍 Blog dhundhen..."
+          placeholder="🔍 Search Blogs..."
           className="bg-[#161b27] border border-white/[0.08] rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-orange-500/50 w-64"
         />
         <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}

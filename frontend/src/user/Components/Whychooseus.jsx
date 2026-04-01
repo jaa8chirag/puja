@@ -28,8 +28,8 @@ const reasons = [
   },
   {
     icon: <BookOpen size={28} />,
-    title: "Complete Samagri Provided",
-    desc: "All puja materials — from flowers to holy items — are sourced authentically and delivered to your doorstep.",
+    title: "Complete Aashirwad Included",
+    desc: "Receive divine blessings along with sacred items — thoughtfully preparedand delivered to your doorstep as part of your Puja experience.",
     highlight: "All Inclusive",
   },
   {

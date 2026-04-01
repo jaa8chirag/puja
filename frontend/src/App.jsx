@@ -56,8 +56,9 @@ import Blog from "./user/Pages/Blog";
 import BlogDetail from "./user/Pages/BlogDetails";
 
 import PrivacyPolicy from "./user/Pages/PrivacyPolice";
-import ContactUs from "./user/Pages/ContactUs";
 import AboutUs from "./user/Pages/AboutUs";
+import CancelationPolicy from "./user/Pages/CancelationPolice";
+
 
 import AIPanditBot from "./user/Pages/AIPanditBot";
 import OnlineRitual from "./user/Pages/OnlineRitual";
@@ -116,6 +117,7 @@ function App() {
 
           <Route path="/aboutUs" element={<AboutUs />} />
           <Route path="/pricaypolicy" element={<PrivacyPolicy />} />
+          <Route path="/cancellationpolicy" element={<CancelationPolicy />} />
 
           {/* Home Puja */}
           <Route path="/homePuja">
@@ -197,6 +199,7 @@ function App() {
         {/* admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        
 
         {/* ================= 404 ================= */}
         <Route path="*" element={<NotFound />} />
