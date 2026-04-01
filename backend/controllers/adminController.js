@@ -751,7 +751,7 @@ export const getAllServices = async (req, res) => {
   try {
     const { puja_type, category, search, status } = req.query;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 12;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
     let whereClause = `WHERE 1=1`;
@@ -2079,7 +2079,9 @@ export const deleteBenefit = async (req, res) => {
 // Get All Pages (About Us & Privacy Policy)
 export const getPages = async (req, res) => {
   try {
-    const [pages] = await db.query(`SELECT * FROM pages WHERE slug != 'contact-us'`);
+    const [pages] = await db.query(
+      `SELECT * FROM pages WHERE slug != 'contact-us'`,
+    );
 
     res.json({
       success: true,
@@ -2123,7 +2125,7 @@ export const updatePage = async (req, res) => {
 
     const [result] = await db.query(
       `UPDATE pages SET title = ?, sections = ?, updated_by = ? WHERE slug = ?`,
-      [title, JSON.stringify(sections), req.admin?.name || "admin", slug]
+      [title, JSON.stringify(sections), req.admin?.name || "admin", slug],
     );
 
     if (result.affectedRows === 0) {

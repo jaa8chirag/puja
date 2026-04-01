@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-
+import Pagination from "../../Components/Pagination";
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -351,29 +351,13 @@ const Users = () => {
           )}
         </div>
 
-        {/* Pagination */}
+        {/* ✅ Pagination Component */}
         {!loading && users.length > 0 && (
-          <div className="flex justify-between items-center px-6 py-4 border-t border-slate-800 bg-[#0f172a]/50">
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-              Page <b className="text-orange-500">{page}</b> of {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-                className="p-2 bg-[#131e32] border border-slate-700 text-slate-400 rounded-xl disabled:opacity-10 hover:bg-slate-800 transition"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-                className="p-2 bg-[#131e32] border border-slate-700 text-slate-400 rounded-xl disabled:opacity-10 hover:bg-slate-800 transition"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
         )}
       </div>
 
