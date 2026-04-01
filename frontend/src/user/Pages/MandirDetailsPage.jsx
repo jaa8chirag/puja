@@ -112,7 +112,7 @@ const MandirDetailsPage = () => {
                         </section>
 
                         {/* Timings Section */}
-                        <section className="space-y-6">
+                        {/* <section className="space-y-6">
                             <h2 className="text-2xl font-black flex items-center gap-3 text-gray-800">
                                 <Clock className="text-orange-600" /> Darshan & Aarti Timings
                             </h2>
@@ -136,7 +136,7 @@ const MandirDetailsPage = () => {
                                     );
                                 })}
                             </div>
-                        </section>
+                        </section> */}
 
                         {/* Festivals Section */}
                         <section className="bg-slate-50 p-8 rounded-[2.5rem] border border-gray-100">

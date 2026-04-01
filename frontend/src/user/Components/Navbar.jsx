@@ -152,14 +152,14 @@ const Navbar = () => {
               onMouseEnter={() => setPindDanOpen(true)}
               onMouseLeave={() => setPindDanOpen(false)}
             >
-              <div className="flex items-center gap-1 font-bold text-[15px] cursor-default text-slate-700 hover:text-orange-600 py-2 px-1 transition-colors">
+              <div className="flex items-center gap-1 font-semibold text-[15px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
                 Pind-Dan/Pitra-Dosh
                 <ChevronDown
                   size={14}
                   className={`transition-transform duration-300 ${
                     pindDanOpen
                       ? "rotate-180 text-orange-600"
-                      : "text-slate-400"
+                      : "text-black"
                   }`}
                 />
               </div>
@@ -202,14 +202,14 @@ const Navbar = () => {
               onMouseEnter={() => setDropdownOpen(true)}
               onMouseLeave={() => setDropdownOpen(false)}
             >
-              <div className="flex items-center gap-1 font-bold text-[15px] cursor-default text-slate-700 hover:text-orange-600 py-2 px-1 transition-colors">
+              <div className="flex items-center gap-1 font-semibold text-[15px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
                 Gallery
                 <ChevronDown
                   size={14}
                   className={`transition-transform duration-300 ${
                     dropdownOpen
                       ? "rotate-180 text-orange-600"
-                      : "text-slate-400"
+                      : "text-black"
                   }`}
                 />
               </div>

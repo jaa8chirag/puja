@@ -42,12 +42,12 @@ const initChatSocket = (io) => {
       onlineAgents[socket.id] = { userId, name, email, role, socketId: socket.id };
       socket.join("agents-room");
 
+      // Waiting aur active sessions bhejo — messages ke saath
       const openSessions = Object.values(sessions).filter(
         (s) => s.status === "waiting" || s.status === "active"
       );
       socket.emit("agent:sessions", openSessions);
       socket.to("agents-room").emit("agent:online", { userId, name });
-
     }
 
     // ── USER: Chat shuru karo ───────────────────
@@ -57,6 +57,7 @@ const initChatSocket = (io) => {
         return;
       }
 
+      // Agar pehle se session hai to wahi de do
       const existingSession = Object.values(sessions).find(
         (s) => s.userId === userId && s.status !== "closed"
       );
@@ -68,9 +69,18 @@ const initChatSocket = (io) => {
           status: existingSession.status,
           agentName: existingSession.agentName || null,
         });
+
+        // Purane messages bhi bheho user ko
+        if (existingSession.messages.length > 0) {
+          socket.emit("user:history", {
+            sessionId: existingSession.sessionId,
+            messages: existingSession.messages,
+          });
+        }
         return;
       }
 
+      // Naya session banao
       const sessionId = `chat_${userId}_${Date.now()}`;
       sessions[sessionId] = {
         sessionId,
@@ -89,10 +99,9 @@ const initChatSocket = (io) => {
       socket.join(sessionId);
       socket.emit("user:session", { sessionId, status: "waiting" });
       io.to("agents-room").emit("agent:new-session", sessions[sessionId]);
-
     });
 
-    // ── AGENT: Accept session ───────────────────
+    // ── AGENT: Session accept karo ──────────────
     socket.on("agent:accept-session", ({ sessionId }) => {
       if (role !== "customerCare" && role !== "admin") {
         socket.emit("error", { message: "Access denied" });
@@ -100,8 +109,14 @@ const initChatSocket = (io) => {
       }
 
       const session = sessions[sessionId];
-      if (!session) { socket.emit("error", { message: "Session nahi mili" }); return; }
-      if (session.status === "active") { socket.emit("error", { message: "Pehle se kisi ne le liya" }); return; }
+      if (!session) {
+        socket.emit("error", { message: "Session nahi mili" });
+        return;
+      }
+      if (session.status === "active") {
+        socket.emit("error", { message: "Pehle se kisi ne le liya" });
+        return;
+      }
 
       session.agentSocketId = socket.id;
       session.agentId = userId;
@@ -109,20 +124,57 @@ const initChatSocket = (io) => {
       session.status = "active";
 
       socket.join(sessionId);
-      io.to(sessionId).emit("session:accepted", { sessionId, agentName: name, agentId: userId });
+
+      // Sabko batao session accept hua
+      io.to(sessionId).emit("session:accepted", {
+        sessionId,
+        agentName: name,
+        agentId: userId,
+      });
       io.to("agents-room").emit("agent:session-updated", session);
 
+      // ✅ Agent ko waiting messages ki history bheho
+      if (session.messages.length > 0) {
+        socket.emit("agent:history", {
+          sessionId,
+          messages: session.messages,
+        });
+      }
     });
 
     // ── MESSAGE bhejo ───────────────────────────
     socket.on("message:send", ({ sessionId, text }) => {
       const session = sessions[sessionId];
-      if (!session) { socket.emit("error", { message: "Session nahi mili" }); return; }
-      if (session.status !== "active") { socket.emit("error", { message: "Chat active nahi hai" }); return; }
+
+      if (!session) {
+        socket.emit("error", { message: "Session nahi mili" });
+        return;
+      }
+
+      // ✅ "waiting" aur "active" dono allow — sirf "closed" block
+      if (session.status === "closed") {
+        socket.emit("error", { message: "Chat band ho gayi hai" });
+        return;
+      }
 
       const isSessionUser = session.userId === userId;
       const isSessionAgent = session.agentId === userId;
-      if (!isSessionUser && !isSessionAgent) { socket.emit("error", { message: "Aap is chat mein nahi hain" }); return; }
+
+      // Waiting mein sirf user message kar sakta hai
+      if (session.status === "waiting" && !isSessionUser) {
+        socket.emit("error", { message: "Session abhi active nahi hai" });
+        return;
+      }
+
+      if (!isSessionUser && !isSessionAgent) {
+        socket.emit("error", { message: "Aap is chat mein nahi hain" });
+        return;
+      }
+
+      if (!text || !text.trim()) {
+        socket.emit("error", { message: "Message khali nahi ho sakta" });
+        return;
+      }
 
       const message = {
         id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
@@ -136,7 +188,14 @@ const initChatSocket = (io) => {
       };
 
       session.messages.push(message);
-      io.to(sessionId).emit("message:received", message);
+
+      // ✅ Waiting mein sirf agents-room ko bhejo (user khud dekh raha hai)
+      if (session.status === "waiting") {
+        socket.emit("message:received", message);         // user ko confirm
+        io.to("agents-room").emit("message:received", message); // agents ko
+      } else {
+        io.to(sessionId).emit("message:received", message); // active — room mein sabko
+      }
     });
 
     // ── TYPING ──────────────────────────────────
@@ -153,17 +212,47 @@ const initChatSocket = (io) => {
       });
     });
 
-    // ── SESSION band karo ───────────────────────
-    socket.on("session:close", ({ sessionId }) => {
+    // ── SESSION cancel karo (user ne wait chhodi) ──
+    socket.on("session:cancel", ({ sessionId }) => {
       const session = sessions[sessionId];
       if (!session) return;
-      if (session.userId !== userId && session.agentId !== userId) { socket.emit("error", { message: "Access denied" }); return; }
+      if (session.userId !== userId) {
+        socket.emit("error", { message: "Access denied" });
+        return;
+      }
+      if (session.status !== "waiting") return;
 
       session.status = "closed";
       session.closedAt = new Date().toISOString();
       session.closedBy = name;
 
-      io.to(sessionId).emit("session:closed", { sessionId, closedBy: name, closedByRole: role });
+      io.to(sessionId).emit("session:closed", {
+        sessionId,
+        closedBy: name,
+        closedByRole: role,
+      });
+      io.to("agents-room").emit("agent:session-updated", session);
+    });
+
+    // ── SESSION band karo ───────────────────────
+    socket.on("session:close", ({ sessionId }) => {
+      const session = sessions[sessionId];
+      if (!session) return;
+
+      if (session.userId !== userId && session.agentId !== userId) {
+        socket.emit("error", { message: "Access denied" });
+        return;
+      }
+
+      session.status = "closed";
+      session.closedAt = new Date().toISOString();
+      session.closedBy = name;
+
+      io.to(sessionId).emit("session:closed", {
+        sessionId,
+        closedBy: name,
+        closedByRole: role,
+      });
       io.to("agents-room").emit("agent:session-updated", session);
     });
 
@@ -174,6 +263,7 @@ const initChatSocket = (io) => {
         socket.to("agents-room").emit("agent:offline", { userId, name });
       }
 
+      // User disconnect hua aur session waiting mein tha to close karo
       const userSession = Object.values(sessions).find(
         (s) => s.userId === userId && s.status === "waiting"
       );
@@ -182,10 +272,8 @@ const initChatSocket = (io) => {
         userSession.closedAt = new Date().toISOString();
         io.to("agents-room").emit("agent:session-updated", userSession);
       }
-
     });
   });
-
 };
 
 export default initChatSocket;

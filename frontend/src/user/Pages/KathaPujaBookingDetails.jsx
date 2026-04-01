@@ -230,6 +230,9 @@ const KathaPujaPaymentDetails = () => {
   //       )[0].price,
   //     )
   //   : 0;
+
+
+  const today = new Date().toISOString().split("T")[0];
   const grandTotal = basePrice + samagriPrice + dharmicTotal;
 
   const inputBaseClass =
@@ -299,6 +302,7 @@ const KathaPujaPaymentDetails = () => {
                       <input
                         type="date"
                         name="date"
+                        min={today}
                         value={formData.date}
                         onChange={handleInputChange}
                         className={inputBaseClass}
@@ -454,59 +458,57 @@ const KathaPujaPaymentDetails = () => {
                 </div>
 
                 {/* Cards Grid (Top 4) */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-  {contributionOptions.map((option) => (
-    <ContributionCard
-      key={option.id}
-      option={option}
-      selected={donations[option.id]}
-      onToggle={() => toggleDonation(option.id)}
-    />
-  ))}
-</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {contributionOptions.map((option) => (
+                    <ContributionCard
+                      key={option.id}
+                      option={option}
+                      selected={donations[option.id]}
+                      onToggle={() => toggleDonation(option.id)}
+                    />
+                  ))}
+                </div>
 
-{/* ✅ GAU SEVA - Now in a matching Box Style */}
-<div className="mt-3"> 
-  <div
-    onClick={() => toggleDonation("Gau Seva")}
-    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${
-      donations["Gau Seva"]
-        ? "border-orange-500 bg-orange-50/30 shadow-sm"
-        : "border-orange-200 bg-white hover:border-orange-300"
-    }`}
-  >
-    {/* Checkbox */}
-    <div
-      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-        donations["Gau Seva"] ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
-      }`}
-    >
-      {donations["Gau Seva"] && (
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-3.5 h-3.5">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      )}
-    </div>
+                {/* ✅ GAU SEVA - Now in a matching Box Style */}
+                <div className="mt-3">
+                  <div
+                    onClick={() => toggleDonation("Gau Seva")}
+                    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
+                        ? "border-orange-500 bg-orange-50/30 shadow-sm"
+                        : "border-orange-200 bg-white hover:border-orange-300"
+                      }`}
+                  >
+                    {/* Checkbox */}
+                    <div
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${donations["Gau Seva"] ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
+                        }`}
+                    >
+                      {donations["Gau Seva"] && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-3.5 h-3.5">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
 
-    {/* Emoji/Icon */}
-    <span className="text-xl shrink-0 ml-1">🐄</span>
+                    {/* Emoji/Icon */}
+                    <span className="text-xl shrink-0 ml-1">🐄</span>
 
-    {/* Text Details */}
-    <div className="flex-1 min-w-0">
-      <h4 className="font-bold text-sm text-gray-900 leading-tight">
-        Complete your Sankalp with Gau Seva
-      </h4>
-      <p className="text-[10px] text-gray-500 font-medium">
-        Feed a cow on your behalf as a sacred gesture
-      </p>
-    </div>
+                    {/* Text Details */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm text-gray-900 leading-tight">
+                        Complete your Sankalp with Gau Seva
+                      </h4>
+                      <p className="text-[10px] text-gray-500 font-medium">
+                        Feed a cow on your behalf as a sacred gesture
+                      </p>
+                    </div>
 
-    {/* Price */}
-    <span className="text-orange-600 font-black text-sm whitespace-nowrap">
-      +₹{getPrice("Gau Seva") || 0}
-    </span>
-  </div>
-</div>
+                    {/* Price */}
+                    <span className="text-orange-600 font-black text-sm whitespace-nowrap">
+                      +₹{getPrice("Gau Seva") || 0}
+                    </span>
+                  </div>
+                </div>
 
                 {/* Guarantees */}
                 <div className="space-y-3 pt-1">
@@ -831,17 +833,15 @@ const MobileSummaryInline = ({
 const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
-    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${
-      selected
+    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
         ? "border-orange-500 bg-orange-50/30 shadow-sm"
         : "border-orange-200 hover:border-orange-300 bg-white"
-    }`}
+      }`}
   >
     {/* ✅ CHECKBOX STYLE (Radio dot ki jagah) */}
     <div
-      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-        selected ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
-      }`}
+      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${selected ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
+        }`}
     >
       {selected && (
         <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-3.5 h-3.5">
@@ -874,76 +874,41 @@ export default KathaPujaPaymentDetails;
 
 
 
-const HourDropdown = ({ value, onChange, inputBaseClass, labelClass }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+export const HourDropdown = ({ value, onChange, inputBaseClass, labelClass }) => {
+  // 7 AM se 5 PM tak ke hours generate karne ke liye
+  const generateHours = () => {
+    const hours = [];
+    for (let i = 7; i <= 17; i++) {
+      const period = i < 12 ? "AM" : "PM";
+      const displayHour = i <= 12 ? i : i - 12; // 13 becomes 1 PM
 
-  const selectedHour = value ? parseInt(value.split(":")[0]) : null;
-
-  const handleSelect = (h) => {
-    onChange({
-      target: {
-        name: "time",
-        value: String(h).padStart(2, "0") + ":00",
-      },
-    });
-    setOpen(false);
+      // Select value format: "07:00 AM", "01:00 PM", etc.
+      const timeString = `${displayHour < 10 ? "0" + displayHour : displayHour}:00 ${period}`;
+      hours.push(timeString);
+    }
+    return hours;
   };
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const timeOptions = generateHours();
 
   return (
-    <div className="space-y-1" ref={ref}>
+    <div className="space-y-1">
       <label className={labelClass}>
         <Clock size={12} /> Time <span className="text-red-500">*</span>
       </label>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((p) => !p)}
-          className={`${inputBaseClass} flex items-center justify-between`}
-        >
-          <span className={selectedHour === null ? "text-gray-400" : "text-gray-800"}>
-            {selectedHour !== null
-              ? String(selectedHour).padStart(2, "0") + ":00"
-              : "Select Hour"}
-          </span>
-          <svg
-            width="14" height="14" viewBox="0 0 12 12" fill="none"
-            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-            style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-          >
-            <path d="M2 4l4 4 4-4" />
-          </svg>
-        </button>
-
-        {open && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-orange-200 rounded-xl shadow-lg overflow-hidden">
-            <div className="max-h-52 overflow-y-auto">
-              {Array.from({ length: 24 }, (_, i) => (
-                <div
-                  key={i}
-                  onClick={() => handleSelect(i)}
-                  className={`px-4 py-2.5 text-sm font-semibold cursor-pointer flex justify-between items-center transition-colors
-                    ${selectedHour === i
-                      ? "bg-orange-50 text-orange-600"
-                      : "text-gray-700 hover:bg-orange-50 hover:text-orange-500"
-                    }`}
-                >
-                  <span>{String(i).padStart(2, "0")}:00</span>
-                  {selectedHour === i && <span className="text-orange-500 text-xs">✓</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <select
+        name="time"
+        value={value}
+        onChange={onChange}
+        className={`${inputBaseClass} cursor-pointer appearance-none`}
+      >
+        <option value="">Select Time</option>
+        {timeOptions.map((time) => (
+          <option key={time} value={time}>
+            {time}
+          </option>
+        ))}
+      </select>
     </div>
   );
 };

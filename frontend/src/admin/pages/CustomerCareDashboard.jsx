@@ -293,10 +293,9 @@ const ChatSupportPanel = ({
 
     const onMessage = (msg) => {
       setMessages((prev) => {
-        const updated = {
-          ...prev,
-          [msg.sessionId]: [...(prev[msg.sessionId] || []), msg],
-        };
+        const existing = prev[msg.sessionId] || [];
+        if (existing.find((m) => m.id === msg.id)) return prev;
+        const updated = { ...prev, [msg.sessionId]: [...existing, msg] };
         onMessagesChange?.(updated);
         return updated;
       });
@@ -317,6 +316,25 @@ const ChatSupportPanel = ({
         return updated;
       });
     };
+
+    const onAgentHistory = ({ sessionId, messages: historyMsgs }) => {
+      setMessages((prev) => {
+        const existing = prev[sessionId] || [];
+        const merged = [...historyMsgs];
+        existing.forEach((m) => {
+          if (!merged.find((hm) => hm.id === m.id)) merged.push(m);
+        });
+        merged.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const updated = { ...prev, [sessionId]: merged };
+        onMessagesChange?.(updated);
+        return updated;
+      });
+    };
+
+    socket.on("agent:history", onAgentHistory);
+
+    // cleanup mein bhi:
+    socket.off("agent:history", onAgentHistory);
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -400,7 +418,7 @@ const ChatSupportPanel = ({
     active: "bg-emerald-400",
     closed: "bg-slate-500",
   };
-  const statusLabel = { waiting: "Wait", active: "Live", closed: "Band" };
+  const statusLabel = { waiting: "Wait", active: "Live", closed: "Close" };
 
   /* ── Sessions List ── */
   const SessionsList = () => (
@@ -550,7 +568,7 @@ const ChatSupportPanel = ({
                     ? "Live"
                     : activeSession.status === "waiting"
                       ? "Waiting"
-                      : "Band"}
+                      : "Close"}
                 </span>
               </div>
               <div className="flex gap-2 flex-shrink-0">
@@ -651,8 +669,8 @@ const ChatSupportPanel = ({
                   activeSession?.status === "active"
                     ? "Reply likhein..."
                     : activeSession?.status === "waiting"
-                      ? "Pehle accept karein..."
-                      : "Chat band ho gayi"
+                      ? "Accept the chat first..."
+                      : "The chat is over."
                 }
                 className="flex-1 bg-[#0a1220] border border-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/30 disabled:opacity-40 transition"
               />
@@ -778,10 +796,11 @@ const CustomerCareDashboard = () => {
 
     // Naya message aaya
     socket.on("message:received", (msg) => {
-      setChatMessages((prev) => ({
-        ...prev,
-        [msg.sessionId]: [...(prev[msg.sessionId] || []), msg],
-      }));
+      setChatMessages((prev) => {
+        const existing = prev[msg.sessionId] || [];
+        if (existing.find((m) => m.id === msg.id)) return prev;
+        return { ...prev, [msg.sessionId]: [...existing, msg] };
+      });
       if (msg.senderType === "user" && activeTabRef.current !== "chatsupport") {
         setChatBadgeCount((prev) => prev + 1);
         addToast(
@@ -1043,10 +1062,9 @@ const CustomerCareDashboard = () => {
               key={item.id}
               onClick={() => handleTabChange(item.id)}
               className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200
-                ${
-                  activeTab === item.id
-                    ? "bg-gradient-to-r from-blue-500/15 to-indigo-500/8 text-blue-300 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.06)_inset]"
-                    : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04] border border-transparent"
+                ${activeTab === item.id
+                  ? "bg-gradient-to-r from-blue-500/15 to-indigo-500/8 text-blue-300 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.06)_inset]"
+                  : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04] border border-transparent"
                 }`}
             >
               {/* Icon + badge */}
@@ -1409,36 +1427,32 @@ const CustomerCareDashboard = () => {
                               {activeTab === "pandits" ? (
                                 // Pandit — Online / Offline
                                 <span
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                                    person.is_online
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${person.is_online
                                       ? "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"
                                       : "bg-slate-400/10 text-slate-400 border-slate-400/25"
-                                  }`}
+                                    }`}
                                 >
                                   <span
-                                    className={`w-1.5 h-1.5 rounded-full ${
-                                      person.is_online
+                                    className={`w-1.5 h-1.5 rounded-full ${person.is_online
                                         ? "bg-emerald-400"
                                         : "bg-red-400"
-                                    }`}
+                                      }`}
                                   />
                                   {person.is_online ? "Online" : "Offline"}
                                 </span>
                               ) : (
                                 // User — Active / Blocked
                                 <span
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                                    person.is_blocked
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${person.is_blocked
                                       ? "bg-rose-400/10 text-rose-400 border-rose-400/25"
                                       : "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"
-                                  }`}
+                                    }`}
                                 >
                                   <span
-                                    className={`w-1.5 h-1.5 rounded-full ${
-                                      person.is_blocked
+                                    className={`w-1.5 h-1.5 rounded-full ${person.is_blocked
                                         ? "bg-rose-400"
                                         : "bg-emerald-400"
-                                    }`}
+                                      }`}
                                   />
                                   {person.is_blocked ? "Blocked" : "Active"}
                                 </span>
@@ -1834,9 +1848,8 @@ const CustomerCareDashboard = () => {
                         </div>
                         {/* ✅ Online/Offline dot on avatar */}
                         <span
-                          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#080f1c] ${
-                            pandit.is_online ? "bg-emerald-400" : "bg-slate-500"
-                          }`}
+                          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#080f1c] ${pandit.is_online ? "bg-emerald-400" : "bg-slate-500"
+                            }`}
                         />
                       </div>
                       <div className="min-w-0">
@@ -1849,11 +1862,10 @@ const CustomerCareDashboard = () => {
                           </p>
                           {/* ✅ Online/Offline badge */}
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                              pandit.is_online
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${pandit.is_online
                                 ? "bg-emerald-400/10 text-emerald-400"
                                 : "bg-slate-400/10 text-slate-400"
-                            }`}
+                              }`}
                           >
                             {pandit.is_online ? "Online" : "Offline"}
                           </span>

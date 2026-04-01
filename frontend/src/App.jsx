@@ -95,7 +95,7 @@ function App() {
 
           <Route path="/chat" element={<Chatwidget />} />
           <Route path="/aiPandit" element={<AIPanditBot />} />
-          <Route path="/kundli" element={<KundliPortal />} />
+          
           <Route path="/nameCorrection" element={<NameCorrection />} />
           <Route path="/blogs" element={<Blog />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />
@@ -103,6 +103,11 @@ function App() {
           <Route path="/temples" element={<FullTemplePage />} />
 
           <Route path="/online-ritual" element={<OnlineRitual />} />
+
+
+          <Route element={<ProtectedLayout />}>
+            <Route path="/kundli" element={<KundliPortal />} />
+          </Route>
 
           <Route element={<ProtectedLayout />}>
             <Route
