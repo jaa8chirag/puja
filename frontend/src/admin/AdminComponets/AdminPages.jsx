@@ -7,55 +7,108 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  Plus,
+  Trash2,
+  GripVertical,
 } from "lucide-react";
 import { API } from "../../services/adminApi";
 
-// ─── Field Label Map ──────────────────────────────────────────────────────────
-const FIELD_LABELS = {
-  // About Us
-  hero_title: "Hero Title",
-  hero_subtitle: "Hero Subtitle",
-  hero_image_url: "Hero Image URL",
-  mission_title: "Mission Title",
-  mission_text: "Mission Text",
-  vision_title: "Vision Title",
-  vision_text: "Vision Text",
-  team_title: "Team Title",
-  team_subtitle: "Team Subtitle",
-  stats_pujas: "Stats — Pujas",
-  stats_devotees: "Stats — Devotees",
-  stats_cities: "Stats — Cities",
-  stats_pandits: "Stats — Pandits",
-  // Privacy Policy
-  last_updated: "Last Updated",
-  intro_text: "Intro Text",
-  section1_title: "Section 1 Title",
-  section1_text: "Section 1 Text",
-  section2_title: "Section 2 Title",
-  section2_text: "Section 2 Text",
-  section3_title: "Section 3 Title",
-  section3_text: "Section 3 Text",
-  section4_title: "Section 4 Title",
-  section4_text: "Section 4 Text",
-  section5_title: "Section 5 Title",
-  section5_text: "Section 5 Text",
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const isTextarea = (key) =>
+  key.toLowerCase().includes("text") ||
+  key.toLowerCase().includes("content") ||
+  key.toLowerCase().includes("subtitle") ||
+  key.toLowerCase().includes("intro") ||
+  key.toLowerCase().includes("description");
+
+const formatKey = (key) =>
+  key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+// Sections object → ordered array of { key, title, content }
+const sectionsToArray = (sections) => {
+  if (!sections) return [];
+
+  let parsed;
+  try {
+    parsed = typeof sections === "string" ? JSON.parse(sections) : sections;
+  } catch {
+    return [];
+  }
+
+  // Array format — normalize each item to ensure title & content exist
+  if (Array.isArray(parsed)) {
+    return parsed.map((item, i) => ({
+      key: item.key || `section_${i}`,
+      title: item.title ?? item.label ?? formatKey(item.key || `section_${i}`),
+      content: item.content ?? item.text ?? item.value ?? "",
+      _paired: item._paired ?? true,
+    }));
+  }
+
+  // Flat object format — pair _title + _text keys
+  const keys = Object.keys(parsed);
+  const result = [];
+  const used = new Set();
+
+  keys.forEach((key) => {
+    if (used.has(key)) return;
+
+    if (key.endsWith("_title")) {
+      const base = key.replace(/_title$/, "");
+      const textKey = `${base}_text`;
+      if (keys.includes(textKey)) {
+        result.push({
+          key: base,
+          title: parsed[key] || "",
+          content: parsed[textKey] || "",
+          _paired: true,
+        });
+        used.add(key);
+        used.add(textKey);
+        return;
+      }
+    }
+
+    if (!used.has(key)) {
+      result.push({
+        key,
+        title: formatKey(key),
+        content: String(parsed[key] ?? ""),
+        _paired: false,
+      });
+      used.add(key);
+    }
+  });
+
+  return result;
 };
 
-const isTextarea = (key) =>
-  key.endsWith("_text") || key === "intro_text" || key === "hero_subtitle";
+// Array back to flat object for API
+const arrayToSections = (arr) => {
+  const obj = {};
+  arr.forEach((item) => {
+    // If this item was originally a paired title+text
+    if (item._paired) {
+      obj[`${item.key}_title`] = item.title;
+      obj[`${item.key}_text`] = item.content;
+    } else {
+      obj[item.key] = item.content;
+    }
+  });
+  return obj;
+};
 
 // ─── Page Card ────────────────────────────────────────────────────────────────
 const PageCard = ({ page, onEdit }) => {
   const [expanded, setExpanded] = useState(false);
-  const sections = typeof page.sections === "string"
-    ? JSON.parse(page.sections)
-    : page.sections;
-
-  const previewKeys = Object.keys(sections).slice(0, 3);
+  const sections = sectionsToArray(page.sections);
+  const previewSections = sections.slice(0, 3);
 
   return (
     <div className="bg-[#131e32] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl mb-4">
-      {/* Card Header */}
+      {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/60">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center">
@@ -82,35 +135,37 @@ const PageCard = ({ page, onEdit }) => {
         </div>
       </div>
 
-      {/* Preview (always visible) */}
+      {/* Preview */}
       <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {previewKeys.map((key) => (
-          <div key={key} className="bg-[#0f172a] rounded-xl px-4 py-3 border border-slate-800/50">
+        {previewSections.map((sec, i) => (
+          <div key={i} className="bg-[#0f172a] rounded-xl px-4 py-3 border border-slate-800/50">
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
-              {FIELD_LABELS[key] || key}
+              {sec.title || sec.key || `Section ${i + 1}`}
             </p>
-            <p className="text-slate-300 text-xs font-medium truncate">
-              {sections[key] || <span className="text-slate-600 italic">Empty</span>}
-            </p>
+            {sec.content ? (
+              <p className="text-slate-300 text-xs font-medium truncate">{sec.content}</p>
+            ) : (
+              <p className="text-slate-600 text-xs italic">Empty</p>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Expanded — All Fields */}
-      {expanded && (
+      {/* Expanded */}
+      {expanded && sections.length > 3 && (
         <div className="px-6 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-800/40 pt-4">
-          {Object.keys(sections)
-            .slice(3)
-            .map((key) => (
-              <div key={key} className="bg-[#0f172a] rounded-xl px-4 py-3 border border-slate-800/50">
-                <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
-                  {FIELD_LABELS[key] || key}
-                </p>
-                <p className="text-slate-300 text-xs font-medium line-clamp-2">
-                  {sections[key] || <span className="text-slate-600 italic">Empty</span>}
-                </p>
-              </div>
-            ))}
+          {sections.slice(3).map((sec, i) => (
+            <div key={i} className="bg-[#0f172a] rounded-xl px-4 py-3 border border-slate-800/50">
+              <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
+                {sec.title || sec.key || `Section ${i + 4}`}
+              </p>
+              {sec.content ? (
+                <p className="text-slate-300 text-xs font-medium line-clamp-2">{sec.content}</p>
+              ) : (
+                <p className="text-slate-600 text-xs italic">Empty</p>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -134,25 +189,106 @@ const PageCard = ({ page, onEdit }) => {
   );
 };
 
+// ─── Section Row in Modal ─────────────────────────────────────────────────────
+const SectionRow = ({ section, index, onChange, onDelete, isLast }) => {
+  return (
+    <div className="bg-[#0a1120] border border-slate-800 rounded-2xl overflow-hidden">
+      {/* Section Header Bar */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800/30 border-b border-slate-800/60">
+        <div className="flex items-center gap-2">
+          <GripVertical size={14} className="text-slate-600" />
+          <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+            Section {index + 1}
+          </span>
+        </div>
+        <button
+          onClick={() => onDelete(index)}
+          className="p-1.5 rounded-lg text-slate-600 hover:bg-red-500/10 hover:text-red-400 transition-all"
+          title="Delete section"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      {/* Fields */}
+      <div className="px-4 py-4 space-y-3">
+        {/* Title */}
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
+            Title / Label
+          </label>
+          <input
+            type="text"
+            value={section.title}
+            placeholder="Section ka title likho..."
+            onChange={(e) => onChange(index, "title", e.target.value)}
+            className="w-full bg-[#131e32] border border-slate-700/60 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-500 transition-all placeholder:text-slate-700"
+          />
+        </div>
+
+        {/* Content */}
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
+            Content
+          </label>
+          <textarea
+            rows={3}
+            value={section.content}
+            placeholder="Content likho..."
+            onChange={(e) => onChange(index, "content", e.target.value)}
+            className="w-full bg-[#131e32] border border-slate-700/60 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-500 transition-all resize-none placeholder:text-slate-700"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Edit Modal ───────────────────────────────────────────────────────────────
 const EditModal = ({ page, onClose, onSaved }) => {
-  const parsedSections =
-    typeof page.sections === "string"
-      ? JSON.parse(page.sections)
-      : page.sections;
-
-  const [title, setTitle] = useState(page.title);
-  const [sections, setSections] = useState({ ...parsedSections });
+  const [pageTitle, setPageTitle] = useState(page.title);
+  const [sections, setSections] = useState(() => {
+    const arr = sectionsToArray(page.sections);
+    // Mark paired items so we can reconstruct correctly
+    return arr.map((s) => ({ ...s, _paired: s._paired ?? !!s.key }));
+  });
   const [submitting, setSubmitting] = useState(false);
 
-  const handleChange = (key, value) => {
-    setSections((prev) => ({ ...prev, [key]: value }));
+  const handleChange = (index, field, value) => {
+    setSections((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
+    );
+  };
+
+  const handleAdd = () => {
+    setSections((prev) => [
+      ...prev,
+      {
+        key: `section_${Date.now()}`,
+        title: "",
+        content: "",
+        _paired: true,
+      },
+    ]);
+  };
+
+  const handleDelete = (index) => {
+    setSections((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await API.put(`/pages/${page.slug}`, { title, sections });
+      // Save as clean array — simple, no key mangling, frontend reads directly
+      const sectionsArr = sections.map((sec) => ({
+        title: sec.title || "",
+        content: sec.content || "",
+      }));
+
+      await API.put(`/pages/${page.slug}`, {
+        title: pageTitle,
+        sections: sectionsArr,
+      });
       onSaved();
       onClose();
     } catch (err) {
@@ -167,7 +303,7 @@ const EditModal = ({ page, onClose, onSaved }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-[#0f172a] border border-slate-800 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800 shrink-0">
           <div>
             <h2 className="text-xl font-black text-white tracking-tight">
               Edit — {page.title}
@@ -183,54 +319,59 @@ const EditModal = ({ page, onClose, onSaved }) => {
         </div>
 
         {/* Scrollable Body */}
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
           {/* Page Title */}
           <div>
-            <label className="text-[10px] uppercase font-bold text-slate-500 ml-1 tracking-wider">
+            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
               Page Title
             </label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-[#131e32] border border-slate-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-500 transition-all mt-1"
+              value={pageTitle}
+              onChange={(e) => setPageTitle(e.target.value)}
+              className="w-full bg-[#131e32] border border-slate-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-500 transition-all"
             />
           </div>
 
           {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-slate-800" />
-            <p className="text-slate-600 text-[10px] uppercase tracking-widest font-bold">Sections</p>
+            <p className="text-slate-600 text-[10px] uppercase tracking-widest font-bold">
+              Sections ({sections.length})
+            </p>
             <div className="flex-1 h-px bg-slate-800" />
           </div>
 
-          {/* Section Fields */}
-          {Object.keys(sections).map((key) => (
-            <div key={key}>
-              <label className="text-[10px] uppercase font-bold text-slate-500 ml-1 tracking-wider">
-                {FIELD_LABELS[key] || key}
-              </label>
-              {isTextarea(key) ? (
-                <textarea
-                  rows={3}
-                  value={sections[key]}
-                  onChange={(e) => handleChange(key, e.target.value)}
-                  className="w-full bg-[#131e32] border border-slate-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-500 transition-all mt-1 resize-none"
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={sections[key]}
-                  onChange={(e) => handleChange(key, e.target.value)}
-                  className="w-full bg-[#131e32] border border-slate-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-500 transition-all mt-1"
-                />
-              )}
+          {/* Section Rows */}
+          {sections.length === 0 && (
+            <div className="text-center py-8 text-slate-600 text-sm italic">
+              Koi section nahi hai. Neeche "+ Add Section" click karo.
             </div>
+          )}
+
+          {sections.map((sec, i) => (
+            <SectionRow
+              key={sec.key + i}
+              section={sec}
+              index={i}
+              onChange={handleChange}
+              onDelete={handleDelete}
+              isLast={i === sections.length - 1}
+            />
           ))}
+
+          {/* Add Section Button */}
+          <button
+            onClick={handleAdd}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-slate-700 text-slate-500 hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/5 transition-all text-sm font-bold"
+          >
+            <Plus size={16} />
+            Add Section
+          </button>
         </div>
 
-        {/* Footer Buttons */}
-        <div className="flex gap-3 px-6 py-5 border-t border-slate-800">
+        {/* Footer */}
+        <div className="flex gap-3 px-6 py-5 border-t border-slate-800 shrink-0">
           <button
             onClick={onClose}
             className="flex-1 py-3 text-sm font-bold text-slate-400 hover:text-white transition-colors"
@@ -240,7 +381,7 @@ const EditModal = ({ page, onClose, onSaved }) => {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="animate-spin" size={18} />
@@ -267,7 +408,7 @@ const AdminPages = () => {
       setLoading(true);
       const response = await API.get("/pages");
       const result = response.data;
-      if (result && result.success && Array.isArray(result.data)) {
+      if (result?.success && Array.isArray(result.data)) {
         setPages(result.data);
       } else {
         setPages([]);

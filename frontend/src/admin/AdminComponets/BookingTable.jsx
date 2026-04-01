@@ -1188,7 +1188,7 @@ const Bookings = () => {
 
       {/* ── Header ── */}
       <div className="flex flex-wrap gap-3 justify-between items-center mb-5">
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-900/20">
             <BookOpen size={18} className="text-white" />
           </div>
@@ -1200,6 +1200,13 @@ const Bookings = () => {
               All puja booking records
             </p>
           </div>
+        </div> */}
+
+        <div>
+          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <BookOpen className="text-orange-500" /> Booking Logs
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium">All puja booking records</p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap ml-auto">

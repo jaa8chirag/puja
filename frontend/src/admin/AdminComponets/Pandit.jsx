@@ -26,6 +26,8 @@ import {
   ImagePlus,
 } from "lucide-react";
 import { API } from "../../services/adminApi.js";
+import VerifyPanditModal from "./VerifyPanditModal.jsx";
+import { useNavigate } from "react-router-dom";
 
 const Pandits = () => {
   // --- Existing States (unchanged) ---
@@ -46,6 +48,8 @@ const Pandits = () => {
   const [total, setTotal] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [blockedCount, setBlockedCount] = useState(0);
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -120,7 +124,7 @@ const Pandits = () => {
         await API.put(`/pandits/${editingPandit.id}`, formData);
         showToast("Profile Updated");
       } else {
-        await API.post("/admin/pandits", formData);
+        await API.post("/pandits", formData);
         showToast("Pandit Registered");
       }
       closeModal();
@@ -135,7 +139,7 @@ const Pandits = () => {
   const toggleBlock = async (id) => {
     setActionLoading(id);
     try {
-      await API.put(`/admin/pandits/block/${id}`);
+      await API.put(`/pandits/block/${id}`);
       showToast("Status Changed");
       fetchPandits();
     } catch (err) {
@@ -293,11 +297,10 @@ const Pandits = () => {
       {/* Toast Notification (unchanged) */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${
-            toast.type === "error"
-              ? "bg-rose-950 border-rose-800 text-rose-400"
-              : "bg-emerald-950 border-emerald-800 text-emerald-400"
-          }`}
+          className={`fixed top-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${toast.type === "error"
+            ? "bg-rose-950 border-rose-800 text-rose-400"
+            : "bg-emerald-950 border-emerald-800 text-emerald-400"
+            }`}
         >
           {toast.type === "error" ? (
             <XCircle size={16} />
@@ -310,8 +313,8 @@ const Pandits = () => {
 
       {/* PAGE HEADER — only Add Verify Pandit button added, rest unchanged */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-slate-900">
+         <div className="flex items-center gap-4">
+          {/*<div className="w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-slate-900">
             <Users size={22} strokeWidth={2.5} />
           </div>
           <div>
@@ -321,17 +324,19 @@ const Pandits = () => {
             <p className="text-[12px] text-slate-500 font-medium">
               Manage types and verification documents
             </p>
-          </div>
+          </div> */}
+
+          <div>
+          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <Users className="text-orange-500" /> Pandit Directory
+          </h1>
+          <p className="text-[12px] text-slate-500 font-medium"> Manage types and verification documents</p>
+        </div>
         </div>
 
         {/* ── NEW BUTTON + existing button side by side ── */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowVerifyModal(true)}
-            className="flex items-center gap-2 bg-orange-500 text-white px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-orange-400 transition-all active:scale-95 shadow-lg shadow-orange-900/20"
-          >
-            <BadgeCheck size={16} strokeWidth={3} /> Add Verify Pandit
-          </button>
+          
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 bg-white text-slate-900 px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-400 transition-all active:scale-95 shadow-lg shadow-emerald-900/10"

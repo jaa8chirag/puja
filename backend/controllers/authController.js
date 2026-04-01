@@ -63,6 +63,12 @@ export const signupVerify = async (req, res) => {
       pincode,
       address_type,
       panditType,
+      paymentMethod,
+      accountHolderName,
+      bankName,
+      bankAccountNumber,
+      ifscCode,
+      upiId,
     } = req.body;
 
     const documentPath = req.file ? req.file.path : null;
@@ -126,6 +132,24 @@ export const signupVerify = async (req, res) => {
           documentPath,
         ]
       );
+
+      // 4️⃣ Insert Payment Details — sirf pandit ke liye
+      if (paymentMethod && ['bank', 'upi'].includes(paymentMethod)) {
+        await connection.query(
+          `INSERT INTO partner_payment_details
+           (user_id, payment_method, account_holder_name, bank_name, bank_account_number, ifsc_code, upi_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            newUserId,
+            paymentMethod,
+            accountHolderName || null,
+            bankName || null,
+            bankAccountNumber || null,
+            ifscCode ? ifscCode.toUpperCase() : null,
+            upiId || null,
+          ]
+        );
+      }
     }
 
     await connection.commit();
@@ -141,6 +165,7 @@ export const signupVerify = async (req, res) => {
       message: "Verified Successfully!",
       token,
       role: role || "user",
+      user_id: newUserId,
     });
 
   } catch (error) {
@@ -154,7 +179,6 @@ export const signupVerify = async (req, res) => {
     if (connection) connection.release();
   }
 };
-
 // --- 3. LOGIN REQUEST (Modified for Partner Check) ---
 export const loginRequest = async (req, res) => {
   try {

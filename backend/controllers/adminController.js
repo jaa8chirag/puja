@@ -996,19 +996,36 @@ export const updateService = async (req, res) => {
   }
 };
 
-//delete service
 export const deleteService = async (req, res) => {
+  let connection;
   try {
     const { id } = req.params;
-    await db.query(`DELETE FROM service_prices WHERE service_id=?`, [id]);
-    await db.query(`DELETE FROM temples WHERE service_id=?`, [id]);
-    await db.query(`DELETE FROM services WHERE id=?`, [id]);
-    res.json({ success: true, message: "Deleted" });
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // puja_requests mein service_id null karo (history safe rahegi)
+    await connection.query(
+      `UPDATE puja_requests SET service_id = NULL WHERE service_id = ?`, [id]
+    );
+
+    // ab child tables delete karo
+    await connection.query(`DELETE FROM service_prices WHERE service_id = ?`, [id]);
+    await connection.query(`DELETE FROM temples WHERE service_id = ?`, [id]);
+
+    // ab main service delete karo
+    await connection.query(`DELETE FROM services WHERE id = ?`, [id]);
+
+    await connection.commit();
+    res.json({ success: true, message: "Service deleted successfully" });
+
   } catch (error) {
-    res.status(500).json({ success: false });
+    if (connection) await connection.rollback();
+    console.error("Delete Service Error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  } finally {
+    if (connection) connection.release();
   }
 };
-
 //===== Booking Services=========
 
 // Get all bookings for admin dashboard with filter and search

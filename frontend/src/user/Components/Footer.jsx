@@ -14,6 +14,7 @@ const Footer = () => {
       { label: "Contact Us", to: "/help" },
       { label: "FAQs", to: "/help" },
       { label: "Privacy Policy", to: "/pricaypolicy" },
+      { label: "Cancellation policy", to: "/cancellationpolicy" },
     ],
     community: [
       { label: "Temple Gallery", to: "/temples" },
@@ -27,15 +28,26 @@ const Footer = () => {
     <footer className="bg-orange-200 border-t border-orange-100">
       <div className="max-w-7xl mx-auto px-5 py-6 md:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-8">
-          
+
           {/* 1. BRAND & SOCIALS - Single row on mobile */}
           <div className="lg:col-span-4 flex flex-row lg:flex-col justify-between items-center lg:items-start border-b border-orange-300/30 pb-4 lg:border-0 lg:pb-0">
+
+            {/* Logo + Title */}
             <div className="flex items-center gap-2">
               <img src="/img/download.jpg" alt="Logo" className="h-8 w-8 rounded-lg shadow-sm" />
               <span className="text-lg font-serif font-bold text-[#3b2a1a]">
                 Sri Vedic <span className="text-orange-500">Puja</span>
               </span>
             </div>
+
+            {/* NEW TEXT (Added here) */}
+            <p className="hidden lg:block text-xs text-gray-600 mt-3 leading-relaxed max-w-xs">
+              Sri Vedic Puja Authentic rituals, simplified. We connect you with 100% verified
+              Pandits for offline and online pujas across Delhi NCR. Your devotion, our
+              dedication.
+            </p>
+
+            {/* Social Icons */}
             <div className="flex gap-2 lg:mt-4">
               {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
                 <a key={i} href="#" className="p-1.5 bg-white/60 rounded-full text-orange-600">
@@ -43,6 +55,7 @@ const Footer = () => {
                 </a>
               ))}
             </div>
+
           </div>
 
           {/* 2. LINKS SECTIONS - 2 Columns on mobile to save 50% height */}
@@ -92,7 +105,7 @@ const Footer = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="relative">
               <input type="email" placeholder="Subscribe" className="w-full bg-white/80 border border-orange-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400" />
               <button className="absolute right-1 top-1 p-1 bg-orange-500 text-white rounded-md">

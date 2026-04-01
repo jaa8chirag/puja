@@ -26,6 +26,7 @@ import fetch from "node-fetch";
 import { generatePDF } from "./controllers/pdfReport.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getPageBySlug } from "./controllers/adminController.js";
+import paymentRouter from "./routes/payment.routes.js"
 
 dotenv.config();
 
@@ -547,6 +548,7 @@ app.use("/api/blogs", blogsRouter);
 app.use("/api/admin/verify-pandit", verifypandiRoutes);
 // Public Pages Route (no auth needed)
 app.get("/api/pages/:slug", getPageBySlug);
+app.use("/api/payment", paymentRouter);
 
 const startServer = async () => {
   try {
