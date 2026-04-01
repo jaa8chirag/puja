@@ -2146,7 +2146,7 @@ export const updatePage = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
+// name correction
 export const getAllNameCorrections = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -2184,5 +2184,132 @@ export const getAllNameCorrections = async (req, res) => {
       success: false,
       error: "Internal server error: " + error.message,
     });
+  }
+};
+
+// ── Personal Info CRUD ─────────────────────────────────────────
+
+export const getAllPersonalInfo = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const [[{ total }]] = await db.execute(
+      "SELECT COUNT(*) as total FROM personal_info",
+    );
+
+    const [rows] = await db.execute(
+      `SELECT * FROM personal_info ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`,
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: rows,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("❌ getAllPersonalInfo Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const createPersonalInfo = async (req, res) => {
+  try {
+    const { phone_name, email } = req.body;
+
+    if (!phone_name || !email)
+      return res.status(400).json({
+        success: false,
+        error: "Phone name and email are required.",
+      });
+
+    const [result] = await db.execute(
+      "INSERT INTO personal_info (phone_name, email) VALUES (?, ?)",
+      [phone_name.trim(), email.trim()],
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Personal info created.",
+      data: { id: result.insertId, phone_name, email },
+    });
+  } catch (error) {
+    console.error("❌ createPersonalInfo Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const updatePersonalInfo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { phone_name, email } = req.body;
+
+    if (!phone_name || !email)
+      return res.status(400).json({
+        success: false,
+        error: "Phone name and email are required.",
+      });
+
+    await db.execute(
+      "UPDATE personal_info SET phone_name = ?, email = ? WHERE id = ?",
+      [phone_name.trim(), email.trim(), id],
+    );
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Updated successfully." });
+  } catch (error) {
+    console.error("❌ updatePersonalInfo Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const deletePersonalInfo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await db.execute("DELETE FROM personal_info WHERE id = ?", [id]);
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Deleted successfully." });
+  } catch (error) {
+    console.error("❌ deletePersonalInfo Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const updatePersonalInfoStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+
+    // validation
+    if (is_active === undefined)
+      return res.status(400).json({
+        success: false,
+        error: "is_active is required.",
+      });
+
+    if (is_active !== 0 && is_active !== 1)
+      return res.status(400).json({
+        success: false,
+        error: "is_active must be 0 or 1.",
+      });
+
+    await db.execute("UPDATE personal_info SET is_active = ? WHERE id = ?", [
+      is_active,
+      id,
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Status updated successfully.",
+    });
+  } catch (error) {
+    console.error("❌ updatePersonalInfoStatus Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 };

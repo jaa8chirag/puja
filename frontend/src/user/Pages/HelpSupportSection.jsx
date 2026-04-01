@@ -1,22 +1,54 @@
 import React, { useState, useEffect } from "react";
-import { Phone, Mail, ChevronRight, ArrowLeft, Headphones, MessageSquare, Clock } from "lucide-react";
+import { Phone, Mail, ChevronRight, ArrowLeft, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const HelpSupportSection = () => {
   const navigate = useNavigate();
+  const [contactInfo, setContactInfo] = useState({ phone: null, email: null });
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/admin/personal-info`);
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const active = json.data.find((item) => item.is_active === 1);
+          if (active) {
+            setContactInfo({ phone: active.phone_name, email: active.email });
+          }
+        }
+      } catch (error) {
+        console.error("❌ HelpSupport contact fetch error:", error);
+      }
+    };
+    fetchContactInfo();
+  }, []);
 
   const faqs = [
-    { question: "How do I cancel a booking?", answer: "You can cancel a booking from the 'My Bookings' section." },
-    { question: "Do I need to arrange Samagri?", answer: "No, we offer optional Samagri kits." },
-    { question: "How are Pandits verified?", answer: "All our Pandits undergo a thorough verification process." },
+    {
+      question: "How do I cancel a booking?",
+      answer: "You can cancel a booking from the 'My Bookings' section.",
+    },
+    {
+      question: "Do I need to arrange Samagri?",
+      answer: "No, we offer optional Samagri kits.",
+    },
+    {
+      question: "How are Pandits verified?",
+      answer: "All our Pandits undergo a thorough verification process.",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-8 font-sans antialiased text-[#2D2D2D]">
       <div className="max-w-xl mx-auto">
-
         {/* Back Button */}
-        <button className="flex items-center gap-1 text-gray-500 text-sm font-bold mb-8 hover:text-orange-500 transition-colors" onClick={() => navigate(-1)}>
+        <button
+          className="flex items-center gap-1 text-gray-500 text-sm font-bold mb-8 hover:text-orange-500 transition-colors"
+          onClick={() => navigate(-1)}
+        >
           <ArrowLeft size={16} /> Back
         </button>
 
@@ -25,24 +57,43 @@ const HelpSupportSection = () => {
           <div className="bg-gradient-to-br from-orange-400 to-orange-500 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-md">
             <span className="text-2xl font-bold">?</span>
           </div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">How can we help you?</h1>
-          <p className="text-gray-500 text-sm font-medium">Choose a way to reach us or browse FAQs</p>
+          <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">
+            How can we help you?
+          </h1>
+          <p className="text-gray-500 text-sm font-medium">
+            Choose a way to reach us or browse FAQs
+          </p>
         </div>
 
         {/* Contact Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          <div onClick={() => navigate("/help/support")} className="cursor-pointer">
-            <ContactCard icon={<Headphones className="text-green-500" size={24} />} title="Talk to Support" sub="Live assistance" />
+          <div
+            onClick={() => navigate("/help/support")}
+            className="cursor-pointer"
+          >
+            <ContactCard
+              icon={<Headphones className="text-green-500" size={24} />}
+              title="Talk to Support"
+              sub="Live assistance"
+            />
           </div>
-          <ContactCard icon={<Phone className="text-blue-500" size={24} />} title="Call Support" sub="+91 98765 43210" />
-          <ContactCard icon={<Mail className="text-purple-500" size={24} />} title="Email Us" sub="Detailed queries" />
+          <ContactCard
+            icon={<Phone className="text-blue-500" size={24} />}
+            title="Call Support"
+            sub={contactInfo.phone ?? "Loading..."}
+          />
+          <ContactCard
+            icon={<Mail className="text-purple-500" size={24} />}
+            title="Email Us"
+            sub={contactInfo.email ?? "Loading..."}
+          />
         </div>
 
-
-
-        {/* FAQ Section - Bottom */}
+        {/* FAQ Section */}
         <div className="bg-white rounded-[2rem] border border-orange-100 p-6 md:p-8 shadow-sm mb-10">
-          <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Common Questions</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">
+            Common Questions
+          </h3>
           <div className="flex flex-col">
             {faqs.map((faq, i) => (
               <FAQItem key={i} q={faq.question} a={faq.answer} />
@@ -80,10 +131,8 @@ const FAQItem = ({ q, a }) => {
           className={`text-orange-400 transition-transform duration-300 shrink-0 ${open ? "rotate-90" : ""}`}
         />
       </div>
-
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? 'max-h-96 mt-3 opacity-100' : 'max-h-0 opacity-0'
-          }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-96 mt-3 opacity-100" : "max-h-0 opacity-0"}`}
       >
         <p className="text-[14px] text-gray-500 leading-relaxed font-medium">
           {a}
@@ -92,4 +141,5 @@ const FAQItem = ({ q, a }) => {
     </div>
   );
 };
+
 export default HelpSupportSection;
