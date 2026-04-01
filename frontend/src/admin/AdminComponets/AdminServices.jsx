@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import ServiceModal from "./ServiceModel";
 import { API } from "../../services/adminApi";
+import Pagination from "../../Components/Pagination";
 
 const AdminServices = () => {
   const [services, setServices] = useState([]);
@@ -32,7 +33,7 @@ const AdminServices = () => {
   const fetchServices = async () => {
     try {
       const { data } = await API.get(`/services`, {
-        params: { page, limit: 15, category: category || undefined },
+        params: { page, limit: 10, category: category || undefined },
       });
       if (data.success) {
         setServices(data.services);
@@ -162,7 +163,7 @@ const AdminServices = () => {
                   key={service.id}
                   className="hover:bg-[#1a2744] transition-colors group"
                 >
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-1.5">
                     <div className="flex flex-col">
                       <span className="font-bold text-slate-200 text-sm mb-1">
                         {service.puja_name}
@@ -271,6 +272,11 @@ const AdminServices = () => {
             )}
           </tbody>
         </table>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={(newPage) => setPage(newPage)}
+        />
       </div>
 
       {/* ── Card List — Mobile only ── */}
