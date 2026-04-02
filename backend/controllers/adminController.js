@@ -304,7 +304,7 @@ export const getAllUsers = async (req, res) => {
 
     // ✅ Total count — sab roles
     const [[{ total }]] = await db.execute(
-      `SELECT COUNT(*) as total FROM users WHERE role != 'pandit'`
+      `SELECT COUNT(*) as total FROM users WHERE role != 'pandit'`,
     );
 
     // ✅ WHERE role='user' hata diya — sab roles aayenge
@@ -317,7 +317,7 @@ LEFT JOIN puja_requests pr ON pr.user_id = u.id
 WHERE u.role != 'pandit'
 GROUP BY u.id
        ORDER BY u.created_at DESC
-       LIMIT ${limit} OFFSET ${offset}`
+       LIMIT ${limit} OFFSET ${offset}`,
     );
 
     res.json({
@@ -350,7 +350,7 @@ export const createUser = async (req, res) => {
 
     await db.execute(
       `INSERT INTO users (name, email, phone, role) VALUES (?, ?, ?, ?)`,
-      [name, email || null, phone, userRole]
+      [name, email || null, phone, userRole],
     );
 
     res.json({ success: true, message: "User created successfully" });
@@ -367,11 +367,13 @@ export const getUserById = async (req, res) => {
 
     const [[user]] = await db.execute(
       "SELECT id, name, email, phone, role, created_at FROM users WHERE id=?",
-      [id]
+      [id],
     );
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.json({ success: true, user });
@@ -389,15 +391,26 @@ export const updateUser = async (req, res) => {
     const fields = [];
     const values = [];
 
-    if (name !== undefined) { fields.push("name=?"); values.push(name); }
-    if (email !== undefined) { fields.push("email=?"); values.push(email); }
-    if (phone !== undefined) { fields.push("phone=?"); values.push(phone); }
+    if (name !== undefined) {
+      fields.push("name=?");
+      values.push(name);
+    }
+    if (email !== undefined) {
+      fields.push("email=?");
+      values.push(email);
+    }
+    if (phone !== undefined) {
+      fields.push("phone=?");
+      values.push(phone);
+    }
 
     // ✅ Role validate karke update karo
     if (role !== undefined) {
       const allowedRoles = ["user", "admin", "customerCare"];
       if (!allowedRoles.includes(role)) {
-        return res.status(400).json({ success: false, message: "Invalid role" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid role" });
       }
       fields.push("role=?");
       values.push(role);
@@ -411,7 +424,10 @@ export const updateUser = async (req, res) => {
     }
 
     values.push(id);
-    await db.execute(`UPDATE users SET ${fields.join(", ")} WHERE id=?`, values);
+    await db.execute(
+      `UPDATE users SET ${fields.join(", ")} WHERE id=?`,
+      values,
+    );
 
     res.json({ success: true, message: "User updated successfully" });
   } catch (error) {
@@ -452,11 +468,13 @@ export const filtarUsers = async (req, res) => {
 
     const [users] = await db.execute(
       "SELECT id, name, email, phone, role, created_at FROM users WHERE role=? ORDER BY created_at DESC",
-      [types]
+      [types],
     );
 
     if (!users || users.length === 0) {
-      return res.status(404).json({ success: false, message: "Users not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Users not found" });
     }
 
     res.json({ success: true, users });
@@ -477,8 +495,26 @@ export const filtarUsers = async (req, res) => {
 export const createPandit = async (req, res) => {
   const connection = await db.getConnection();
   try {
-    const { name, email, phone, pandit_type, document_url } = req.body;
-
+    const {
+      name,
+      email,
+      phone,
+      pandit_type,
+      gotra,
+      // Address fields
+      address,
+      city,
+      state,
+      pincode,
+      // Payment fields
+      paymentMethod,
+      accountHolderName,
+      bankName,
+      bankAccountNumber,
+      ifscCode,
+      upiId,
+    } = req.body;
+    const document_url = req.file ? req.file.path : null;
     if (!name || !phone) {
       return res
         .status(400)
@@ -489,9 +525,9 @@ export const createPandit = async (req, res) => {
 
     // 1. Insert into users table
     const [userResult] = await connection.query(
-      `INSERT INTO users (name, email, phone, role, is_blocked)
-       VALUES (?, ?, ?, 'pandit', 0)`,
-      [name, email || null, phone],
+      `INSERT INTO users (name,gotra, email, phone, role, is_blocked)
+       VALUES (?, ?, ?, ?, 'pandit', 0)`,
+      [name, gotra, email || null, phone],
     );
 
     const newUserId = userResult.insertId;
@@ -502,6 +538,34 @@ export const createPandit = async (req, res) => {
        VALUES (?, ?, ?)`,
       [newUserId, pandit_type || null, document_url || null],
     );
+
+    // 3. Insert Address (if provided)
+    if (address && city && state) {
+      await connection.query(
+        `INSERT INTO addresses
+         (user_id, address_line1, city, state, address_type, pincode, is_default)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [newUserId, address, city, state, "home", pincode || null, 1],
+      );
+    }
+
+    // 4. Insert Payment Details (if provided)
+    if (paymentMethod && ["bank", "upi"].includes(paymentMethod)) {
+      await connection.query(
+        `INSERT INTO partner_payment_details
+         (user_id, payment_method, account_holder_name, bank_name, bank_account_number, ifsc_code, upi_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          newUserId,
+          paymentMethod,
+          accountHolderName || null,
+          bankName || null,
+          bankAccountNumber || null,
+          ifscCode ? ifscCode.toUpperCase() : null,
+          upiId || null,
+        ],
+      );
+    }
 
     await connection.commit();
     res.json({ success: true, message: "Pandit registered successfully" });
@@ -541,9 +605,20 @@ export const getAllPandits = async (req, res) => {
     const [rows] = await db.query(
       `SELECT 
         u.id, u.name, u.email, u.phone, u.is_blocked, u.created_at,
-        p.pandit_type, p.document_url
+        p.pandit_type, p.document_url,
+        ppd.id as payment_id,
+        ppd.payment_method,
+        ppd.account_holder_name,
+        ppd.bank_name,
+        ppd.bank_account_number,
+        ppd.ifsc_code,
+        ppd.upi_id,
+        ppd.is_active as payment_is_active,
+        ppd.is_verified as payment_is_verified,
+        ppd.verified_at as payment_verified_at
        FROM users u
        LEFT JOIN pandits p ON u.id = p.user_id
+       LEFT JOIN partner_payment_details ppd ON u.id = ppd.user_id AND ppd.is_active = 1
        ${whereClause}
        ORDER BY u.created_at DESC
        LIMIT ? OFFSET ?`,
@@ -1456,7 +1531,16 @@ export const getRecentTransactions = async (req, res) => {
 // ─────────────────────────────────────────────
 export const getPanditEarnings = async (req, res) => {
   try {
-    const [rows] = await db.query(`
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const [[{ total }]] = await db.query(`
+      SELECT COUNT(*) AS total FROM users WHERE role = 'pandit'
+    `);
+
+    const [rows] = await db.query(
+      `
       SELECT
         u.id          AS pandit_id,
         u.name        AS pandit_name,
@@ -1469,61 +1553,89 @@ export const getPanditEarnings = async (req, res) => {
       WHERE u.role = 'pandit'
       GROUP BY u.id, u.name, u.phone
       ORDER BY total_earned DESC
-    `);
+      LIMIT ? OFFSET ?
+    `,
+      [limit, offset],
+    );
 
-    res.json({ success: true, data: rows });
+    res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 // ─────────────────────────────────────────────
 // 10. DATE RANGE FILTER (Custom Report)
 // ─────────────────────────────────────────────
 export const getRevenueByDateRange = async (req, res) => {
   try {
-    const { from, to } = req.query; // ?from=2026-02-01&to=2026-03-03
+    const { from, to } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
     if (!from || !to)
       return res
         .status(400)
         .json({ success: false, message: "from aur to date required hai" });
 
-    const [rows] = await db.query(
-      `
-      SELECT
-        DATE(created_at)                 AS date,
-        COUNT(*)                         AS bookings,
-        COALESCE(SUM(total_price), 0)    AS revenue,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)  AS completed,
-        SUM(CASE WHEN status = 'pending'   THEN 1 ELSE 0 END)  AS pending,
-        SUM(CASE WHEN status = 'declined'  THEN 1 ELSE 0 END)  AS declined
-      FROM puja_requests
-      WHERE DATE(created_at) BETWEEN ? AND ?
-      GROUP BY DATE(created_at)
-      ORDER BY date ASC
-    `,
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total FROM puja_requests WHERE DATE(created_at) BETWEEN ? AND ?`,
       [from, to],
+    );
+
+    const [rows] = await db.query(
+      `SELECT
+        pr.id            AS bookingId,
+        u.name           AS user_name,
+        ps.puja_name     AS puja_name,
+        pr.city          AS city,
+        pr.status,
+        pr.total_price,
+        pr.created_at
+      FROM puja_requests pr
+      LEFT JOIN users u ON u.id = pr.user_id
+      LEFT JOIN services ps ON ps.id = pr.service_id
+      WHERE DATE(pr.created_at) BETWEEN ? AND ?
+      ORDER BY pr.created_at DESC
+      LIMIT ? OFFSET ?`,
+      [from, to, limit, offset],
     );
 
     const [[summary]] = await db.query(
-      `
-      SELECT
+      `SELECT
         COALESCE(SUM(total_price), 0) AS total_revenue,
-        COUNT(*)                      AS total_bookings
+        COUNT(*) AS total_bookings
       FROM puja_requests
-      WHERE status = 'completed'
-        AND DATE(created_at) BETWEEN ? AND ?
-    `,
+      WHERE status = 'completed' AND DATE(created_at) BETWEEN ? AND ?`,
       [from, to],
     );
 
-    res.json({ success: true, summary, data: rows });
+    res.json({
+      success: true,
+      data: {
+        summary,
+        data: rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 //===========Analytics=========
 
 export const getGodViewAnalytics = async (req, res) => {
@@ -1827,10 +1939,10 @@ export const adminUpdateBlog = async (req, res) => {
     const image_url = req.file ? req.file.filename : existing.image_url;
     const slug = title
       ? title
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .slice(0, 120)
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .slice(0, 120)
       : existing.slug;
 
     await pool.query(

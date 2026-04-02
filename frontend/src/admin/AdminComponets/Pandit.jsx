@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Users,
   Plus,
@@ -17,20 +17,58 @@ import {
   FileText,
   Award,
   Link as LinkIcon,
-  ChevronLeft,
-  ChevronRight,
   XCircle,
   CheckCircle2,
   BadgeCheck,
   Star,
   ImagePlus,
+  Wallet,
+  Building2,
+  CreditCard,
+  Home,
+  MapPin,
+  ChevronDown,
+  Smartphone,
+  Fingerprint,
 } from "lucide-react";
 import { API } from "../../services/adminApi.js";
-import VerifyPanditModal from "./VerifyPanditModal.jsx";
+import Pagination from "../../Components/Pagination.jsx";
 import { useNavigate } from "react-router-dom";
 
+const INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Delhi",
+];
+
 const Pandits = () => {
-  // --- Existing States (unchanged) ---
+  // --- Existing States ---
   const [pandits, setPandits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
@@ -42,6 +80,10 @@ const Pandits = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedPanditName, setSelectedPanditName] = useState("");
 
+  // ── Payment Details Modal States ──
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentDetails, setSelectedPaymentDetails] = useState(null);
+
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -51,13 +93,31 @@ const Pandits = () => {
 
   const navigate = useNavigate();
 
+  // ── Add/Edit form state — extended with address + payment ──
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     pandit_type: "",
-    document_url: "",
+    document: null,
+    // Address
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    // Payment
+    paymentMethod: "bank",
+    accountHolderName: "",
+    bankName: "",
+    bankAccountNumber: "",
+    confirmBankAccountNumber: "",
+    ifscCode: "",
+    upiId: "",
   });
+
+  // State dropdown ref for click-outside
+  const stateListRef = useRef(null);
+  const [showStateList, setShowStateList] = useState(false);
 
   const [toast, setToast] = useState(null);
 
@@ -65,15 +125,27 @@ const Pandits = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  // ── NEW: Verify Pandit Modal States ──────────────────────
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyForm, setVerifyForm] = useState({ name: "", rating: "" });
   const [verifyImage, setVerifyImage] = useState(null);
   const [verifyPreview, setVerifyPreview] = useState(null);
-  // ─────────────────────────────────────────────────────────
 
-  // --- Existing Functions (unchanged) ---
+  // Close state dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        stateListRef.current &&
+        !stateListRef.current.contains(event.target)
+      ) {
+        setShowStateList(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // --- Functions ---
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -90,7 +162,7 @@ const Pandits = () => {
       setActiveCount(res.data.pandits.filter((p) => !p.is_blocked).length);
       setBlockedCount(res.data.pandits.filter((p) => p.is_blocked).length);
     } catch (err) {
-      showToast("Failed to fetch records", "error", err);
+      showToast("Failed to fetch records", "error");
     } finally {
       setLoading(false);
     }
@@ -108,23 +180,85 @@ const Pandits = () => {
       const res = await API.get(`/pandits/history/${pandit.id}`);
       setHistory(res.data);
     } catch (err) {
-      showToast("History load nahi ho payi", "error", err);
+      showToast("History load nahi ho payi", "error");
     } finally {
       setHistoryLoading(false);
     }
+  };
+
+  const openPaymentModal = (pandit) => {
+    setSelectedPaymentDetails({
+      name: pandit.name,
+      payment_method: pandit.payment_method,
+      account_holder_name: pandit.account_holder_name,
+      bank_name: pandit.bank_name,
+      bank_account_number: pandit.bank_account_number,
+      ifsc_code: pandit.ifsc_code,
+      upi_id: pandit.upi_id,
+      payment_is_verified: pandit.payment_is_verified,
+      payment_verified_at: pandit.payment_verified_at,
+    });
+    setShowPaymentModal(true);
   };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.phone)
       return showToast("Name & Phone are required", "error");
 
+    // Payment validation (only for new pandit, not edit)
+    if (!editingPandit && formData.paymentMethod === "bank") {
+      if (
+        formData.bankAccountNumber &&
+        formData.bankAccountNumber !== formData.confirmBankAccountNumber
+      ) {
+        return showToast("Bank account numbers match nahi kar rahe", "error");
+      }
+      if (formData.ifscCode) {
+        const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+        if (!ifscRegex.test(formData.ifscCode.toUpperCase())) {
+          return showToast(
+            "Invalid IFSC code format (e.g. SBIN0001234)",
+            "error",
+          );
+        }
+      }
+    }
+
     setActionLoading("form");
     try {
       if (editingPandit) {
-        await API.put(`/pandits/${editingPandit.id}`, formData);
+        // Edit: only send basic fields (same as before)
+        await API.put(`/pandits/${editingPandit.id}`, {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          pandit_type: formData.pandit_type,
+          document_url: formData.document_url,
+        });
         showToast("Profile Updated");
       } else {
-        await API.post("/pandits", formData);
+        // Create: FormData use karo (file upload ke liye)
+        const payload = new FormData();
+        payload.append("name", formData.name);
+        payload.append("email", formData.email || "");
+        payload.append("phone", formData.phone);
+        payload.append("pandit_type", formData.pandit_type || "");
+        payload.append("address", formData.address || "");
+        payload.append("city", formData.city || "");
+        payload.append("state", formData.state || "");
+        payload.append("pincode", formData.pincode || "");
+        payload.append("paymentMethod", formData.paymentMethod);
+        payload.append("accountHolderName", formData.accountHolderName || "");
+        payload.append("bankName", formData.bankName || "");
+        payload.append("bankAccountNumber", formData.bankAccountNumber || "");
+        payload.append("ifscCode", formData.ifscCode || "");
+        payload.append("upiId", formData.upiId || "");
+        payload.append("gotra", formData.gotra || "");
+        if (formData.document) {
+          payload.append("document", formData.document);
+        }
+
+        await API.post("/pandits", payload);
         showToast("Pandit Registered");
       }
       closeModal();
@@ -143,7 +277,7 @@ const Pandits = () => {
       showToast("Status Changed");
       fetchPandits();
     } catch (err) {
-      showToast("Action failed", "error", err);
+      showToast("Action failed", "error");
     } finally {
       setActionLoading(null);
     }
@@ -164,7 +298,7 @@ const Pandits = () => {
       setDeleteTarget(null);
       fetchPandits();
     } catch (err) {
-      showToast("Delete failed", "error", err);
+      showToast("Delete failed", "error");
     } finally {
       setDeleting(false);
     }
@@ -178,6 +312,18 @@ const Pandits = () => {
       phone: p.phone,
       pandit_type: p.pandit_type || "",
       document_url: p.document_url || "",
+      // Address & payment empty on edit (not shown)
+      address: "",
+      city: "",
+      state: "",
+      pincode: "",
+      paymentMethod: "bank",
+      accountHolderName: "",
+      bankName: "",
+      bankAccountNumber: "",
+      confirmBankAccountNumber: "",
+      ifscCode: "",
+      upiId: "",
     });
     setShowModal(true);
   };
@@ -185,12 +331,24 @@ const Pandits = () => {
   const closeModal = () => {
     setShowModal(false);
     setEditingPandit(null);
+    setShowStateList(false);
     setFormData({
       name: "",
       email: "",
       phone: "",
       pandit_type: "",
       document_url: "",
+      address: "",
+      city: "",
+      state: "",
+      pincode: "",
+      paymentMethod: "bank",
+      accountHolderName: "",
+      bankName: "",
+      bankAccountNumber: "",
+      confirmBankAccountNumber: "",
+      ifscCode: "",
+      upiId: "",
     });
   };
 
@@ -203,54 +361,6 @@ const Pandits = () => {
     return colors[name?.length % 3];
   };
 
-  const getPaginationPages = () => {
-    const pages = [];
-    const delta = 1;
-    const left = Math.max(2, page - delta);
-    const right = Math.min(totalPages - 1, page + delta);
-    pages.push(1);
-    if (left > 2) pages.push("...");
-    for (let i = left; i <= right; i++) pages.push(i);
-    if (right < totalPages - 1) pages.push("...");
-    if (totalPages > 1) pages.push(totalPages);
-    return pages;
-  };
-
-  // ── NEW: Verify Pandit Submit ─────────────────────────────
-  // const handleVerifySubmit = async () => {
-  //   if (!verifyForm.name || !verifyForm.rating) {
-  //     return showToast("Name aur Rating required hai", "error");
-  //   }
-  //   if (!verifyImage) {
-  //     return showToast("Image select karo", "error");
-  //   }
-  //   if (
-  //     isNaN(verifyForm.rating) ||
-  //     verifyForm.rating < 0 ||
-  //     verifyForm.rating > 5
-  //   ) {
-  //     return showToast("Rating 0 se 5 ke beech honi chahiye", "error");
-  //   }
-  //   setVerifyLoading(true);
-  //   try {
-  //     const fd = new FormData();
-  //     fd.append("name", verifyForm.name);
-  //     fd.append("rating", verifyForm.rating);
-  //     fd.append("image", verifyImage);
-  //     await API.post("/verify-pandit", fd, {
-  //       headers: { "Content-Type": "multipart/form-data" },
-  //     });
-  //     showToast("Verify Pandit Added!");
-  //     setShowVerifyModal(false);
-  //     setVerifyForm({ name: "", rating: "" });
-  //     setVerifyImage(null);
-  //     setVerifyPreview(null);
-  //   } catch (err) {
-  //     showToast(err.response?.data?.message || "Failed to add", "error");
-  //   } finally {
-  //     setVerifyLoading(false);
-  //   }
-  // };
   const handleVerifySubmit = async () => {
     if (!verifyForm.name || !verifyForm.rating) {
       return showToast("Name aur Rating required hai", "error");
@@ -275,10 +385,9 @@ const Pandits = () => {
 
       await API.post("/verify-pandit", fd, {
         headers: { "Content-Type": "multipart/form-data" },
-        validateStatus: (status) => status < 500, // ✅ 201 bhi success maano
+        validateStatus: (status) => status < 500,
       });
 
-      // ✅ Yahan aa gaye matlab success hai
       showToast("Verify Pandit Added!");
       setShowVerifyModal(false);
       setVerifyForm({ name: "", rating: "" });
@@ -287,20 +396,24 @@ const Pandits = () => {
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to add", "error");
     } finally {
-      setVerifyLoading(false); // ✅ Spinner band
+      setVerifyLoading(false);
     }
   };
-  // ─────────────────────────────────────────────────────────
+
+  // ── Reusable input style ──
+  const inputCls =
+    "w-full pl-12 pr-4 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-700";
 
   return (
     <div className="min-h-screen text-slate-300">
-      {/* Toast Notification (unchanged) */}
+      {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${toast.type === "error"
-            ? "bg-rose-950 border-rose-800 text-rose-400"
-            : "bg-emerald-950 border-emerald-800 text-emerald-400"
-            }`}
+          className={`fixed top-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${
+            toast.type === "error"
+              ? "bg-rose-950 border-rose-800 text-rose-400"
+              : "bg-emerald-950 border-emerald-800 text-emerald-400"
+          }`}
         >
           {toast.type === "error" ? (
             <XCircle size={16} />
@@ -311,32 +424,20 @@ const Pandits = () => {
         </div>
       )}
 
-      {/* PAGE HEADER — only Add Verify Pandit button added, rest unchanged */}
+      {/* PAGE HEADER */}
       <div className="flex items-center justify-between mb-6">
-         <div className="flex items-center gap-4">
-          {/*<div className="w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-slate-900">
-            <Users size={22} strokeWidth={2.5} />
-          </div>
+        <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-xl font-black text-white tracking-tight">
-              Pandit Directory
+            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              <Users className="text-orange-500" /> Pandit Directory
             </h1>
             <p className="text-[12px] text-slate-500 font-medium">
               Manage types and verification documents
             </p>
-          </div> */}
-
-          <div>
-          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-            <Users className="text-orange-500" /> Pandit Directory
-          </h1>
-          <p className="text-[12px] text-slate-500 font-medium"> Manage types and verification documents</p>
-        </div>
+          </div>
         </div>
 
-        {/* ── NEW BUTTON + existing button side by side ── */}
         <div className="flex items-center gap-3">
-          
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 bg-white text-slate-900 px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-400 transition-all active:scale-95 shadow-lg shadow-emerald-900/10"
@@ -346,7 +447,7 @@ const Pandits = () => {
         </div>
       </div>
 
-      {/* STATS STRIP (unchanged) */}
+      {/* STATS STRIP */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
           {
@@ -377,7 +478,7 @@ const Pandits = () => {
         ))}
       </div>
 
-      {/* MAIN DATA CARD (unchanged) */}
+      {/* MAIN DATA CARD */}
       <div className="bg-[#131e32] rounded-[24px] shadow-xl border border-slate-800 overflow-hidden">
         <div className="p-4 border-b border-slate-800 bg-[#0f172a]/40">
           <div className="relative max-w-sm">
@@ -410,6 +511,7 @@ const Pandits = () => {
                   <th className="px-6 py-4">Pandit Name</th>
                   <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">Contact</th>
+                  <th className="px-6 py-4 text-center">Payment Details</th>
                   <th className="px-6 py-4 text-center">Verification</th>
                   <th className="px-6 py-4 text-center">History</th>
                   <th className="px-6 py-4 text-right">Actions</th>
@@ -419,12 +521,16 @@ const Pandits = () => {
                 {pandits.map((p) => (
                   <tr
                     key={p.id}
-                    className={`group hover:bg-emerald-500/[0.02] transition-colors ${actionLoading === p.id ? "opacity-30" : ""}`}
+                    className={`group hover:bg-emerald-500/[0.02] transition-colors ${
+                      actionLoading === p.id ? "opacity-30" : ""
+                    }`}
                   >
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         <div
-                          className={`w-10 h-10 rounded-xl border flex items-center justify-center font-black text-xs ${avatarColor(p.name)}`}
+                          className={`w-10 h-10 rounded-xl border flex items-center justify-center font-black text-xs ${avatarColor(
+                            p.name,
+                          )}`}
                         >
                           {p.name?.charAt(0).toUpperCase()}
                         </div>
@@ -450,6 +556,26 @@ const Pandits = () => {
                           </div>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      {p.payment_method ? (
+                        <button
+                          onClick={() => openPaymentModal(p)}
+                          className="group flex items-center gap-2 mx-auto px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all"
+                        >
+                          <Wallet
+                            size={14}
+                            className="text-slate-500 group-hover:text-blue-400"
+                          />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-400">
+                            View
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-bold text-slate-600 uppercase italic">
+                          No Payment
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-5 text-center">
                       {p.document_url ? (
@@ -491,7 +617,11 @@ const Pandits = () => {
                         </button>
                         <button
                           onClick={() => toggleBlock(p.id)}
-                          className={`p-2 rounded-xl transition-all ${p.is_blocked ? "text-emerald-500 hover:bg-emerald-500/10" : "text-amber-500 hover:bg-amber-500/10"}`}
+                          className={`p-2 rounded-xl transition-all ${
+                            p.is_blocked
+                              ? "text-emerald-500 hover:bg-emerald-500/10"
+                              : "text-amber-500 hover:bg-amber-500/10"
+                          }`}
                         >
                           {p.is_blocked ? (
                             <ShieldCheck size={14} />
@@ -514,56 +644,23 @@ const Pandits = () => {
           )}
         </div>
 
-        {/* PAGINATION (unchanged) */}
-        {!loading && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-800 bg-[#0f172a]/40 flex items-center justify-between gap-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              {getPaginationPages().map((p, idx) =>
-                p === "..." ? (
-                  <span
-                    key={`ellipsis-${idx}`}
-                    className="px-2 text-slate-600 text-[11px] font-black"
-                  >
-                    ...
-                  </span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`w-8 h-8 rounded-xl text-[11px] font-black border transition-all ${page === p ? "bg-emerald-500 border-emerald-500 text-slate-900" : "border-slate-700 text-slate-400 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10"}`}
-                  >
-                    {p}
-                  </button>
-                ),
-              )}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
+        {/* PAGINATION COMPONENT */}
+        {!loading && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         )}
       </div>
 
-      {/* --- EXISTING MODALS (unchanged) --- */}
-
-      {/* ADD/EDIT MODAL */}
+      {/* ══════════════════════════════════════════
+          ADD / EDIT MODAL
+      ══════════════════════════════════════════ */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-          <div className="bg-[#131e32] w-full max-w-lg rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#131e32] w-full max-w-2xl rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
             <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-[#0f172a]/50">
               <div>
                 <h3 className="text-xl font-black text-white tracking-tight">
@@ -572,7 +669,9 @@ const Pandits = () => {
                     : "Register New Pandit"}
                 </h3>
                 <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-[0.2em] mt-1">
-                  Verification & Credentials Management
+                  {editingPandit
+                    ? "Edit Basic Details"
+                    : "Complete Profile — Basic, Address & Payment"}
                 </p>
               </div>
               <button
@@ -582,107 +681,489 @@ const Pandits = () => {
                 <X size={24} />
               </button>
             </div>
-            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Full Name
-                </label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
-                  <input
-                    type="text"
-                    placeholder="e.g. Ramesh Sharma"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all uppercase placeholder:text-slate-700"
-                  />
+
+            {/* Modal Body — scrollable */}
+            <div className="p-8 flex flex-col gap-8 max-h-[72vh] overflow-y-auto">
+              {/* ── SECTION 1: Basic Info ── */}
+              <div>
+                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
+                  <User size={12} /> Basic Information
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      Full Name
+                    </label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        type="text"
+                        placeholder="e.g. Ramesh Sharma"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      Contact Number
+                    </label>
+                    <div className="relative group">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        placeholder="10-digit mobile"
+                        value={formData.phone}
+                        onChange={(e) =>
+                          setFormData({ ...formData, phone: e.target.value })
+                        }
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      Email Address (Optional)
+                    </label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        type="email"
+                        placeholder="example@domain.com"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      Gotra (Optional)
+                    </label>
+                    <div className="relative group">
+                      <Fingerprint className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        type="text"
+                        placeholder="e.g. Kashyap"
+                        value={formData.gotra}
+                        onChange={(e) =>
+                          setFormData({ ...formData, gotra: e.target.value })
+                        }
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      Pandit Expertise
+                    </label>
+                    <div className="relative group">
+                      <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                      <select
+                        value={formData.pandit_type}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pandit_type: e.target.value,
+                          })
+                        }
+                        className={`${inputCls} appearance-none cursor-pointer uppercase`}
+                      >
+                        <option value="" className="bg-[#131e32]">
+                          Select Classification
+                        </option>
+                        <option value="Standard" className="bg-[#131e32]">
+                          Standard Pandit
+                        </option>
+                        <option value="Senior" className="bg-[#131e32]">
+                          Senior Pandit
+                        </option>
+                        <option value="Vedic" className="bg-[#131e32]">
+                          Vedic Pandit
+                        </option>
+                        <option value="Shastri" className="bg-[#131e32]">
+                          Shastri
+                        </option>
+                        <option value="Acharya" className="bg-[#131e32]">
+                          Acharya
+                        </option>
+                        <option value="Karmakandi" className="bg-[#131e32]">
+                          Karmakandi
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      KYC Document URL
+                    </label>
+                    <div className="relative group">
+                      <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          const allowed = [
+                            "image/jpeg",
+                            "image/png",
+                            "application/pdf",
+                          ];
+                          if (!allowed.includes(file.type)) {
+                            showToast(
+                              "Only JPEG, PNG and PDF allowed",
+                              "error",
+                            );
+                            e.target.value = "";
+                            return;
+                          }
+                          if (file.size > 5 * 1024 * 1024) {
+                            showToast(
+                              "File size 5MB se kam honi chahiye",
+                              "error",
+                            );
+                            return;
+                          }
+                          setFormData({ ...formData, document: file });
+                        }}
+                        className={inputCls + " cursor-pointer file:hidden"}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Contact Number
-                </label>
-                <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
-                  <input
-                    type="tel"
-                    placeholder="10-digit mobile"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all uppercase placeholder:text-slate-700"
-                  />
+
+              {/* ── SECTION 2: Address (only on Add, not Edit) ── */}
+              {!editingPandit && (
+                <div>
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
+                    <Home size={12} /> Address Details
+                  </p>
+                  <div className="grid grid-cols-1 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                        Street Address
+                      </label>
+                      <div className="relative group">
+                        <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                        <input
+                          type="text"
+                          placeholder="Street, Landmark"
+                          value={formData.address}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              address: e.target.value,
+                            })
+                          }
+                          className={inputCls}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* State Dropdown */}
+                      <div className="space-y-2 relative" ref={stateListRef}>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          State
+                        </label>
+                        <div
+                          onClick={() => setShowStateList(!showStateList)}
+                          className="flex items-center justify-between w-full pl-4 pr-3 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl cursor-pointer hover:border-emerald-500 transition-all"
+                        >
+                          <div className="flex items-center gap-3">
+                            <MapPin
+                              size={14}
+                              className="text-slate-600 shrink-0"
+                            />
+                            <span
+                              className={`text-xs font-bold truncate ${formData.state ? "text-white" : "text-slate-700"}`}
+                            >
+                              {formData.state || "Select State"}
+                            </span>
+                          </div>
+                          <ChevronDown
+                            size={14}
+                            className={`text-slate-500 transition-transform shrink-0 ${showStateList ? "rotate-180" : ""}`}
+                          />
+                        </div>
+                        {showStateList && (
+                          <div className="absolute z-[200] w-full mt-1 bg-[#131e32] border border-slate-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto">
+                            {INDIAN_STATES.map((s) => (
+                              <div
+                                key={s}
+                                onClick={() => {
+                                  setFormData({ ...formData, state: s });
+                                  setShowStateList(false);
+                                }}
+                                className="px-4 py-2.5 hover:bg-emerald-500/10 cursor-pointer text-xs font-bold text-slate-300 border-b border-slate-800/50 last:border-0"
+                              >
+                                {s}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          City
+                        </label>
+                        <div className="relative group">
+                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                          <input
+                            type="text"
+                            placeholder="City"
+                            value={formData.city}
+                            onChange={(e) =>
+                              setFormData({ ...formData, city: e.target.value })
+                            }
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          Pincode
+                        </label>
+                        <div className="relative group">
+                          <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                          <input
+                            type="text"
+                            maxLength={6}
+                            placeholder="6-digit pin"
+                            value={formData.pincode}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                pincode: e.target.value.replace(/\D/g, ""),
+                              })
+                            }
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Email Address (Optional)
-                </label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
-                  <input
-                    type="email"
-                    placeholder="example@domain.com"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-700"
-                  />
+              )}
+
+              {/* ── SECTION 3: Payment Details (only on Add, not Edit) ── */}
+              {!editingPandit && (
+                <div>
+                  <p className="text-[10px] font-black text-orange-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
+                    <Wallet size={12} /> Payment Details
+                  </p>
+
+                  {/* Bank / UPI Toggle */}
+                  <div className="flex bg-[#0f172a] p-1 rounded-xl border border-slate-700 mb-5">
+                    <button
+                      onClick={() =>
+                        setFormData({ ...formData, paymentMethod: "bank" })
+                      }
+                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                        formData.paymentMethod === "bank"
+                          ? "bg-slate-700 text-emerald-400 shadow"
+                          : "text-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      <Building2 size={12} /> Bank Account
+                    </button>
+                    <button
+                      onClick={() =>
+                        setFormData({ ...formData, paymentMethod: "upi" })
+                      }
+                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                        formData.paymentMethod === "upi"
+                          ? "bg-slate-700 text-emerald-400 shadow"
+                          : "text-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      <Smartphone size={12} /> UPI
+                    </button>
+                  </div>
+
+                  {/* Bank Fields */}
+                  {formData.paymentMethod === "bank" && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          Account Holder Name
+                        </label>
+                        <div className="relative group">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                          <input
+                            type="text"
+                            placeholder="As per bank records"
+                            value={formData.accountHolderName}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                accountHolderName: e.target.value,
+                              })
+                            }
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          Bank Name
+                        </label>
+                        <div className="relative group">
+                          <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                          <input
+                            type="text"
+                            placeholder="e.g. State Bank of India"
+                            value={formData.bankName}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                bankName: e.target.value,
+                              })
+                            }
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          Account Number
+                        </label>
+                        <div className="relative group">
+                          <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                          <input
+                            type="password"
+                            maxLength={11}
+                            placeholder="Enter account number"
+                            value={formData.bankAccountNumber}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                bankAccountNumber: e.target.value.replace(
+                                  /\D/g,
+                                  "",
+                                ),
+                              })
+                            }
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          Confirm Account Number
+                        </label>
+                        <div className={`relative group`}>
+                          <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                          <input
+                            type="text"
+                            maxLength={11}
+                            placeholder="Re-enter account number"
+                            value={formData.confirmBankAccountNumber}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                confirmBankAccountNumber:
+                                  e.target.value.replace(/\D/g, ""),
+                              })
+                            }
+                            className={`${inputCls} ${
+                              formData.confirmBankAccountNumber &&
+                              formData.bankAccountNumber !==
+                                formData.confirmBankAccountNumber
+                                ? "border-rose-500 focus:border-rose-500"
+                                : ""
+                            }`}
+                          />
+                          {formData.confirmBankAccountNumber &&
+                            formData.bankAccountNumber ===
+                              formData.confirmBankAccountNumber && (
+                              <CheckCircle2
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400"
+                                size={16}
+                              />
+                            )}
+                        </div>
+                        {formData.confirmBankAccountNumber &&
+                          formData.bankAccountNumber !==
+                            formData.confirmBankAccountNumber && (
+                            <p className="text-[9px] text-rose-500 font-bold ml-1">
+                              Account numbers match nahi kar rahe
+                            </p>
+                          )}
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                          IFSC Code
+                        </label>
+                        <div className="relative group">
+                          <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                          <input
+                            type="text"
+                            placeholder="e.g. SBIN0001234"
+                            maxLength={11}
+                            value={formData.ifscCode}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                ifscCode: e.target.value.toUpperCase(),
+                              })
+                            }
+                            className={`${inputCls} uppercase`}
+                          />
+                        </div>
+                        <p className="text-[9px] text-slate-600 ml-1">
+                          Format: 4 letters + 0 + 6 alphanumeric (e.g.
+                          HDFC0001234)
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* UPI Field */}
+                  {formData.paymentMethod === "upi" && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                        UPI ID
+                      </label>
+                      <div className="relative group">
+                        <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                        <input
+                          type="text"
+                          placeholder="yourname@paytm / @gpay / @ybl"
+                          value={formData.upiId}
+                          onChange={(e) =>
+                            setFormData({ ...formData, upiId: e.target.value })
+                          }
+                          className={inputCls}
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-600 ml-1">
+                        Supported: Google Pay, PhonePe, Paytm, BHIM, etc.
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Pandit Expertise
-                </label>
-                <div className="relative group">
-                  <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
-                  <select
-                    value={formData.pandit_type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pandit_type: e.target.value })
-                    }
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer uppercase"
-                  >
-                    <option value="" className="bg-[#131e32]">
-                      Select Classification
-                    </option>
-                    <option value="Vedic" className="bg-[#131e32]">
-                      Vedic Pandit
-                    </option>
-                    <option value="Shastri" className="bg-[#131e32]">
-                      Shastri
-                    </option>
-                    <option value="Acharya" className="bg-[#131e32]">
-                      Acharya
-                    </option>
-                    <option value="Karmakandi" className="bg-[#131e32]">
-                      Karmakandi
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  KYC Document URL
-                </label>
-                <div className="relative group">
-                  <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
-                  <input
-                    type="text"
-                    placeholder="G-Drive or S3 Link"
-                    value={formData.document_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, document_url: e.target.value })
-                    }
-                    className="w-full pl-12 pr-4 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-700"
-                  />
-                </div>
-              </div>
+              )}
             </div>
+
+            {/* Modal Footer */}
             <div className="px-8 py-6 bg-[#0f172a]/50 border-t border-slate-800 flex items-center gap-4">
               <button
                 onClick={closeModal}
@@ -709,7 +1190,7 @@ const Pandits = () => {
         </div>
       )}
 
-      {/* HISTORY MODAL (unchanged) */}
+      {/* HISTORY MODAL */}
       {showHistory && (
         <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center z-[110] p-4">
           <div className="bg-[#131e32] w-full max-w-2xl rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in slide-in-from-bottom-4">
@@ -776,7 +1257,117 @@ const Pandits = () => {
         </div>
       )}
 
-      {/* DELETE CONFIRM MODAL (unchanged) */}
+      {/* PAYMENT DETAILS MODAL */}
+      {showPaymentModal && selectedPaymentDetails && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center z-[110] p-4">
+          <div className="bg-[#131e32] w-full max-w-lg rounded-[32px] border border-blue-500/20 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4">
+            <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-[#0f172a]/50">
+              <div>
+                <h3 className="text-lg font-black text-white uppercase tracking-tight">
+                  Payment Details
+                </h3>
+                <p className="text-[11px] text-blue-400 font-bold uppercase tracking-widest">
+                  {selectedPaymentDetails.name}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="p-2 rounded-full hover:bg-slate-800 text-slate-400 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#0f172a] border border-slate-700 rounded-xl">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Method
+                </span>
+                <span className="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-black uppercase">
+                  {selectedPaymentDetails.payment_method === "bank"
+                    ? "Bank Transfer"
+                    : "UPI"}
+                </span>
+              </div>
+
+              {selectedPaymentDetails.payment_method === "bank" ? (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-slate-800/50 border border-slate-700">
+                      <User size={16} className="text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">
+                        Account Holder
+                      </p>
+                      <p className="text-sm font-bold text-white">
+                        {selectedPaymentDetails.account_holder_name || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-slate-800/50 border border-slate-700">
+                      <Building2 size={16} className="text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">
+                        Bank Name
+                      </p>
+                      <p className="text-sm font-bold text-white">
+                        {selectedPaymentDetails.bank_name || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-slate-800/50 border border-slate-700">
+                      <Hash size={16} className="text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">
+                        Account Number
+                      </p>
+                      <p className="text-sm font-bold text-white font-mono">
+                        {selectedPaymentDetails.bank_account_number || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-slate-800/50 border border-slate-700">
+                      <CreditCard size={16} className="text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">
+                        IFSC Code
+                      </p>
+                      <p className="text-sm font-bold text-white font-mono">
+                        {selectedPaymentDetails.ifsc_code || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-slate-800/50 border border-slate-700">
+                    <Wallet size={16} className="text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">
+                      UPI ID
+                    </p>
+                    <p className="text-sm font-bold text-white font-mono">
+                      {selectedPaymentDetails.upi_id || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRM MODAL */}
       {deleteModal && deleteTarget && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 backdrop-blur-md px-4">
           <div className="bg-[#131e32] border border-rose-500/20 rounded-[32px] p-8 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -824,11 +1415,10 @@ const Pandits = () => {
         </div>
       )}
 
-      {/* ── NEW: ADD VERIFY PANDIT MODAL ─────────────────────── */}
+      {/* VERIFY PANDIT MODAL */}
       {showVerifyModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-[130] p-4">
           <div className="bg-[#131e32] w-full max-w-md rounded-[32px] border border-orange-500/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
             <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-[#0f172a]/50">
               <div>
                 <h3 className="text-xl font-black text-white tracking-tight">
@@ -851,9 +1441,7 @@ const Pandits = () => {
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="p-8 flex flex-col gap-6">
-              {/* Name */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                   Pandit Name
@@ -872,7 +1460,6 @@ const Pandits = () => {
                 </div>
               </div>
 
-              {/* Image File Upload */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                   Pandit Image
@@ -897,7 +1484,6 @@ const Pandits = () => {
                     }}
                   />
                 </label>
-                {/* Live Preview */}
                 {verifyPreview && (
                   <div className="mt-2 flex items-center gap-3 px-1">
                     <img
@@ -917,7 +1503,6 @@ const Pandits = () => {
                 )}
               </div>
 
-              {/* Rating */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                   Rating (0.0 – 5.0)
@@ -940,7 +1525,6 @@ const Pandits = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="px-8 py-6 bg-[#0f172a]/50 border-t border-slate-800 flex items-center gap-4">
               <button
                 onClick={() => {
@@ -970,7 +1554,6 @@ const Pandits = () => {
           </div>
         </div>
       )}
-      {/* ─────────────────────────────────────────────────────── */}
     </div>
   );
 };

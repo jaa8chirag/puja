@@ -123,7 +123,14 @@ router.get("/bookings_today", verifyToken, adminOnly, getTodayBookings);
 
 // pandit management routes for admin can be added here
 // router.get("/pandits", verifyToken, adminOnly, getAllPandits);
-router.post("/pandits", verifyToken, adminOnly, createPandit);
+// router.post("/pandits", verifyToken, adminOnly, createPandit);
+router.post(
+  "/pandits",
+  verifyToken,
+  adminOnly,
+  upload.single("document"),
+  createPandit,
+);
 router.get("/pandits", verifyToken, adminOnly, getAllPandits);
 router.get("/pandits/:id", verifyToken, adminOnly, getSinglePandit);
 router.put("/pandits/:id", verifyToken, adminOnly, updatePandit);
