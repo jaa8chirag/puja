@@ -6,11 +6,11 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function TemplePuja() {
 
-const slides = [
-  { image: "/img/slider1.jpeg", quote: "Where devotion meets divinity, every prayer finds its way to the heavens." },
-  { image: "/img/slider2.jpeg", quote: "In the silence of the temple, the soul speaks its truest prayers." },
-  { image: "/img/slider3.jpeg", quote: "A single flame of faith can illuminate the darkest corners of the heart." }
-];
+  const slides = [
+    { image: "/img/slider1.jpeg", quote: "Where devotion meets divinity, every prayer finds its way to the heavens." },
+    { image: "/img/slider2.jpeg", quote: "In the silence of the temple, the soul speaks its truest prayers." },
+    { image: "/img/slider3.jpeg", quote: "A single flame of faith can illuminate the darkest corners of the heart." }
+  ];
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
@@ -141,14 +141,16 @@ const slides = [
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1108]/90 via-transparent to-transparent opacity-60" />
 
-                  <div className="absolute top-3 left-3 z-20">
-                    <div className="bg-orange-500/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
-                      <Sparkles size={10} fill="white" className="text-white" />
-                      <span className="text-[11px] md:text-[13px] capitalize font-bold tracking-wide">
-                        {service.status}
-                      </span>
+                  {service.status && service.status.trim() !== "" && (
+                    <div className="absolute top-3 right-3 z-20">
+                      <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                        <Sparkles size={10} fill="white" />
+                        <span className="text-[11px] md:text-[13px] font-bold capitalize tracking-wide">
+                          {service.status}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* CONTENT */}

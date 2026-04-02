@@ -9,14 +9,64 @@ import {
   User,
   Mail,
   Phone,
-  ChevronLeft,
-  ChevronRight,
+  Shield,
   Users as UsersIcon,
   Loader2,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
 import Pagination from "../../Components/Pagination";
+
+// ✅ Component ke BAHAR — re-render fix
+const ModalWrapper = ({ children, onClose }) => (
+  <div
+    className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4"
+    onClick={(e) => e.target === e.currentTarget && onClose()}
+  >
+    <div className="bg-[#131e32] w-full max-w-sm rounded-3xl shadow-2xl border border-slate-800 overflow-hidden ring-1 ring-slate-700/50">
+      {children}
+    </div>
+  </div>
+);
+
+// ✅ Component ke BAHAR — re-render fix
+const ModalField = ({ icon: Icon, placeholder, type = "text", value, onChange }) => (
+  <div className="relative">
+    <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className="w-full pl-11 pr-4 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder:text-slate-600 transition-all"
+    />
+  </div>
+);
+
+// ✅ Role dropdown bhi bahar
+const ModalSelect = ({ icon: Icon, value, onChange, options }) => (
+  <div className="relative">
+    <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10" />
+    <select
+      value={value}
+      onChange={onChange}
+      className="w-full pl-11 pr-4 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all appearance-none cursor-pointer"
+    >
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+const roleOptions = [
+  { value: "user", label: "User" },
+  { value: "admin", label: "Admin" },
+  { value: "customerCare", label: "Customer Care" },
+];
+
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -30,7 +80,7 @@ const Users = () => {
   const [toast, setToast] = useState(null);
   const limit = 10;
 
-  const [newUser, setNewUser] = useState({ name: "", email: "", phone: "" });
+  const [newUser, setNewUser] = useState({ name: "", email: "", phone: "", role: "user" });
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -56,13 +106,12 @@ const Users = () => {
   }, [page]);
 
   const filteredUsers = users.filter((u) =>
-    `${u.name} ${u.email} ${u.phone}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
+    `${u.name} ${u.email} ${u.phone}`.toLowerCase().includes(search.toLowerCase()),
   );
 
   const deleteUser = async (id) => {
     if (!window.confirm("Are you sure?")) return;
+    console.log("Deleting id:", id, typeof id);
     setActionLoading(id);
     try {
       await API.delete(`/users/${id}`);
@@ -97,7 +146,7 @@ const Users = () => {
       await API.post(`/createUser`, newUser);
       showToast("User created");
       setShowAddModal(false);
-      setNewUser({ name: "", email: "", phone: "" });
+      setNewUser({ name: "", email: "", phone: "", role: "user" });
       await fetchUsers();
     } catch {
       showToast("Failed to create user", "error");
@@ -118,38 +167,8 @@ const Users = () => {
     return colors[(name?.charCodeAt(0) || 0) % colors.length];
   };
 
-  const ModalWrapper = ({ children, onClose }) => (
-    <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="bg-[#131e32] w-full max-w-sm rounded-3xl shadow-2xl border border-slate-800 overflow-hidden ring-1 ring-slate-700/50">
-        {children}
-      </div>
-    </div>
-  );
-
-  const ModalField = ({
-    icon: Icon,
-    placeholder,
-    type = "text",
-    value,
-    onChange,
-  }) => (
-    <div className="relative">
-      <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        className="w-full pl-11 pr-4 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder:text-slate-600 transition-all"
-      />
-    </div>
-  );
-
   return (
-    <div className=" bg-transparent min-h-screen">
+    <div className="bg-transparent min-h-screen">
       {/* Toast */}
       {toast && (
         <div
@@ -159,31 +178,13 @@ const Users = () => {
               : "bg-emerald-950/40 text-emerald-400 border-emerald-800/50 backdrop-blur-md"
           }`}
         >
-          {toast.type === "error" ? (
-            <XCircle size={16} />
-          ) : (
-            <CheckCircle2 size={16} />
-          )}
+          {toast.type === "error" ? <XCircle size={16} /> : <CheckCircle2 size={16} />}
           {toast.message}
         </div>
       )}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        {/* <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-900/20">
-            <UsersIcon size={20} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-base font-extrabold text-white leading-tight">
-              User Management
-            </h1>
-            <p className="text-[11px] text-slate-500">
-              Manage all registered users
-            </p>
-          </div>
-        </div> */}
-
         <div>
           <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
             <UsersIcon className="text-orange-500" /> User Management
@@ -201,15 +202,11 @@ const Users = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="flex items-center justify-between px-4 py-3 rounded-2xl border bg-[#131e32] text-orange-500 border-orange-500/20 shadow-xl">
-          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
-            Total
-          </span>
+          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Total</span>
           <span className="text-lg font-black">{total}</span>
         </div>
         <div className="flex items-center justify-between px-4 py-3 rounded-2xl border bg-[#131e32] text-emerald-500 border-emerald-500/20 shadow-xl">
-          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
-            Current
-          </span>
+          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Current</span>
           <span className="text-lg font-black">{filteredUsers.length}</span>
         </div>
       </div>
@@ -243,16 +240,12 @@ const Users = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-500">
               <Loader2 size={32} className="animate-spin text-orange-500" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">
-                Accessing Records...
-              </span>
+              <span className="text-[10px] uppercase tracking-widest font-bold">Accessing Records...</span>
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-600">
               <UsersIcon size={48} className="mb-3 opacity-20" />
-              <p className="text-xs font-bold uppercase tracking-widest">
-                No matching users
-              </p>
+              <p className="text-xs font-bold uppercase tracking-widest">No matching users</p>
             </div>
           ) : (
             <table className="w-full text-xs text-left">
@@ -260,9 +253,7 @@ const Users = () => {
                 <tr className="bg-[#0f172a] border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[10px]">
                   <th className="px-5 py-4 font-bold">User Identity</th>
                   <th className="px-5 py-4 font-bold">Contact Channel</th>
-                  <th className="px-5 py-4 text-center font-bold">
-                    Permissions
-                  </th>
+                  <th className="px-5 py-4 text-center font-bold">Permissions</th>
                   <th className="px-5 py-4 font-bold">Registered</th>
                   <th className="px-5 py-4 text-center font-bold">Bookings</th>
                   <th className="px-5 py-4 text-right font-bold">Actions</th>
@@ -280,47 +271,32 @@ const Users = () => {
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border ${avatarColor(u.name)}`}
-                        >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border ${avatarColor(u.name)}`}>
                           {u.name?.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-bold text-slate-200">
-                          {u.name}
-                        </span>
+                        <span className="font-bold text-slate-200">{u.name}</span>
                       </div>
                     </td>
-
                     <td className="px-5 py-4">
                       <div className="space-y-1">
-                        <p className="text-slate-400 font-medium">
-                          {u.email || "No Email"}
-                        </p>
-                        <p className="text-orange-500/80 font-mono text-[10px]">
-                          {u.phone}
-                        </p>
+                        <p className="text-slate-400 font-medium">{u.email || "No Email"}</p>
+                        <p className="text-orange-500/80 font-mono text-[10px]">{u.phone}</p>
                       </div>
                     </td>
-
                     <td className="px-5 py-4 text-center">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${
-                          u.role === "admin"
-                            ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                            : u.role === "pandit"
-                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                              : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                        }`}
-                      >
+                      <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${
+                        u.role === "admin"
+                          ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                          : u.role === "customerCare"
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                      }`}>
                         {u.role}
                       </span>
                     </td>
-
                     <td className="px-5 py-4 text-slate-500 font-medium">
                       {new Date(u.created_at).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
+                        day: "2-digit", month: "short", year: "numeric",
                       })}
                     </td>
                     <td className="px-5 py-4 text-center">
@@ -351,7 +327,6 @@ const Users = () => {
           )}
         </div>
 
-        {/* ✅ Pagination Component */}
         {!loading && users.length > 0 && (
           <Pagination
             currentPage={page}
@@ -361,14 +336,9 @@ const Users = () => {
         )}
       </div>
 
-      {/* ADD/EDIT MODAL UI SHARED STYLE */}
+      {/* ADD / EDIT MODAL */}
       {(showAddModal || editingUser) && (
-        <ModalWrapper
-          onClose={() => {
-            setShowAddModal(false);
-            setEditingUser(null);
-          }}
-        >
+        <ModalWrapper onClose={() => { setShowAddModal(false); setEditingUser(null); }}>
           <div className="px-6 py-5 border-b border-slate-800 bg-[#0f172a]/50">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
@@ -385,10 +355,7 @@ const Users = () => {
                 </div>
               </div>
               <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setEditingUser(null);
-                }}
+                onClick={() => { setShowAddModal(false); setEditingUser(null); }}
                 className="text-slate-500 hover:text-white transition"
               >
                 <X size={20} />
@@ -429,14 +396,23 @@ const Users = () => {
                   : setEditingUser({ ...editingUser, phone: e.target.value })
               }
             />
+
+            {/* ✅ Role Dropdown */}
+            <ModalSelect
+              icon={Shield}
+              value={showAddModal ? newUser.role : editingUser?.role}
+              onChange={(e) =>
+                showAddModal
+                  ? setNewUser({ ...newUser, role: e.target.value })
+                  : setEditingUser({ ...editingUser, role: e.target.value })
+              }
+              options={roleOptions}
+            />
           </div>
 
           <div className="px-6 py-5 bg-[#0f172a]/50 border-t border-slate-800 flex gap-3">
             <button
-              onClick={() => {
-                setShowAddModal(false);
-                setEditingUser(null);
-              }}
+              onClick={() => { setShowAddModal(false); setEditingUser(null); }}
               className="flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-700 text-slate-400 hover:bg-slate-800 transition"
             >
               Discard
@@ -446,11 +422,7 @@ const Users = () => {
               disabled={actionLoading === "add" || actionLoading === "edit"}
               className="flex-1 flex items-center justify-center gap-2 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-900/20 transition disabled:opacity-50"
             >
-              {actionLoading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Plus size={14} />
-              )}
+              {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
               Commit
             </button>
           </div>

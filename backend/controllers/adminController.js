@@ -302,63 +302,76 @@ export const getAllUsers = async (req, res) => {
     const limit = Number(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    let query = `
-      SELECT 
+    // ✅ Total count — sab roles
+    const [[{ total }]] = await db.execute(
+      `SELECT COUNT(*) as total FROM users WHERE role != 'pandit'`
+    );
+
+    // ✅ WHERE role='user' hata diya — sab roles aayenge
+    const [users] = await db.execute(
+      `SELECT 
         u.id, u.name, u.email, u.phone, u.role, u.created_at,
         COUNT(pr.id) as total_bookings
-      FROM users u
-      LEFT JOIN puja_requests pr ON pr.user_id = u.id
-      WHERE u.role='user'
-      GROUP BY u.id
-    `;
-
-    const params = [];
-
-    query += ` ORDER BY u.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
-
-    const [users] = await db.execute(query, params);
+       FROM users u
+LEFT JOIN puja_requests pr ON pr.user_id = u.id
+WHERE u.role != 'pandit'
+GROUP BY u.id
+       ORDER BY u.created_at DESC
+       LIMIT ${limit} OFFSET ${offset}`
+    );
 
     res.json({
       success: true,
       users,
+      total,
       currentPage: page,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false });
   }
 };
-// create new user for admin dashboard (optional, since users can sign up themselves)
+
+// ✅ Role dynamic — user/admin/customerCare sab ban sakte hain
 export const createUser = async (req, res) => {
   try {
-    const { name, email, phone } = req.body;
+    const { name, email, phone, role } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and phone are required",
+      });
+    }
+
+    const allowedRoles = ["user", "admin", "customerCare"];
+    const userRole = allowedRoles.includes(role) ? role : "user";
 
     await db.execute(
-      `INSERT INTO users (name, email, phone, role)
-       VALUES (?, ?, ?, 'user')`,
-      [name, email, phone],
+      `INSERT INTO users (name, email, phone, role) VALUES (?, ?, ?, ?)`,
+      [name, email || null, phone, userRole]
     );
 
-    res.json({ success: true });
+    res.json({ success: true, message: "User created successfully" });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
-// Get Single user details for admin dashboard
+
+// Get Single user
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
 
     const [[user]] = await db.execute(
       "SELECT id, name, email, phone, role, created_at FROM users WHERE id=?",
-      [id],
+      [id]
     );
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     res.json({ success: true, user });
@@ -367,37 +380,29 @@ export const getUserById = async (req, res) => {
   }
 };
 
-// Update user details for admin dashboard
+// Update user
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, phone, role } = req.body;
 
-    // Collect fields dynamically
-    let fields = [];
-    let values = [];
+    const fields = [];
+    const values = [];
 
-    if (name !== undefined) {
-      fields.push("name=?");
-      values.push(name);
-    }
+    if (name !== undefined) { fields.push("name=?"); values.push(name); }
+    if (email !== undefined) { fields.push("email=?"); values.push(email); }
+    if (phone !== undefined) { fields.push("phone=?"); values.push(phone); }
 
-    if (email !== undefined) {
-      fields.push("email=?");
-      values.push(email);
-    }
-
-    if (phone !== undefined) {
-      fields.push("phone=?");
-      values.push(phone);
-    }
-
+    // ✅ Role validate karke update karo
     if (role !== undefined) {
+      const allowedRoles = ["user", "admin", "customerCare"];
+      if (!allowedRoles.includes(role)) {
+        return res.status(400).json({ success: false, message: "Invalid role" });
+      }
       fields.push("role=?");
       values.push(role);
     }
 
-    // If no field provided
     if (fields.length === 0) {
       return res.status(400).json({
         success: false,
@@ -405,29 +410,22 @@ export const updateUser = async (req, res) => {
       });
     }
 
-    // Add id at the end for WHERE clause
     values.push(id);
+    await db.execute(`UPDATE users SET ${fields.join(", ")} WHERE id=?`, values);
 
-    const query = `UPDATE users SET ${fields.join(", ")} WHERE id=?`;
-
-    await db.execute(query, values);
-
-    res.json({
-      success: true,
-      message: "User updated successfully",
-    });
+    res.json({ success: true, message: "User updated successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// Delete user for admin dashboard
+// Delete user
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-
-    if (Number(id) === req.user.id) {
+    console.log("Delete id:", id, "User id:", req.user.id, typeof req.user.id);
+    if (Number(id) === Number(req.user.id)) {
       return res.status(400).json({
         success: false,
         message: "Admin cannot delete himself",
@@ -442,20 +440,25 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// filter users by role for admin dashboard
+// Filter users by role
 export const filtarUsers = async (req, res) => {
   try {
     const { types } = req.params;
 
+    const allowedRoles = ["user", "admin", "customerCare"];
+    if (!allowedRoles.includes(types)) {
+      return res.status(400).json({ success: false, message: "Invalid role" });
+    }
+
     const [users] = await db.execute(
       "SELECT id, name, email, phone, role, created_at FROM users WHERE role=? ORDER BY created_at DESC",
-      [types],
+      [types]
     );
+
     if (!users || users.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Users not found" });
+      return res.status(404).json({ success: false, message: "Users not found" });
     }
+
     res.json({ success: true, users });
   } catch (error) {
     console.error(error);
@@ -849,7 +852,7 @@ export const createService = async (req, res) => {
         puja_type,
         description,
         image_url,
-        status || "active",
+        status !== undefined && status !== null ? status : "",
         priority || 0,
         is_featured || 0,
       ],
@@ -919,7 +922,7 @@ export const updateService = async (req, res) => {
       fields.push("description=?");
       vals.push(description);
     }
-    if (status) {
+    if (status !== undefined) {
       fields.push("status=?");
       vals.push(status);
     }
@@ -1824,10 +1827,10 @@ export const adminUpdateBlog = async (req, res) => {
     const image_url = req.file ? req.file.filename : existing.image_url;
     const slug = title
       ? title
-          .toLowerCase()
-          .replace(/[^\w\s-]/g, "")
-          .replace(/\s+/g, "-")
-          .slice(0, 120)
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .slice(0, 120)
       : existing.slug;
 
     await pool.query(

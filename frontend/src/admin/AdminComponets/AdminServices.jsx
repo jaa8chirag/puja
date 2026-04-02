@@ -427,7 +427,7 @@ const AdminServices = () => {
                   </>
                 ) : (
                   <>
-                    <Trash2 size={14} /> Haan, Delete Karo
+                    <Trash2 size={14} />Yes, Delete it
                   </>
                 )}
               </button>

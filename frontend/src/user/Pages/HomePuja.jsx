@@ -144,20 +144,25 @@ export default function HomePuja() {
                 className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-200 cursor-pointer flex flex-col hover:-translate-y-2 active:scale-[0.98]"
               >
                 {/* Image */}
+                {/* Image */}
                 <div className="relative h-48 md:h-64 overflow-hidden">
                   <img
                     src={`${API_BASE_URL}/uploads/${service.image_url}`}
                     alt={service.puja_name}
                     className="w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                   />
-                  <div className="absolute top-3 right-3 z-20">
-                    <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
-                      <Sparkles size={10} fill="white" />
-                      <span className="text-[11px] md:text-[13px] capitalize font-bold tracking-wide">
-                        {service.status}
-                      </span>
+
+                  {/* ✅ Sirf tab dikhe jab status ho */}
+                  {service.status && service.status.trim() !== "" && (
+                    <div className="absolute top-3 right-3 z-20">
+                      <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                        <Sparkles size={10} fill="white" />
+                        <span className="text-[11px] md:text-[13px] capitalize font-bold tracking-wide">
+                          {service.status}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Content */}

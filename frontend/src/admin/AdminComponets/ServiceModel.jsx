@@ -14,7 +14,7 @@ import {
   Sparkles,
   Edit,
   Layers,
-  Star, // Naye icons
+  Star,
 } from "lucide-react";
 import {
   API,
@@ -33,8 +33,8 @@ const ServiceModal = ({ close, editData, refresh }) => {
     address: "",
     about: "",
     dateOfStart: "",
-    priority: 0, // 1. Naya field added
-    is_featured: 0, // 2. Naya field added (0 for No, 1 for Yes)
+    priority: 0,
+    is_featured: 0,
     prices: [{ pricing_type: "standard", price: "" }],
   });
 
@@ -43,9 +43,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
   // Benefits State
   const [benefits, setBenefits] = useState([]);
-  const [newBenefits, setNewBenefits] = useState([
-    { name: "", description: "" },
-  ]);
+  const [newBenefits, setNewBenefits] = useState([{ name: "", description: "" }]);
   const [editingBenefit, setEditingBenefit] = useState(null);
   const [showBenefitForm, setShowBenefitForm] = useState(false);
 
@@ -58,10 +56,10 @@ const ServiceModal = ({ close, editData, refresh }) => {
       puja_type: newType,
       prices: temple
         ? [
-            { pricing_type: "single", price: "" },
-            { pricing_type: "couple", price: "" },
-            { pricing_type: "family", price: "" },
-          ]
+          { pricing_type: "single", price: "" },
+          { pricing_type: "couple", price: "" },
+          { pricing_type: "family", price: "" },
+        ]
         : [{ pricing_type: "standard", price: "" }],
     });
   };
@@ -70,9 +68,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
     if (editData) {
       let formattedDateTime = "";
       if (editData.dateOfStart) {
-        formattedDateTime = editData.dateOfStart
-          .replace(" ", "T")
-          .substring(0, 16);
+        formattedDateTime = editData.dateOfStart.replace(" ", "T").substring(0, 16);
       }
 
       setForm({
@@ -83,8 +79,8 @@ const ServiceModal = ({ close, editData, refresh }) => {
         address: editData.address || "",
         about: editData.about || "",
         dateOfStart: formattedDateTime,
-        priority: editData.priority || 0, // 3. Edit mode mein data load
-        is_featured: editData.is_featured || 0, // 4. Edit mode mein data load
+        priority: editData.priority || 0,
+        is_featured: editData.is_featured || 0,
         prices:
           editData.prices?.length > 0
             ? editData.prices
@@ -120,12 +116,19 @@ const ServiceModal = ({ close, editData, refresh }) => {
           (p) => p.pricing_type && p.price,
         );
         formData.append(key, JSON.stringify(validPrices));
+      } else if (key === "status") {
+        // ✅ Featured OFF hai to status empty bhejo
+        formData.append("status", form.is_featured === 1 ? form.status : "");
       } else {
         formData.append(key, form[key]);
       }
     });
 
     if (image) formData.append("image", image);
+
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
 
     try {
       let serviceId;
@@ -154,12 +157,12 @@ const ServiceModal = ({ close, editData, refresh }) => {
   // --- Benefit Handlers ---
   const handleAddBenefitRow = () =>
     setNewBenefits([...newBenefits, { name: "", description: "" }]);
+
   const handleRemoveBenefitRow = (index) => {
     const updated = newBenefits.filter((_, i) => i !== index);
-    setNewBenefits(
-      updated.length > 0 ? updated : [{ name: "", description: "" }],
-    );
+    setNewBenefits(updated.length > 0 ? updated : [{ name: "", description: "" }]);
   };
+
   const handleBenefitChange = (index, field, value) => {
     const updated = [...newBenefits];
     updated[index][field] = value;
@@ -253,9 +256,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
                     type="text"
                     required
                     value={form.puja_name}
-                    onChange={(e) =>
-                      setForm({ ...form, puja_name: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, puja_name: e.target.value })}
                     className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
                     placeholder="e.g. Navratri Special Puja"
                   />
@@ -280,7 +281,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 </select>
               </div>
 
-              {/* Priority - NEW FIELD */}
+              {/* Priority */}
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1 flex items-center gap-2">
                   <Layers size={12} /> Sorting Priority
@@ -290,9 +291,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
                   <input
                     type="number"
                     value={form.priority}
-                    onChange={(e) =>
-                      setForm({ ...form, priority: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
                     className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
                     placeholder="Higher number = Top position"
                   />
@@ -311,46 +310,59 @@ const ServiceModal = ({ close, editData, refresh }) => {
                   <textarea
                     rows={4}
                     value={form.description}
-                    onChange={(e) =>
-                      setForm({ ...form, description: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
                     className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-500"
                   />
                 </div>
               </div>
 
-              {/* Featured & Status */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Featured Toggle + Status Input */}
+              {/* Featured Toggle + Status Input */}
+              <div className="space-y-3">
+
+                {/* ✅ Featured Toggle */}
                 <div
-                  onClick={() =>
+                  onClick={(e) => {
+                    e.stopPropagation(); // card click se alag
                     setForm({
                       ...form,
                       is_featured: form.is_featured === 1 ? 0 : 1,
-                    })
-                  }
-                  className={`flex items-center justify-center gap-2 p-3 rounded-2xl border cursor-pointer transition-all ${form.is_featured === 1 ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-[#0b1120] border-slate-700 text-slate-500"}`}
+                      status: form.is_featured === 1 ? "" : form.status,
+                    });
+                  }}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-2xl border cursor-pointer transition-all ${form.is_featured === 1
+                    ? "bg-orange-500/20 border-orange-500 text-orange-400"
+                    : "bg-[#0b1120] border-slate-700 text-slate-500"
+                    }`}
                 >
+                  {/* ✅ Toggle Switch UI */}
+                  <div className={`w-9 h-5 rounded-full transition-all duration-300 flex items-center px-1 ${form.is_featured === 1 ? "bg-orange-500" : "bg-slate-600"
+                    }`}>
+                    <div className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-all duration-300 ${form.is_featured === 1 ? "translate-x-4" : "translate-x-0"
+                      }`} />
+                  </div>
                   <Star
                     size={14}
                     fill={form.is_featured === 1 ? "currentColor" : "none"}
                   />
                   <span className="text-[10px] font-black uppercase">
-                    Featured
+                    {form.is_featured === 1 ? "Featured ON" : "Featured OFF"}
                   </span>
                 </div>
 
-                <div className="relative">
-                  <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
-                  <input
-                    type="text"
-                    value={form.status}
-                    onChange={(e) =>
-                      setForm({ ...form, status: e.target.value })
-                    }
-                    className="w-full pl-8 pr-3 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-[10px] text-white focus:border-orange-500 outline-none"
-                    placeholder="Label (e.g. 10% Off)"
-                  />
-                </div>
+                {/* ✅ Status input — sirf Featured ON hone pe dikhe */}
+                {form.is_featured === 1 && (
+                  <div className="relative">
+                    <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
+                    <input
+                      type="text"
+                      value={form.status}
+                      onChange={(e) => setForm({ ...form, status: e.target.value })}
+                      className="w-full pl-8 pr-3 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-[10px] text-white focus:border-orange-500 outline-none"
+                      placeholder="Label (e.g. 10% Off)"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -365,18 +377,14 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 <input
                   type="text"
                   value={form.address}
-                  onChange={(e) =>
-                    setForm({ ...form, address: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, address: e.target.value })}
                   className="w-full px-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400"
                   placeholder="Address"
                 />
                 <input
                   type="datetime-local"
                   value={form.dateOfStart}
-                  onChange={(e) =>
-                    setForm({ ...form, dateOfStart: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, dateOfStart: e.target.value })}
                   className="w-full px-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400"
                   style={{ colorScheme: "dark" }}
                 />
@@ -432,8 +440,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 onClick={() => setShowBenefitForm(!showBenefitForm)}
                 className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-xl text-[10px] font-bold text-purple-300 transition hover:bg-purple-500/30"
               >
-                <Plus size={12} />{" "}
-                {showBenefitForm ? "Hide Form" : "Add Benefits"}
+                <Plus size={12} /> {showBenefitForm ? "Hide Form" : "Add Benefits"}
               </button>
             </div>
 
@@ -459,22 +466,14 @@ const ServiceModal = ({ close, editData, refresh }) => {
                     <input
                       type="text"
                       value={benefit.name}
-                      onChange={(e) =>
-                        handleBenefitChange(index, "name", e.target.value)
-                      }
+                      onChange={(e) => handleBenefitChange(index, "name", e.target.value)}
                       className="w-full px-4 py-2 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white outline-none"
                       placeholder="Benefit name"
                     />
                     <textarea
                       rows={2}
                       value={benefit.description}
-                      onChange={(e) =>
-                        handleBenefitChange(
-                          index,
-                          "description",
-                          e.target.value,
-                        )
-                      }
+                      onChange={(e) => handleBenefitChange(index, "description", e.target.value)}
                       className="w-full px-4 py-2 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white outline-none"
                       placeholder="Description (optional)"
                     />
@@ -492,33 +491,31 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
             {/* Existing/Preview Benefits List */}
             <div className="space-y-2">
-              {(editData ? benefits : newBenefits.filter((b) => b.name)).map(
-                (b, i) => (
-                  <div
-                    key={i}
-                    className="p-3 bg-[#0b1120] rounded-xl border border-slate-700 flex justify-between items-center group"
-                  >
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{b.name}</h4>
-                      <p className="text-xs text-slate-400">{b.description}</p>
-                    </div>
-                    {editData && (
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <Edit
-                          size={14}
-                          className="text-purple-400 cursor-pointer"
-                          onClick={() => setEditingBenefit(b)}
-                        />
-                        <Trash2
-                          size={14}
-                          className="text-red-400 cursor-pointer"
-                          onClick={() => handleDeleteBenefit(b.id)}
-                        />
-                      </div>
-                    )}
+              {(editData ? benefits : newBenefits.filter((b) => b.name)).map((b, i) => (
+                <div
+                  key={i}
+                  className="p-3 bg-[#0b1120] rounded-xl border border-slate-700 flex justify-between items-center group"
+                >
+                  <div>
+                    <h4 className="text-sm font-bold text-white">{b.name}</h4>
+                    <p className="text-xs text-slate-400">{b.description}</p>
                   </div>
-                ),
-              )}
+                  {editData && (
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                      <Edit
+                        size={14}
+                        className="text-purple-400 cursor-pointer"
+                        onClick={() => setEditingBenefit(b)}
+                      />
+                      <Trash2
+                        size={14}
+                        className="text-red-400 cursor-pointer"
+                        onClick={() => handleDeleteBenefit(b.id)}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -526,7 +523,10 @@ const ServiceModal = ({ close, editData, refresh }) => {
           <div className="pt-2">
             <label className="block group cursor-pointer">
               <div
-                className={`border-2 border-dashed rounded-3xl p-6 text-center transition-all ${preview ? "border-orange-500/50 bg-orange-500/5" : "border-slate-800 hover:border-slate-600"}`}
+                className={`border-2 border-dashed rounded-3xl p-6 text-center transition-all ${preview
+                  ? "border-orange-500/50 bg-orange-500/5"
+                  : "border-slate-800 hover:border-slate-600"
+                  }`}
               >
                 {preview ? (
                   <img
@@ -537,9 +537,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 ) : (
                   <div className="text-slate-600 flex flex-col items-center gap-2">
                     <Image size={32} className="opacity-30" />
-                    <span className="text-[11px] font-bold uppercase">
-                      Upload Banner
-                    </span>
+                    <span className="text-[11px] font-bold uppercase">Upload Banner</span>
                   </div>
                 )}
               </div>

@@ -815,7 +815,7 @@ const Pandits = () => {
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <>
-                    <Trash2 size={14} /> Haan, Delete Karo
+                    <Trash2 size={14} /> Yes, Delete it
                   </>
                 )}
               </button>

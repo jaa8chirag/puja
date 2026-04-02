@@ -1,4 +1,4 @@
-import { MapPin, Calendar, ArrowRight, Search, Sparkles  } from "lucide-react";
+import { MapPin, Calendar, ArrowRight, Search, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -94,14 +94,16 @@ export default function KathaPuja() {
                     alt={service.puja_name}
                     className="w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                   />
-                  <div className="absolute top-3 right-3 z-20">
-                    <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
-                      <Sparkles size={10} fill="white" />
-                      <span className="text-[11px] md:text-[13px] font-bold capitalize tracking-wide">
-                        {service.status}
-                      </span>
+                  {service.status && service.status.trim() !== "" && (
+                    <div className="absolute top-3 right-3 z-20">
+                      <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                        <Sparkles size={10} fill="white" />
+                        <span className="text-[11px] md:text-[13px] font-bold capitalize tracking-wide">
+                          {service.status}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Content */}

@@ -480,7 +480,7 @@ const Adminblogs = () => {
                 style={{ background: saving ? "#7f1d1d" : "#dc2626" }}>
                 {saving
                   ? <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full inline-block"/> Deleting...</>
-                  : "🗑️ Haan, Delete Karo"}
+                  : "🗑️ Yes, Delete Karo"}
               </button>
             </div>
           </div>
