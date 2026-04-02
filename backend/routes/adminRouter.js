@@ -56,6 +56,11 @@ import {
   updatePage,
   deleteContribution,
   getAllNameCorrections,
+  getAllPersonalInfo,
+  createPersonalInfo,
+  updatePersonalInfo,
+  deletePersonalInfo,
+  updatePersonalInfoStatus,
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -207,6 +212,17 @@ router.get(
   verifyToken,
   adminOnly,
   getAllNameCorrections,
+);
+
+router.get("/personal-info", getAllPersonalInfo);
+router.post("/personal-info", verifyToken, adminOnly, createPersonalInfo);
+router.put("/personal-info/:id", verifyToken, adminOnly, updatePersonalInfo);
+router.delete("/personal-info/:id", verifyToken, adminOnly, deletePersonalInfo);
+router.put(
+  "/personal-info/:id/status",
+  verifyToken,
+  adminOnly,
+  updatePersonalInfoStatus,
 );
 
 export default router;

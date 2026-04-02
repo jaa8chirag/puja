@@ -17,6 +17,7 @@ import AdminPages from "../AdminComponets/AdminPages";
 import VerifyPanditModal from "../AdminComponets/VerifyPanditModal";
 import Gallery from "../AdminComponets/AdminEventsAartis";
 import NameCorrectionList from "../AdminComponets/NameCorrectionList";
+import PersonalInfo from "../AdminComponets/PersonalInfo";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Icon = ({ name }) => {
@@ -256,6 +257,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Pages", icon: "services" },
     { label: "Gallery", icon: "gallery" },
     { label: "Name Correction", icon: "nameCorrection" },
+    { label: "Personal Info", icon: "users" },
   ];
   return (
     <>
@@ -279,7 +281,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
             <Icon name="close" />
           </button>
         </div>
-        <nav className="flex-1 p-3">
+        <nav className="flex-1 p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {menus.map((item) => {
             const isActive = active === item.label;
             return (
@@ -556,6 +558,7 @@ const AdminDashboard = () => {
             {active === "Pages" && <AdminPages />}
             {active === "Gallery" && <Gallery />}
             {active === "Name Correction" && <NameCorrectionList />}
+            {active === "Personal Info" && <PersonalInfo />}
           </div>
         </div>
       </div>
