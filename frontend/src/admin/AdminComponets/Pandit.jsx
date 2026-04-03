@@ -615,7 +615,7 @@ const Pandits = () => {
                         >
                           <Pencil size={14} />
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => toggleBlock(p.id)}
                           className={`p-2 rounded-xl transition-all ${
                             p.is_blocked
@@ -628,7 +628,7 @@ const Pandits = () => {
                           ) : (
                             <ShieldOff size={14} />
                           )}
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => openDeleteModal(p)}
                           className="p-2 rounded-xl text-slate-500 hover:text-rose-500 hover:bg-rose-500/10"

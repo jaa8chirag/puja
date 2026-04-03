@@ -43,7 +43,9 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
   // Benefits State
   const [benefits, setBenefits] = useState([]);
-  const [newBenefits, setNewBenefits] = useState([{ name: "", description: "" }]);
+  const [newBenefits, setNewBenefits] = useState([
+    { name: "", description: "" },
+  ]);
   const [editingBenefit, setEditingBenefit] = useState(null);
   const [showBenefitForm, setShowBenefitForm] = useState(false);
 
@@ -56,10 +58,10 @@ const ServiceModal = ({ close, editData, refresh }) => {
       puja_type: newType,
       prices: temple
         ? [
-          { pricing_type: "single", price: "" },
-          { pricing_type: "couple", price: "" },
-          { pricing_type: "family", price: "" },
-        ]
+            { pricing_type: "single", price: "" },
+            { pricing_type: "couple", price: "" },
+            { pricing_type: "family", price: "" },
+          ]
         : [{ pricing_type: "standard", price: "" }],
     });
   };
@@ -68,7 +70,9 @@ const ServiceModal = ({ close, editData, refresh }) => {
     if (editData) {
       let formattedDateTime = "";
       if (editData.dateOfStart) {
-        formattedDateTime = editData.dateOfStart.replace(" ", "T").substring(0, 16);
+        formattedDateTime = editData.dateOfStart
+          .replace(" ", "T")
+          .substring(0, 16);
       }
 
       setForm({
@@ -160,7 +164,9 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
   const handleRemoveBenefitRow = (index) => {
     const updated = newBenefits.filter((_, i) => i !== index);
-    setNewBenefits(updated.length > 0 ? updated : [{ name: "", description: "" }]);
+    setNewBenefits(
+      updated.length > 0 ? updated : [{ name: "", description: "" }],
+    );
   };
 
   const handleBenefitChange = (index, field, value) => {
@@ -243,131 +249,152 @@ const ServiceModal = ({ close, editData, refresh }) => {
           onSubmit={handleSubmit}
           className="overflow-y-auto flex-1 px-8 py-6 space-y-6 scrollbar-hide"
         >
+          {/* Row 1: Service Name + Featured Toggle */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              {/* Service Name */}
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
-                  Service Name
-                </label>
-                <div className="relative">
-                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    value={form.puja_name}
-                    onChange={(e) => setForm({ ...form, puja_name: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
-                    placeholder="e.g. Navratri Special Puja"
-                  />
-                </div>
-              </div>
-
-              {/* Category Type */}
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
-                  Category Type
-                </label>
-                <select
-                  value={form.puja_type}
-                  onChange={(e) => handleTypeChange(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white outline-none focus:border-orange-500"
-                >
-                  <option value="home_puja">Home Puja</option>
-                  <option value="katha">Katha</option>
-                  <option value="temple_puja">Temple Puja</option>
-                  <option value="pind_dan">Temple Pind Dan</option>
-                  <option value="online_pind_dan">Online Pind Dan</option>
-                </select>
-              </div>
-
-              {/* Priority */}
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1 flex items-center gap-2">
-                  <Layers size={12} /> Sorting Priority
-                </label>
-                <div className="relative">
-                  <Layers className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="number"
-                    value={form.priority}
-                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
-                    placeholder="Higher number = Top position"
-                  />
-                </div>
+            {/* Service Name */}
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+                Service Name
+              </label>
+              <div className="relative">
+                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  required
+                  value={form.puja_name}
+                  onChange={(e) =>
+                    setForm({ ...form, puja_name: e.target.value })
+                  }
+                  className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
+                  placeholder="e.g. Navratri Special Puja"
+                />
               </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Description */}
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
-                  Description
-                </label>
-                <div className="relative">
-                  <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-slate-500" />
-                  <textarea
-                    rows={4}
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-500"
-                  />
-                </div>
-              </div>
-
-              {/* Featured Toggle + Status Input */}
-              {/* Featured Toggle + Status Input */}
-              <div className="space-y-3">
-
-                {/* ✅ Featured Toggle */}
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation(); // card click se alag
-                    setForm({
-                      ...form,
-                      is_featured: form.is_featured === 1 ? 0 : 1,
-                      status: form.is_featured === 1 ? "" : form.status,
-                    });
-                  }}
-                  className={`flex items-center justify-center gap-2 p-3 rounded-2xl border cursor-pointer transition-all ${form.is_featured === 1
+            {/* Featured Toggle + Status */}
+            <div className="space-y-3">
+              {/* ✅ Featured Toggle */}
+              <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+                Featured Status
+              </label>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setForm({
+                    ...form,
+                    is_featured: form.is_featured === 1 ? 0 : 1,
+                    status: form.is_featured === 1 ? "" : form.status,
+                  });
+                }}
+                className={`flex items-center justify-center gap-2 p-3 rounded-2xl border cursor-pointer transition-all ${
+                  form.is_featured === 1
                     ? "bg-orange-500/20 border-orange-500 text-orange-400"
                     : "bg-[#0b1120] border-slate-700 text-slate-500"
-                    }`}
+                }`}
+              >
+                <div
+                  className={`w-9 h-5 rounded-full transition-all duration-300 flex items-center px-1 ${
+                    form.is_featured === 1 ? "bg-orange-500" : "bg-slate-600"
+                  }`}
                 >
-                  {/* ✅ Toggle Switch UI */}
-                  <div className={`w-9 h-5 rounded-full transition-all duration-300 flex items-center px-1 ${form.is_featured === 1 ? "bg-orange-500" : "bg-slate-600"
-                    }`}>
-                    <div className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-all duration-300 ${form.is_featured === 1 ? "translate-x-4" : "translate-x-0"
-                      }`} />
-                  </div>
-                  <Star
-                    size={14}
-                    fill={form.is_featured === 1 ? "currentColor" : "none"}
+                  <div
+                    className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-all duration-300 ${
+                      form.is_featured === 1 ? "translate-x-4" : "translate-x-0"
+                    }`}
                   />
-                  <span className="text-[10px] font-black uppercase">
-                    {form.is_featured === 1 ? "Featured ON" : "Featured OFF"}
-                  </span>
                 </div>
+                <Star
+                  size={14}
+                  fill={form.is_featured === 1 ? "currentColor" : "none"}
+                />
+                <span className="text-[10px] font-black uppercase">
+                  {form.is_featured === 1 ? "Featured ON" : "Featured OFF"}
+                </span>
+              </div>
 
-                {/* ✅ Status input — sirf Featured ON hone pe dikhe */}
-                {form.is_featured === 1 && (
-                  <div className="relative">
-                    <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
-                    <input
-                      type="text"
-                      value={form.status}
-                      onChange={(e) => setForm({ ...form, status: e.target.value })}
-                      className="w-full pl-8 pr-3 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-[10px] text-white focus:border-orange-500 outline-none"
-                      placeholder="Label (e.g. 10% Off)"
-                    />
-                  </div>
-                )}
+              {/* ✅ Status input — sirf Featured ON hone pe dikhe */}
+              {form.is_featured === 1 && (
+                <div className="relative">
+                  <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
+                  <input
+                    type="text"
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm({ ...form, status: e.target.value })
+                    }
+                    className="w-full pl-8 pr-3 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-[10px] text-white focus:border-orange-500 outline-none"
+                    placeholder="Label (e.g. 10% Off)"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Category Type + Sorting Priority */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Category Type */}
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+                Category Type
+              </label>
+              <select
+                value={form.puja_type}
+                onChange={(e) => handleTypeChange(e.target.value)}
+                className="w-full px-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white outline-none focus:border-orange-500"
+              >
+                <option value="home_puja">Home Puja</option>
+                <option value="katha">Katha</option>
+                <option value="temple_puja">Temple Puja</option>
+                <option value="pind_dan">Temple Pind Dan</option>
+                <option value="online_pind_dan">Online Pind Dan</option>
+              </select>
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1 flex items-center gap-2">
+                <Layers size={12} /> Sorting Priority
+              </label>
+              <div className="relative">
+                <Layers className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="number"
+                  value={form.priority}
+                  onChange={(e) =>
+                    setForm({ ...form, priority: e.target.value })
+                  }
+                  className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
+                  placeholder="Higher number = Top position"
+                />
               </div>
             </div>
           </div>
 
-          {/* Temple Schedule */}
+          {/* Description - Full Width - Auto Height */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+              Description
+            </label>
+            <div className="relative">
+              <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-slate-500" />
+              <textarea
+                value={form.description}
+                onChange={(e) => {
+                  setForm({ ...form, description: e.target.value });
+                  e.target.style.height = "auto";
+                  e.target.style.height = e.target.scrollHeight + "px";
+                }}
+                onInput={(e) => {
+                  e.target.style.height = "auto";
+                  e.target.style.height = e.target.scrollHeight + "px";
+                }}
+                className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-500 overflow-hidden min-h-[100px]"
+                placeholder="Enter service description..."
+              />
+            </div>
+          </div>
+
+          {/* Temple Schedule - Full Width with Auto Height */}
           {isTempleType && (
             <div className="p-6 bg-[#0f172a] rounded-3xl border border-orange-500/20 space-y-4">
               <div className="flex items-center gap-2 text-orange-400 font-black text-[10px] uppercase tracking-tighter mb-2">
@@ -377,23 +404,34 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 <input
                   type="text"
                   value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, address: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400"
                   placeholder="Address"
                 />
                 <input
                   type="datetime-local"
                   value={form.dateOfStart}
-                  onChange={(e) => setForm({ ...form, dateOfStart: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, dateOfStart: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white outline-none focus:border-orange-400"
                   style={{ colorScheme: "dark" }}
                 />
               </div>
               <textarea
-                rows={2}
                 value={form.about}
-                onChange={(e) => setForm({ ...form, about: e.target.value })}
-                className="w-full px-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-400"
+                onChange={(e) => {
+                  setForm({ ...form, about: e.target.value });
+                  e.target.style.height = "auto";
+                  e.target.style.height = e.target.scrollHeight + "px";
+                }}
+                onInput={(e) => {
+                  e.target.style.height = "auto";
+                  e.target.style.height = e.target.scrollHeight + "px";
+                }}
+                className="w-full px-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-400 overflow-hidden min-h-[80px]"
                 placeholder="About significance..."
               />
             </div>
@@ -440,7 +478,8 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 onClick={() => setShowBenefitForm(!showBenefitForm)}
                 className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-xl text-[10px] font-bold text-purple-300 transition hover:bg-purple-500/30"
               >
-                <Plus size={12} /> {showBenefitForm ? "Hide Form" : "Add Benefits"}
+                <Plus size={12} />{" "}
+                {showBenefitForm ? "Hide Form" : "Add Benefits"}
               </button>
             </div>
 
@@ -466,15 +505,28 @@ const ServiceModal = ({ close, editData, refresh }) => {
                     <input
                       type="text"
                       value={benefit.name}
-                      onChange={(e) => handleBenefitChange(index, "name", e.target.value)}
+                      onChange={(e) =>
+                        handleBenefitChange(index, "name", e.target.value)
+                      }
                       className="w-full px-4 py-2 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white outline-none"
                       placeholder="Benefit name"
                     />
                     <textarea
-                      rows={2}
                       value={benefit.description}
-                      onChange={(e) => handleBenefitChange(index, "description", e.target.value)}
-                      className="w-full px-4 py-2 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white outline-none"
+                      onChange={(e) => {
+                        handleBenefitChange(
+                          index,
+                          "description",
+                          e.target.value,
+                        );
+                        e.target.style.height = "auto";
+                        e.target.style.height = e.target.scrollHeight + "px";
+                      }}
+                      onInput={(e) => {
+                        e.target.style.height = "auto";
+                        e.target.style.height = e.target.scrollHeight + "px";
+                      }}
+                      className="w-full px-4 py-2 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white outline-none resize-none overflow-hidden min-h-[60px]"
                       placeholder="Description (optional)"
                     />
                   </div>
@@ -491,31 +543,33 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
             {/* Existing/Preview Benefits List */}
             <div className="space-y-2">
-              {(editData ? benefits : newBenefits.filter((b) => b.name)).map((b, i) => (
-                <div
-                  key={i}
-                  className="p-3 bg-[#0b1120] rounded-xl border border-slate-700 flex justify-between items-center group"
-                >
-                  <div>
-                    <h4 className="text-sm font-bold text-white">{b.name}</h4>
-                    <p className="text-xs text-slate-400">{b.description}</p>
-                  </div>
-                  {editData && (
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                      <Edit
-                        size={14}
-                        className="text-purple-400 cursor-pointer"
-                        onClick={() => setEditingBenefit(b)}
-                      />
-                      <Trash2
-                        size={14}
-                        className="text-red-400 cursor-pointer"
-                        onClick={() => handleDeleteBenefit(b.id)}
-                      />
+              {(editData ? benefits : newBenefits.filter((b) => b.name)).map(
+                (b, i) => (
+                  <div
+                    key={i}
+                    className="p-3 bg-[#0b1120] rounded-xl border border-slate-700 flex justify-between items-center group"
+                  >
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{b.name}</h4>
+                      <p className="text-xs text-slate-400">{b.description}</p>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {editData && (
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                        <Edit
+                          size={14}
+                          className="text-purple-400 cursor-pointer"
+                          onClick={() => setEditingBenefit(b)}
+                        />
+                        <Trash2
+                          size={14}
+                          className="text-red-400 cursor-pointer"
+                          onClick={() => handleDeleteBenefit(b.id)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ),
+              )}
             </div>
           </div>
 
@@ -523,10 +577,11 @@ const ServiceModal = ({ close, editData, refresh }) => {
           <div className="pt-2">
             <label className="block group cursor-pointer">
               <div
-                className={`border-2 border-dashed rounded-3xl p-6 text-center transition-all ${preview
-                  ? "border-orange-500/50 bg-orange-500/5"
-                  : "border-slate-800 hover:border-slate-600"
-                  }`}
+                className={`border-2 border-dashed rounded-3xl p-6 text-center transition-all ${
+                  preview
+                    ? "border-orange-500/50 bg-orange-500/5"
+                    : "border-slate-800 hover:border-slate-600"
+                }`}
               >
                 {preview ? (
                   <img
@@ -537,7 +592,9 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 ) : (
                   <div className="text-slate-600 flex flex-col items-center gap-2">
                     <Image size={32} className="opacity-30" />
-                    <span className="text-[11px] font-bold uppercase">Upload Banner</span>
+                    <span className="text-[11px] font-bold uppercase">
+                      Upload Banner
+                    </span>
                   </div>
                 )}
               </div>
