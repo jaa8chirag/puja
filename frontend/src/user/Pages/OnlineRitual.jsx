@@ -136,7 +136,6 @@ const OnlineRitual = () => {
     };
     fetchService();
   }, []);
-  console.log("services--", service);
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 180;

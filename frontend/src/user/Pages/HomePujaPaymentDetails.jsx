@@ -65,28 +65,28 @@ const HomePujaPaymentDetails = () => {
   });
 
   const getPrice = (title) => {
-    const daan = contributionOptions2.find((c) => c.name === title);
-    return Number(daan?.price || 0);
-  };
+  const daan = contributionOptions2.find((c) => c.name === title);
+  return Number(daan?.price || 0);
+};
 
-  const iconMap = {
-    "Vastra Dan": <Shirt size={16} />,
-    "Anna Dan": <Coffee size={16} />,
-    "Deep Dan": <Flame size={16} />,
-    "Brahmin Dan": <UtensilsCrossed size={16} />,
-  };
+const iconMap = {
+  "Vastra Dan":  <Shirt size={16} />,
+  "Anna Dan":    <Coffee size={16} />,
+  "Deep Dan":    <Flame size={16} />,
+  "Brahmin Dan": <UtensilsCrossed size={16} />,
+};
 
-  const contributionOptions = Array.isArray(contributionOptions2)
-    ? contributionOptions2
+const contributionOptions = Array.isArray(contributionOptions2)
+  ? contributionOptions2
       .filter((c) => c.name !== "Gau Seva" && c.name !== "Temple Donation" && c.name !== "Samagri Kit")
       .map((c) => ({
-        id: c.name,
-        name: c.name,
+        id:    c.name,
+        name:  c.name,
         price: Number(c.price),
-        icon: iconMap[c.name] || <Sparkles size={16} />,
-        desc: c.description || "",  // ✅ database se
+        icon:  iconMap[c.name] || <Sparkles size={16} />,
+        desc:  c.description || "",  // ✅ database se
       }))
-    : [];
+  : [];
 
 
 
@@ -443,8 +443,8 @@ const HomePujaPaymentDetails = () => {
                   <div
                     onClick={() => toggleDonation("Gau Seva")}
                     className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
-                      ? "border-orange-500 bg-orange-50/30 shadow-sm"
-                      : "border-orange-200 bg-white hover:border-orange-300"
+                        ? "border-orange-500 bg-orange-50/30 shadow-sm"
+                        : "border-orange-200 bg-white hover:border-orange-300"
                       }`}
                   >
                     {/* Checkbox */}
@@ -468,8 +468,8 @@ const HomePujaPaymentDetails = () => {
                         Complete your Sankalp with Gau Seva
                       </h4>
                       <p className="text-[10px] text-gray-500 font-medium">
-                        {contributionOptions2.find((c) => c.name === "Gau Seva")?.description || "Feed a cow on your behalf as a sacred gesture"}
-                      </p>
+  {contributionOptions2?.find((c) => c.name === "Gau Seva")?.description || "Feed a cow on your behalf as a sacred gesture"}
+</p>
                     </div>
 
                     {/* Price */}
@@ -503,17 +503,18 @@ const HomePujaPaymentDetails = () => {
                 className="lg:hidden bg-white rounded-2xl border border-orange-200 shadow-sm p-5"
               >
                 <MobileSummaryInline
-                  puja={puja}
-                  isSamagriSelected={isSamagriSelected}
-                  basePrice={basePrice}
-                  samagriPrice={samagriPrice}
-                  dharmicTotal={dharmicTotal}
-                  grandTotal={grandTotal}
-                  donations={donations}
-                  toggleDonation={toggleDonation}
-                  dharmicRef={dharmicRef}
-                  getPrice={getPrice}
-                />
+  puja={puja}
+  isSamagriSelected={isSamagriSelected}
+  basePrice={basePrice}
+  samagriPrice={samagriPrice}
+  dharmicTotal={dharmicTotal}
+  grandTotal={grandTotal}
+  donations={donations}
+  toggleDonation={toggleDonation}
+  dharmicRef={dharmicRef}
+  getPrice={getPrice}
+  contributionOptions2={contributionOptions2}
+/>
               </div>
             </div>
 
@@ -596,9 +597,8 @@ const HomePujaPaymentDetails = () => {
 
                       {/* ✅ Now will come below */}
                       <p className="text-[12px] text-gray-500 mt-1 ml-5 leading-snug">
-                        Your donation helps maintain the temple, support daily
-                        rituals, and serve devotees.
-                      </p>
+  {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Your donation helps maintain the temple, support daily rituals, and serve devotees."}
+</p>
                     </div>
 
                     <div className="flex justify-between items-center pt-2">
@@ -673,16 +673,9 @@ const HomePujaPaymentDetails = () => {
    MOBILE INLINE SUMMARY
 ───────────────────────────────────────────── */
 const MobileSummaryInline = ({
-  puja,
-  isSamagriSelected,
-  basePrice,
-  samagriPrice,
-  dharmicTotal,
-  grandTotal,
-  donations,
-  toggleDonation,
-  dharmicRef,
-  getPrice,
+  puja, isSamagriSelected, basePrice, samagriPrice,
+  dharmicTotal, grandTotal, donations, toggleDonation, dharmicRef, getPrice,
+  contributionOptions2,
 }) => (
   <div className="space-y-4">
     <div>
@@ -762,8 +755,8 @@ const MobileSummaryInline = ({
 
         {/* ✅ ADD THIS LINE BELOW */}
         <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-          Helps in temple upkeep, rituals, and serving the community.
-        </p>
+  {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
+</p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />
@@ -848,7 +841,7 @@ export const HourDropdown = ({ value, onChange, inputBaseClass, labelClass }) =>
     for (let i = 7; i <= 17; i++) {
       const period = i < 12 ? "AM" : "PM";
       const displayHour = i <= 12 ? i : i - 12; // 13 becomes 1 PM
-
+      
       // Select value format: "07:00 AM", "01:00 PM", etc.
       const timeString = `${displayHour < 10 ? "0" + displayHour : displayHour}:00 ${period}`;
       hours.push(timeString);

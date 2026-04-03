@@ -526,6 +526,7 @@ const PindDanBooking = () => {
                 selectedContributionsTotal={selectedContributionsTotal}
                 scrollToSection={scrollToSection}
                 getPrice={getPrice}
+                contributionOptions={contributionOptions}
               />
             </div>
 
@@ -636,8 +637,8 @@ const PindDanBooking = () => {
                   </div>
 
                   <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-                    {Array.from(contributionOptions).find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
-                  </p>
+  {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
+</p>
                 </div>
 
                 <div className="border-t border-dashed border-gray-300 w-full my-2" />
@@ -742,14 +743,9 @@ const PindDanBooking = () => {
    MOBILE INLINE SUMMARY SECTION
 ───────────────────────────────────────────── */
 const MobileSummarySection = ({
-  service,
-  donations,
-  setDonations,
-  contributionList,
-  calculateTotal,
-  selectedContributionsTotal,
-  scrollToSection,
-  getPrice,
+  service, donations, setDonations, contributionList,
+  calculateTotal, selectedContributionsTotal, scrollToSection, getPrice,
+  contributionOptions,
 }) => (
   <div>
     <div className="mb-5">
@@ -822,8 +818,8 @@ const MobileSummarySection = ({
         </div>
 
         <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
-          Helps in temple upkeep, daily rituals, and serving devotees.
-        </p>
+  {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
+</p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />

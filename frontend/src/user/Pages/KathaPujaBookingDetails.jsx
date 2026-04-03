@@ -534,6 +534,7 @@ const KathaPujaPaymentDetails = () => {
                   toggleDonation={toggleDonation}
                   dharmicRef={dharmicRef}
                   getPrice={getPrice}
+                  contributionOptions2={contributionOptions2}
                 />
               </div>
             </div>
@@ -622,8 +623,7 @@ const KathaPujaPaymentDetails = () => {
 
                       {/* ✅ NEW TEXT BELOW */}
                       <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-                        Helps in temple upkeep, daily rituals, and serving
-                        devotees.
+                        {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
                       </p>
                     </div>
 
@@ -699,16 +699,9 @@ const KathaPujaPaymentDetails = () => {
    MOBILE INLINE SUMMARY
 ───────────────────────────────────────────── */
 const MobileSummaryInline = ({
-  puja,
-  isSamagriSelected,
-  basePrice,
-  samagriPrice,
-  dharmicTotal,
-  grandTotal,
-  donations,
-  toggleDonation,
-  dharmicRef,
-  getPrice,
+  puja, isSamagriSelected, basePrice, samagriPrice,
+  dharmicTotal, grandTotal, donations, toggleDonation, dharmicRef, getPrice,
+  contributionOptions2,
 }) => (
   <div className="space-y-4">
     <div>
@@ -785,7 +778,7 @@ const MobileSummaryInline = ({
 
         {/* ✅ Niche aayega */}
         <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
-          Helps in temple upkeep, rituals, and serving the community.
+          {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
         </p>
       </div>
 

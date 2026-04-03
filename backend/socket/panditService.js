@@ -10,7 +10,6 @@ export const handlePanditLogic = async (socket, text, groq, PANDIT_PROMPT) => {
     }
     let state = userStates.get(socket.id);
 
-    console.log(`[DEBUG] User: ${socket.id} | Step: ${state.step} | Input: ${text}`);
 
     try {
         // SCENARIO A: Agar details maangne ka process shuru ho chuka hai
@@ -73,7 +72,7 @@ async function collectJanamDetails(socket, text, state, groq) {
 
     const currentSubStep = state.subStep;
     state.data[currentSubStep] = text;
-    console.log(`[DEBUG] Saved ${currentSubStep}: ${text}`);
+
 
     if (steps[currentSubStep].next !== 'complete') {
         state.subStep = steps[currentSubStep].next;
@@ -82,7 +81,6 @@ async function collectJanamDetails(socket, text, state, groq) {
         // FINAL EXECUTION
         try {
             const { name, dob, tob, city, gender } = state.data;
-            console.log("[DEBUG] Calling generateKundli with:", state.data);
 
             const rawData = await generateKundli(name, dob, tob, city, gender, 5.5, 29.94, 78.16);
             const report = await interpretRawData(rawData, groq);

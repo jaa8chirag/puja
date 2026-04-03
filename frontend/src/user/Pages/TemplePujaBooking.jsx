@@ -1132,19 +1132,20 @@ const TemplePujaBooking = () => {
                 className="lg:hidden bg-white rounded-2xl border border-orange-200 shadow-sm p-5"
               >
                 <MobileSummarySection
-                  service={service}
-                  tickets={tickets}
-                  selectedTicket={selectedTicket}
-                  setSelectedTicket={handleTicketClick}
-                  donations={donations}
-                  setDonations={setDonations}
-                  contributionList={contributionList}
-                  calculateTotal={calculateTotal}
-                  selectedContributionsTotal={selectedContributionsTotal}
-                  scrollToSection={scrollToSection}
-                  getPrice={getPrice}
-                  selectedMemberNames={selectedMemberNames}
-                />
+  service={service}
+  tickets={tickets}
+  selectedTicket={selectedTicket}
+  setSelectedTicket={handleTicketClick}
+  donations={donations}
+  setDonations={setDonations}
+  contributionList={contributionList}
+  calculateTotal={calculateTotal}
+  selectedContributionsTotal={selectedContributionsTotal}
+  scrollToSection={scrollToSection}
+  getPrice={getPrice}
+  selectedMemberNames={selectedMemberNames}
+  contributionOptions={contributionOptions}
+/>
               </div>
 
               {/* 6. FAQ */}
@@ -1400,18 +1401,10 @@ const TemplePujaBooking = () => {
    MOBILE INLINE SUMMARY
 ───────────────────────────────────────────── */
 const MobileSummarySection = ({
-  service,
-  tickets,
-  selectedTicket,
-  setSelectedTicket, // now = handleTicketClick
-  donations,
-  setDonations,
-  contributionList,
-  calculateTotal,
-  selectedContributionsTotal,
-  scrollToSection,
-  getPrice,
-  selectedMemberNames,
+  service, tickets, selectedTicket, setSelectedTicket,
+  donations, setDonations, contributionList, calculateTotal,
+  selectedContributionsTotal, scrollToSection, getPrice, selectedMemberNames,
+  contributionOptions,
 }) => (
   <div className="space-y-5">
     <div>
@@ -1528,8 +1521,8 @@ const MobileSummarySection = ({
           </span>
         </div>
         <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-          Helps in temple upkeep, rituals, and serving the community.
-        </p>
+  {Array.from(contributionOptions || []).find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
+</p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />

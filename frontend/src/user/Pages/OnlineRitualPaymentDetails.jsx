@@ -116,7 +116,6 @@ const OnlineRitualPaymentDetails = () => {
       total_price: grandTotal,
       samagriKit: isSamagriSelected,
     };
-    console.log("payload", payload);
     try {
       const response = await fetch(
         `${API_BASE_URL}/puja/online_pindan_booking`,
@@ -446,8 +445,8 @@ const OnlineRitualPaymentDetails = () => {
                 <div
                   onClick={() => toggleDonation("Gau Seva")}
                   className={`p-4 flex items-center gap-4 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
-                      ? "border-orange-500 bg-orange-50/30"
-                      : "border-orange-200 bg-white hover:border-orange-300"
+                    ? "border-orange-500 bg-orange-50/30"
+                    : "border-orange-200 bg-white hover:border-orange-300"
                     }`}
                 >
                   <div
@@ -505,6 +504,7 @@ const OnlineRitualPaymentDetails = () => {
                   toggleDonation={toggleDonation}
                   dharmicRef={dharmicRef}
                   getPrice={getPrice}
+                  contributionOptions2={contributionOptions2}
                 />
               </div>
             </div>
@@ -593,8 +593,7 @@ const OnlineRitualPaymentDetails = () => {
 
                       {/* ✅ NEW TEXT BELOW */}
                       <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-                        Helps in temple upkeep, daily rituals, and serving
-                        devotees.
+                        {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
                       </p>
                     </div>
 
@@ -670,16 +669,9 @@ const OnlineRitualPaymentDetails = () => {
    MOBILE INLINE SUMMARY
 ───────────────────────────────────────────── */
 const MobileSummaryInline = ({
-  puja,
-  isSamagriSelected,
-  basePrice,
-  samagriPrice,
-  dharmicTotal,
-  grandTotal,
-  donations,
-  toggleDonation,
-  dharmicRef,
-  getPrice,
+  puja, isSamagriSelected, basePrice, samagriPrice,
+  dharmicTotal, grandTotal, donations, toggleDonation, dharmicRef, getPrice,
+  contributionOptions2,
 }) => (
   <div className="space-y-4">
     <div>
@@ -756,7 +748,7 @@ const MobileSummaryInline = ({
 
         {/* ✅ Niche aayega */}
         <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
-          Helps in temple upkeep, rituals, and serving the community.
+          {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
         </p>
       </div>
 
@@ -795,8 +787,8 @@ const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
     className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
-        ? "border-orange-500 bg-orange-50/30"
-        : "border-orange-200 hover:border-orange-300"
+      ? "border-orange-500 bg-orange-50/30"
+      : "border-orange-200 hover:border-orange-300"
       }`}
   >
     <div
