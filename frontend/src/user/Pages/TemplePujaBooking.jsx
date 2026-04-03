@@ -447,12 +447,11 @@ const MemberSelectModal = ({
                         onClick={() => !isDisabled && onToggleMember(member.id)}
                         disabled={isDisabled}
                         className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-200 text-left
-                          ${
-                            isSelected
-                              ? "border-orange-400 bg-orange-50 shadow-sm"
-                              : isDisabled
-                                ? "border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed"
-                                : "border-orange-100 bg-white hover:border-orange-300 hover:bg-orange-50/50"
+                          ${isSelected
+                            ? "border-orange-400 bg-orange-50 shadow-sm"
+                            : isDisabled
+                              ? "border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed"
+                              : "border-orange-100 bg-white hover:border-orange-300 hover:bg-orange-50/50"
                           }`}
                       >
                         <div
@@ -512,10 +511,9 @@ const MemberSelectModal = ({
                   onClick={onConfirm}
                   disabled={selectedMembers.length === 0}
                   className={`w-full py-3.5 rounded-2xl font-black text-[15px] uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2
-                    ${
-                      selectedMembers.length > 0
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    ${selectedMembers.length > 0
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                 >
                   <Ticket size={18} />
@@ -718,9 +716,9 @@ const TemplePujaBooking = () => {
         : new Date().toISOString().split("T")[0],
       time: service?.dateOfStart
         ? new Date(service.dateOfStart).toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+          hour: "2-digit",
+          minute: "2-digit",
+        })
         : "10:00 AM",
       address: service?.address || "N/A",
       // city: "default city",
@@ -807,42 +805,17 @@ const TemplePujaBooking = () => {
     return Number(daan[0]?.price);
   };
 
+  const getDescription = (name) => {
+    const item = Array.from(contributionOptions).find((c) => c.name === name);
+    return item?.description || "";
+  };
+
   const contributionList = [
-    {
-      id: "Vastra Dan",
-      title: "Vastra Dan",
-      price: getPrice("Vastra Dan"),
-      icon: <Shirt size={16} />,
-      sub: "Donate clothes to the needy",
-    },
-    {
-      id: "Anna Dan",
-      title: "Anna Dan",
-      price: getPrice("Anna Dan"),
-      icon: <Coffee size={16} />,
-      sub: "Provide meals to the hungry",
-    },
-    {
-      id: "Deep Dan",
-      title: "Deep Dan",
-      price: getPrice("Deep Dan"),
-      icon: <Flame size={16} />,
-      sub: "Light lamps at sacred temples",
-    },
-    {
-      id: "Brahmin Dan",
-      title: "Brahmin Dan",
-      price: getPrice("Brahmin Dan"),
-      icon: <UtensilsCrossed size={16} />,
-      sub: "Feed Brahmins after ceremony",
-    },
-    {
-      id: "Gau Seva",
-      title: "Gau Seva",
-      price: getPrice("Gau Seva"),
-      icon: <span className="text-xl">🐄</span>,
-      sub: "Feed the Gau Mata",
-    },
+    { id: "Vastra Dan", title: "Vastra Dan", price: getPrice("Vastra Dan"), icon: <Shirt size={16} />, sub: getDescription("Vastra Dan") || "Donate clothes to the needy" },
+    { id: "Anna Dan", title: "Anna Dan", price: getPrice("Anna Dan"), icon: <Coffee size={16} />, sub: getDescription("Anna Dan") || "Provide meals to the hungry" },
+    { id: "Deep Dan", title: "Deep Dan", price: getPrice("Deep Dan"), icon: <Flame size={16} />, sub: getDescription("Deep Dan") || "Light lamps at sacred temples" },
+    { id: "Brahmin Dan", title: "Brahmin Dan", price: getPrice("Brahmin Dan"), icon: <UtensilsCrossed size={16} />, sub: getDescription("Brahmin Dan") || "Feed Brahmins after ceremony" },
+    { id: "Gau Seva", title: "Gau Seva", price: getPrice("Gau Seva"), icon: <span className="text-xl">🐄</span>, sub: getDescription("Gau Seva") || "Feed the Gau Mata" },
   ];
 
   const tickets = [
@@ -877,10 +850,10 @@ const TemplePujaBooking = () => {
       extra +
       (donations["Temple Donation"]
         ? Number(
-            Array.from(contributionOptions).filter(
-              (c) => c.name == "Temple Donation",
-            )[0].price,
-          )
+          Array.from(contributionOptions).filter(
+            (c) => c.name == "Temple Donation",
+          )[0].price,
+        )
         : 0)
     );
   };
@@ -971,11 +944,10 @@ const TemplePujaBooking = () => {
                     <button
                       key={tab}
                       onClick={() => scrollToSection(tab)}
-                      className={`flex-1 px-4 md:px-6 py-4 text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all relative whitespace-nowrap ${
-                        activeTab === tab
+                      className={`flex-1 px-4 md:px-6 py-4 text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
                           ? "text-orange-600 bg-orange-50/50"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       {tab}
                       {activeTab === tab && (
@@ -1216,11 +1188,10 @@ const TemplePujaBooking = () => {
                       <button
                         key={t.label}
                         onClick={() => handleTicketClick(t.label)}
-                        className={`relative flex flex-col items-center py-4 px-2 rounded-2xl border-2 transition-all duration-300 ${
-                          selectedTicket === t.label
+                        className={`relative flex flex-col items-center py-4 px-2 rounded-2xl border-2 transition-all duration-300 ${selectedTicket === t.label
                             ? "border-orange-500 bg-orange-50/30 ring-4 ring-orange-50"
                             : "border-gray-100 bg-white hover:border-orange-200"
-                        }`}
+                          }`}
                       >
                         <div
                           className={`mb-2 p-2.5 rounded-xl ${selectedTicket === t.label ? "bg-orange-500 text-white shadow-md" : "bg-gray-50 text-gray-400"}`}
@@ -1332,8 +1303,7 @@ const TemplePujaBooking = () => {
                       </span>
                     </div>
                     <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-                      Helps in temple upkeep, daily rituals, and serving
-                      devotees.
+                      {Array.from(contributionOptions).find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
                     </p>
                   </div>
                 </div>
@@ -1463,11 +1433,10 @@ const MobileSummarySection = ({
           <button
             key={t.label}
             onClick={() => setSelectedTicket(t.label)}
-            className={`flex flex-col items-center py-2 px-2 rounded-2xl border-2 transition-all ${
-              selectedTicket === t.label
+            className={`flex flex-col items-center py-2 px-2 rounded-2xl border-2 transition-all ${selectedTicket === t.label
                 ? "border-orange-500 bg-orange-50 ring-2 ring-orange-100"
                 : "border-gray-100 bg-white hover:border-orange-200"
-            }`}
+              }`}
           >
             <div
               className={`mb-1.5 p-2 rounded-xl ${selectedTicket === t.label ? "bg-orange-500 text-white" : "bg-gray-50 text-gray-400"}`}
@@ -1591,11 +1560,10 @@ const MobileSummarySection = ({
 const ContributionCard = ({ item, selected, onToggle }) => (
   <button
     onClick={onToggle}
-    className={`flex items-center justify-between p-3 md:p-5 rounded-xl border transition-all shadow-sm w-full gap-2 ${
-      selected
+    className={`flex items-center justify-between p-3 md:p-5 rounded-xl border transition-all shadow-sm w-full gap-2 ${selected
         ? "border-orange-400 bg-orange-50"
         : "border-orange-200 bg-white hover:border-orange-300"
-    }`}
+      }`}
   >
     <div className="flex items-center gap-3 text-left">
       <div

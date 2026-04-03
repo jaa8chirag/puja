@@ -183,10 +183,10 @@ const PindDanBooking = () => {
 
       time: service?.dateOfStart
         ? new Date(service.dateOfStart).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          })
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
         : "10:00 AM",
       address: service?.address || "N/A",
       city: "Default City",
@@ -257,42 +257,17 @@ const PindDanBooking = () => {
 
   // console.log("services", service);
 
+  const getDescription = (name) => {
+    const item = Array.from(contributionOptions).find((c) => c.name === name);
+    return item?.description || "";
+  };
+
   const contributionList = [
-    {
-      id: "Vastra Dan",
-      title: "Vastra Dan",
-      price: getPrice("Vastra Dan"),
-      icon: <Shirt size={16} />,
-      sub: "Donate clothes to the needy",
-    },
-    {
-      id: "Anna Dan",
-      title: "Anna Dan",
-      price: getPrice("Anna Dan"),
-      icon: <Coffee size={16} />,
-      sub: "Provide meals to the hungry",
-    },
-    {
-      id: "Deep Dan",
-      title: "Deep Dan",
-      price: getPrice("Deep Dan"),
-      icon: <Flame size={16} />,
-      sub: "Light lamps at sacred temples",
-    },
-    {
-      id: "Brahmin Dan",
-      title: "Brahmin Dan",
-      price: getPrice("Brahmin Dan"),
-      icon: <UtensilsCrossed size={16} />,
-      sub: "Feed Brahmins after ceremony",
-    },
-    {
-      id: "Gau Seva",
-      title: "Gau Seva",
-      price: getPrice("Gau Seva"),
-      icon: <span className="text-xl">🐄</span>,
-      sub: "Feed the Gau Mata",
-    },
+    { id: "Vastra Dan", title: "Vastra Dan", price: getPrice("Vastra Dan"), icon: <Shirt size={16} />, sub: getDescription("Vastra Dan") || "Donate clothes to the needy" },
+    { id: "Anna Dan", title: "Anna Dan", price: getPrice("Anna Dan"), icon: <Coffee size={16} />, sub: getDescription("Anna Dan") || "Provide meals to the hungry" },
+    { id: "Deep Dan", title: "Deep Dan", price: getPrice("Deep Dan"), icon: <Flame size={16} />, sub: getDescription("Deep Dan") || "Light lamps at sacred temples" },
+    { id: "Brahmin Dan", title: "Brahmin Dan", price: getPrice("Brahmin Dan"), icon: <UtensilsCrossed size={16} />, sub: getDescription("Brahmin Dan") || "Feed Brahmins after ceremony" },
+    { id: "Gau Seva", title: "Gau Seva", price: getPrice("Gau Seva"), icon: <span className="text-xl">🐄</span>, sub: getDescription("Gau Seva") || "Feed the Gau Mata" },
   ];
 
   const calculateTotal = () => {
@@ -365,11 +340,10 @@ const PindDanBooking = () => {
                   <button
                     key={tab}
                     onClick={() => scrollToSection(tab)}
-                    className={`flex-1 px-4 md:px-6 py-4 text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all relative whitespace-nowrap ${
-                      activeTab === tab
+                    className={`flex-1 px-4 md:px-6 py-4 text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
                         ? "text-orange-600 bg-orange-50/50"
                         : "text-gray-400"
-                    }`}
+                      }`}
                   >
                     {tab}
                     {activeTab === tab && (
@@ -409,9 +383,8 @@ const PindDanBooking = () => {
                   </div>
                   <div>
                     <p
-                      className={`text-[16px] text-gray-600 leading-relaxed text-justify transition-all ${
-                        !aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""
-                      }`}
+                      className={`text-[16px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""
+                        }`}
                     >
                       {service?.description}
                     </p>
@@ -663,7 +636,7 @@ const PindDanBooking = () => {
                   </div>
 
                   <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-                    Helps in temple upkeep, daily rituals, and serving devotees.
+                    {Array.from(contributionOptions).find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
                   </p>
                 </div>
 
@@ -881,19 +854,17 @@ const MobileSummarySection = ({
 const ContributionCard = ({ item, selected, onToggle }) => (
   <button
     onClick={onToggle}
-    className={`flex items-center justify-between p-3 md:p-5 rounded-xl border transition-all shadow-sm w-full gap-2 ${
-      selected
+    className={`flex items-center justify-between p-3 md:p-5 rounded-xl border transition-all shadow-sm w-full gap-2 ${selected
         ? "border-orange-400 bg-orange-50"
         : "border-orange-200 bg-white hover:border-orange-300"
-    }`}
+      }`}
   >
     <div className="flex items-center gap-3 text-left">
       <div
-        className={`hidden md:flex p-2.5 rounded-lg shrink-0 transition-all ${
-          selected
+        className={`hidden md:flex p-2.5 rounded-lg shrink-0 transition-all ${selected
             ? "bg-orange-500 text-white"
             : "bg-orange-100 text-orange-500"
-        }`}
+          }`}
       >
         {item.icon}
       </div>
@@ -953,9 +924,8 @@ const FAQItem = ({ q, a }) => {
         />
       </div>
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          open ? "max-h-96 mt-3 opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-96 mt-3 opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <p className="text-[13px] md:text-[14px] text-gray-500 leading-relaxed font-medium">
           {a}

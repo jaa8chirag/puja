@@ -33,7 +33,7 @@ const OnlineRitualPaymentDetails = () => {
   const dharmicRef = useRef(null);
 
   const isSamagriSelected = location.state?.isSamagriSelected || false;
-  const [contributionOptions2, setContributionOptions2] = useState("");
+  const [contributionOptions2, setContributionOptions2] = useState([]);
   const generateBookingId = () =>
     `BK-${Math.random().toString(36).substring(2, 8)}`;
   const token = localStorage.getItem("token");
@@ -68,43 +68,28 @@ const OnlineRitualPaymentDetails = () => {
     "Temple Donation": false,
   });
   const getPrice = (title) => {
-    const daan = Array.from(contributionOptions2).filter(
-      (c) => c.name == title,
-    );
-
-    return Number(daan[0]?.price);
+    const daan = contributionOptions2.find((c) => c.name === title);
+    return Number(daan?.price || 0);
   };
 
-  const contributionOptions = [
-    {
-      id: "Vastra Dan",
-      name: "Vastra Dan",
-      price: getPrice("Vastra Dan"),
-      icon: <Shirt size={16} />,
-      desc: "Donate clothes to the needy",
-    },
-    {
-      id: "Anna Dan",
-      name: "Anna Dan",
-      price: getPrice("Anna Dan"),
-      icon: <Coffee size={16} />,
-      desc: "Provide meals to the hungry",
-    },
-    {
-      id: "Deep Dan",
-      name: "Deep Dan",
-      price: getPrice("Deep Dan"),
-      icon: <Flame size={16} />,
-      desc: "Light lamps at sacred temples",
-    },
-    {
-      id: "Brahmin Dan",
-      name: "Brahmin Dan",
-      price: getPrice("Brahmin Dan"),
-      icon: <UtensilsCrossed size={16} />,
-      desc: "Feed Brahmins after ceremony",
-    },
-  ];
+  const iconMap = {
+    "Vastra Dan": <Shirt size={16} />,
+    "Anna Dan": <Coffee size={16} />,
+    "Deep Dan": <Flame size={16} />,
+    "Brahmin Dan": <UtensilsCrossed size={16} />,
+  };
+
+  const contributionOptions = Array.isArray(contributionOptions2)
+    ? contributionOptions2
+      .filter((c) => c.name !== "Gau Seva" && c.name !== "Temple Donation" && c.name !== "Samagri Kit")
+      .map((c) => ({
+        id: c.name,
+        name: c.name,
+        price: Number(c.price),
+        icon: iconMap[c.name] || <Sparkles size={16} />,
+        desc: c.description || "",  // ✅ database se
+      }))
+    : [];
   const selectedDonations = Object.keys(donations)
     .filter((key) => donations[key])
     .join(", ");
@@ -460,11 +445,10 @@ const OnlineRitualPaymentDetails = () => {
                 {/* Gau Seva */}
                 <div
                   onClick={() => toggleDonation("Gau Seva")}
-                  className={`p-4 flex items-center gap-4 transition-all cursor-pointer rounded-xl border-2 ${
-                    donations["Gau Seva"]
+                  className={`p-4 flex items-center gap-4 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
                       ? "border-orange-500 bg-orange-50/30"
                       : "border-orange-200 bg-white hover:border-orange-300"
-                  }`}
+                    }`}
                 >
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${donations["Gau Seva"] ? "bg-orange-500 border-orange-500" : "border-orange-200"}`}
@@ -478,8 +462,8 @@ const OnlineRitualPaymentDetails = () => {
                     <h4 className="font-bold text-sm text-gray-900 leading-tight">
                       Complete your Sankalp with Gau Seva
                     </h4>
-                    <p className="text-[11px] text-gray-500 font-medium">
-                      Feed a cow on your behalf — an auspicious addition
+                    <p className="text-[10px] text-gray-500 font-medium">
+                      {contributionOptions2.find((c) => c.name === "Gau Seva")?.description || "Feed a cow on your behalf as a sacred gesture"}
                     </p>
                   </div>
                   <span className="text-orange-600 font-black text-sm whitespace-nowrap">
@@ -810,11 +794,10 @@ const MobileSummaryInline = ({
 const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
-    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${
-      selected
+    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
         ? "border-orange-500 bg-orange-50/30"
         : "border-orange-200 hover:border-orange-300"
-    }`}
+      }`}
   >
     <div
       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? "bg-orange-500 border-orange-500" : "border-orange-200"}`}

@@ -33,7 +33,7 @@ const HomePujaPaymentDetails = () => {
 
   const isSamagriSelected = location.state?.isSamagriSelected || false;
   const [errorMsg, setErrorMsg] = useState("");
-  const [contributionOptions2, setContributionOptions2] = useState("");
+  const [contributionOptions2, setContributionOptions2] = useState([]);
 
   const generateBookingId = () =>
     `BK-${Math.random().toString(36).substring(2, 8)}`;
@@ -42,10 +42,7 @@ const HomePujaPaymentDetails = () => {
     ? JSON.parse(atob(token.split(".")[1])).name
     : "Guest User";
   const bookingId = generateBookingId();
-  // const generateOTP = () => {
-  //   return Math.floor(100000 + Math.random() * 900000).toString();
-  // };
-  // const otp = generateOTP();
+
 
   const [formData, setFormData] = useState({
     date: "",
@@ -68,43 +65,31 @@ const HomePujaPaymentDetails = () => {
   });
 
   const getPrice = (title) => {
-    const daan = Array.from(contributionOptions2).filter(
-      (c) => c.name == title,
-    );
-
-    return Number(daan[0]?.price);
+    const daan = contributionOptions2.find((c) => c.name === title);
+    return Number(daan?.price || 0);
   };
 
-  const contributionOptions = [
-    {
-      id: "Vastra Dan",
-      name: "Vastra Dan",
-      price: getPrice("Vastra Dan"),
-      icon: <Shirt size={16} />,
-      desc: "Donate clothes to the needy",
-    },
-    {
-      id: "Anna Dan",
-      name: "Anna Dan",
-      price: getPrice("Anna Dan"),
-      icon: <Coffee size={16} />,
-      desc: "Provide meals to the hungry",
-    },
-    {
-      id: "Deep Dan",
-      name: "Deep Dan",
-      price: getPrice("Deep Dan"),
-      icon: <Flame size={16} />,
-      desc: "Light lamps at sacred temples",
-    },
-    {
-      id: "Brahmin Dan",
-      name: "Brahmin Dan",
-      price: getPrice("Brahmin Dan"),
-      icon: <UtensilsCrossed size={16} />,
-      desc: "Feed Brahmins after ceremony",
-    },
-  ];
+  const iconMap = {
+    "Vastra Dan": <Shirt size={16} />,
+    "Anna Dan": <Coffee size={16} />,
+    "Deep Dan": <Flame size={16} />,
+    "Brahmin Dan": <UtensilsCrossed size={16} />,
+  };
+
+  const contributionOptions = Array.isArray(contributionOptions2)
+    ? contributionOptions2
+      .filter((c) => c.name !== "Gau Seva" && c.name !== "Temple Donation" && c.name !== "Samagri Kit")
+      .map((c) => ({
+        id: c.name,
+        name: c.name,
+        price: Number(c.price),
+        icon: iconMap[c.name] || <Sparkles size={16} />,
+        desc: c.description || "",  // ✅ database se
+      }))
+    : [];
+
+
+
   const selectedDonations = Object.keys(donations)
     .filter((key) => donations[key])
     .join(", ");
@@ -458,8 +443,8 @@ const HomePujaPaymentDetails = () => {
                   <div
                     onClick={() => toggleDonation("Gau Seva")}
                     className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
-                        ? "border-orange-500 bg-orange-50/30 shadow-sm"
-                        : "border-orange-200 bg-white hover:border-orange-300"
+                      ? "border-orange-500 bg-orange-50/30 shadow-sm"
+                      : "border-orange-200 bg-white hover:border-orange-300"
                       }`}
                   >
                     {/* Checkbox */}
@@ -483,7 +468,7 @@ const HomePujaPaymentDetails = () => {
                         Complete your Sankalp with Gau Seva
                       </h4>
                       <p className="text-[10px] text-gray-500 font-medium">
-                        Feed a cow on your behalf as a sacred gesture
+                        {contributionOptions2.find((c) => c.name === "Gau Seva")?.description || "Feed a cow on your behalf as a sacred gesture"}
                       </p>
                     </div>
 
@@ -863,7 +848,7 @@ export const HourDropdown = ({ value, onChange, inputBaseClass, labelClass }) =>
     for (let i = 7; i <= 17; i++) {
       const period = i < 12 ? "AM" : "PM";
       const displayHour = i <= 12 ? i : i - 12; // 13 becomes 1 PM
-      
+
       // Select value format: "07:00 AM", "01:00 PM", etc.
       const timeString = `${displayHour < 10 ? "0" + displayHour : displayHour}:00 ${period}`;
       hours.push(timeString);

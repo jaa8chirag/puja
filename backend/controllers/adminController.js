@@ -15,27 +15,25 @@ export const getAllContributions = async (req, res) => {
   }
 };
 
-// 2. Add New
+// 2. Add New - description add karo
 export const addContribution = async (req, res) => {
-  const { name, price, is_active } = req.body;
+  const { name, price, is_active, description } = req.body;
   try {
-    const sql =
-      "INSERT INTO contribution_types (name, price, is_active) VALUES (?, ?, ?)";
-    const [result] = await db.query(sql, [name, price, is_active ?? 1]);
+    const sql = "INSERT INTO contribution_types (name, price, is_active, description) VALUES (?, ?, ?, ?)";
+    const [result] = await db.query(sql, [name, price, is_active ?? 1, description || ""]);
     res.status(201).json({ success: true, id: result.insertId });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// 3. Update
+// 3. Update - description add karo
 export const updateContribution = async (req, res) => {
   const { id } = req.params;
-  const { name, price, is_active } = req.body;
+  const { name, price, is_active, description } = req.body;
   try {
-    const sql =
-      "UPDATE contribution_types SET name=?, price=?, is_active=? WHERE id=?";
-    await db.query(sql, [name, price, is_active, id]);
+    const sql = "UPDATE contribution_types SET name=?, price=?, is_active=?, description=? WHERE id=?";
+    await db.query(sql, [name, price, is_active, description || "", id]);
     res.status(200).json({ success: true, message: "Updated" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
