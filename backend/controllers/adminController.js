@@ -1480,10 +1480,11 @@ export const getRevenueByCity = async (req, res) => {
 // ─────────────────────────────────────────────
 // 8. RECENT TRANSACTIONS (Paginated)
 // ─────────────────────────────────────────────
+
 export const getRecentTransactions = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
     const [rows] = await db.query(
@@ -1506,6 +1507,7 @@ export const getRecentTransactions = async (req, res) => {
       FROM puja_requests pr
       JOIN users u    ON pr.user_id    = u.id
       JOIN services s ON pr.service_id = s.id
+      WHERE pr.status = 'completed'
       ORDER BY pr.created_at DESC
       LIMIT ? OFFSET ?
     `,
@@ -1513,7 +1515,7 @@ export const getRecentTransactions = async (req, res) => {
     );
 
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM puja_requests`,
+      `SELECT COUNT(*) AS total FROM puja_requests WHERE status = 'completed'`,
     );
 
     res.json({
@@ -1575,9 +1577,10 @@ export const getPanditEarnings = async (req, res) => {
 // ─────────────────────────────────────────────
 // 10. DATE RANGE FILTER (Custom Report)
 // ─────────────────────────────────────────────
+
 export const getRevenueByDateRange = async (req, res) => {
   try {
-    const { from, to } = req.query;
+    const { from, to, status } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -1587,11 +1590,22 @@ export const getRevenueByDateRange = async (req, res) => {
         .status(400)
         .json({ success: false, message: "from aur to date required hai" });
 
+    // Status filter condition
+    let statusCondition = "";
+    let statusParam = [];
+    if (status && status !== "all") {
+      statusCondition = "AND pr.status = ?";
+      statusParam = [status];
+    }
+
+    // Total count query
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM puja_requests WHERE DATE(created_at) BETWEEN ? AND ?`,
-      [from, to],
+      `SELECT COUNT(*) AS total FROM puja_requests pr 
+       WHERE DATE(pr.created_at) BETWEEN ? AND ? ${statusCondition}`,
+      [from, to, ...statusParam],
     );
 
+    // Data query
     const [rows] = await db.query(
       `SELECT
         pr.id            AS bookingId,
@@ -1604,19 +1618,20 @@ export const getRevenueByDateRange = async (req, res) => {
       FROM puja_requests pr
       LEFT JOIN users u ON u.id = pr.user_id
       LEFT JOIN services ps ON ps.id = pr.service_id
-      WHERE DATE(pr.created_at) BETWEEN ? AND ?
+      WHERE DATE(pr.created_at) BETWEEN ? AND ? ${statusCondition}
       ORDER BY pr.created_at DESC
       LIMIT ? OFFSET ?`,
-      [from, to, limit, offset],
+      [from, to, ...statusParam, limit, offset],
     );
 
+    // Summary query with status filter
     const [[summary]] = await db.query(
       `SELECT
         COALESCE(SUM(total_price), 0) AS total_revenue,
         COUNT(*) AS total_bookings
-      FROM puja_requests
-      WHERE status = 'completed' AND DATE(created_at) BETWEEN ? AND ?`,
-      [from, to],
+      FROM puja_requests pr
+      WHERE DATE(pr.created_at) BETWEEN ? AND ? ${statusCondition}`,
+      [from, to, ...statusParam],
     );
 
     res.json({

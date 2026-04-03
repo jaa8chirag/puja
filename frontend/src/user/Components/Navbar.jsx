@@ -157,9 +157,7 @@ const Navbar = () => {
                 <ChevronDown
                   size={14}
                   className={`transition-transform duration-300 ${
-                    pindDanOpen
-                      ? "rotate-180 text-orange-600"
-                      : "text-black"
+                    pindDanOpen ? "rotate-180 text-orange-600" : "text-black"
                   }`}
                 />
               </div>
@@ -181,7 +179,7 @@ const Navbar = () => {
                     </button>
                     <button
                       onClick={() => {
-                        navigate("/online-ritual");
+                        navigate("/online-pinddan_home");
                         setPindDanOpen(false);
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-all group/item"
@@ -207,9 +205,7 @@ const Navbar = () => {
                 <ChevronDown
                   size={14}
                   className={`transition-transform duration-300 ${
-                    dropdownOpen
-                      ? "rotate-180 text-orange-600"
-                      : "text-black"
+                    dropdownOpen ? "rotate-180 text-orange-600" : "text-black"
                   }`}
                 />
               </div>
@@ -423,7 +419,7 @@ const Navbar = () => {
                   </button>
                   <button
                     onClick={() => {
-                      navigate("/online-ritual");
+                      navigate("/online-pinddan_home");
                       setMenuOpen(false);
                       setMobilePindDanOpen(false);
                     }}

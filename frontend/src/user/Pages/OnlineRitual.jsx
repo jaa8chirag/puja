@@ -14,7 +14,7 @@ import {
   Gem,
   Moon,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 // const SERVICE_ID = 48; // Online Pind Dan service ID
@@ -111,7 +111,7 @@ const OnlineRitual = () => {
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const { id } = useParams();
   const sections = {
     about: useRef(null),
     benefits: useRef(null),
@@ -123,12 +123,11 @@ const OnlineRitual = () => {
     const fetchService = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(
-          `${API_BASE_URL}/puja/online_pind/online_pind_dan`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+        const response = await fetch(`${API_BASE_URL}/puja/online_pind/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await response.json();
-        setService(Array.isArray(data) ? data[0] : data);
+        setService(data.data);
       } catch (error) {
         console.error("Fetch Error:", error);
       } finally {

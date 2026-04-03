@@ -63,6 +63,7 @@ import AIPanditBot from "./user/Pages/AIPanditBot";
 import OnlineRitual from "./user/Pages/OnlineRitual";
 import OnlineRitualPaymentDetails from "./user/Pages/OnlineRitualPaymentDetails";
 import NameCorrectionDummy from "./user/Pages/NameCorrectionDummy";
+import HomeOnlineRitual from "./user/Pages/HomeOnlineRitual";
 function App() {
   const location = useLocation();
 
@@ -99,8 +100,9 @@ function App() {
           <Route path="/blogs/:id" element={<BlogDetail />} />
 
           <Route path="/temples" element={<FullTemplePage />} />
+          <Route path="/online-pinddan_home" element={<HomeOnlineRitual />} />
 
-          <Route path="/online-ritual" element={<OnlineRitual />} />
+          <Route path="/online-ritual/:id" element={<OnlineRitual />} />
 
           <Route element={<ProtectedLayout />}>
             <Route path="/kundli" element={<KundliPortal />} />
