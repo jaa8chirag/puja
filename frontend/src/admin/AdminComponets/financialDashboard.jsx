@@ -50,7 +50,21 @@ const useApi = (endpoint, deps = []) => {
       const res = await API.get(endpoint);
       const json = res.data;
       if (!json.success) throw new Error(json.message || "Server error");
-      setData(json.data !== undefined ? json.data : json);
+      if (
+        json.data &&
+        typeof json.data === "object" &&
+        !Array.isArray(json.data)
+      ) {
+        // Date range format: { summary, data, pagination }
+        setData(json.data);
+      } else if (json.pagination) {
+        // Normal transactions: { data: [...], pagination: {...} }
+        setData({ data: json.data, pagination: json.pagination });
+      } else {
+        // Fallback for other endpoints
+        setData(json.data !== undefined ? json.data : json);
+      }
+      // setData(json.data !== undefined ? json.data : json);
     } catch (e) {
       setError(e.response?.data?.message || e.message || "Unknown error");
     } finally {
@@ -488,34 +502,34 @@ const OverviewTab = () => {
 // ══════════════════════════════════════════════════════════
 // TRANSACTIONS TAB
 // ══════════════════════════════════════════════════════════
+
 const TransactionsTab = () => {
   const [page, setPage] = useState(1);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [status, setStatus] = useState("all");
   const [applyRange, setApplyRange] = useState(false);
   const [rangePage, setRangePage] = useState(1);
 
   const txEndpoint =
     applyRange && from && to
-      ? `/date-range?from=${from}&to=${to}&page=${rangePage}&limit=10`
+      ? `/date-range?from=${from}&to=${to}&status=${status}&page=${rangePage}&limit=10`
       : `/transactions?page=${page}&limit=10`;
 
-  const tx = useApi(txEndpoint, [page, applyRange, rangePage]);
+  const tx = useApi(txEndpoint, [page, applyRange, rangePage, status]);
 
-  // const txData = applyRange ? tx.data?.data || [] : tx.data || [];
+  // Date range wala data
   const rangeSummary = applyRange ? tx.data?.summary : null;
-  // const pag = !applyRange ? tx.data?.pagination : null;
   const rangePag = applyRange ? tx.data?.pagination : null;
-  const txData = applyRange
-    ? tx.data?.data || []
-    : Array.isArray(tx.data)
-      ? tx.data
-      : tx.data?.data || [];
-  const pag = !applyRange
-    ? Array.isArray(tx.data)
-      ? null
-      : tx.data?.pagination
-    : null;
+  const rangeData = applyRange ? tx.data?.data || [] : [];
+
+  // Normal completed transactions wala data
+  const normalData = !applyRange ? tx.data?.data || [] : [];
+  const normalPag = !applyRange ? tx.data?.pagination : null;
+
+  // Final values
+  const txData = applyRange ? rangeData : normalData;
+  const pag = applyRange ? rangePag : normalPag;
 
   return (
     <div className="space-y-4">
@@ -538,6 +552,40 @@ const TransactionsTab = () => {
             </div>
           );
         })}
+
+        {/* Status Dropdown */}
+        {applyRange && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold tracking-widest uppercase text-white/30">
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value);
+                setRangePage(1);
+              }}
+              className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all min-w-[140px]"
+            >
+              <option value="all" className="bg-[#1a1f35]">
+                All Status
+              </option>
+              <option value="completed" className="bg-[#1a1f35]">
+                Completed
+              </option>
+              <option value="pending" className="bg-[#1a1f35]">
+                Pending
+              </option>
+              <option value="accepted" className="bg-[#1a1f35]">
+                Accepted
+              </option>
+              <option value="declined" className="bg-[#1a1f35]">
+                Declined
+              </option>
+            </select>
+          </div>
+        )}
+
         <button
           onClick={() => {
             setApplyRange(true);
@@ -554,6 +602,7 @@ const TransactionsTab = () => {
               setApplyRange(false);
               setFrom("");
               setTo("");
+              setStatus("all");
               setRangePage(1);
             }}
             className="bg-white/5 hover:bg-white/10 text-white/60 px-4 py-2 rounded-xl text-sm font-medium transition-colors border border-white/10 self-end"
@@ -573,7 +622,7 @@ const TransactionsTab = () => {
             </div>
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-widest text-white/30 mb-0.5">
-                Completed Bookings
+                Total Bookings
               </p>
               <p className="font-black text-white">
                 {rangeSummary.total_bookings}
@@ -583,9 +632,13 @@ const TransactionsTab = () => {
         )}
       </div>
 
-      {/* Table — scrollable on mobile */}
+      {/* Table */}
       <div className="rounded-2xl border border-white/5 bg-[#141828] p-4 md:p-6">
-        <SectionTitle title="Transactions" />
+        <SectionTitle
+          title={
+            applyRange ? "Filtered Transactions" : "Completed Transactions"
+          }
+        />
         {tx.loading && (
           <div className="space-y-3">
             {[...Array(8)].map((_, i) => (
@@ -666,21 +719,12 @@ const TransactionsTab = () => {
               </table>
             </div>
 
-            {/* Normal transactions pagination */}
+            {/* Pagination - Always show if exists */}
             {pag && (
               <Pagination
-                currentPage={page}
+                currentPage={applyRange ? rangePage : page}
                 totalPages={pag.totalPages}
-                onPageChange={setPage}
-              />
-            )}
-
-            {/* Date range pagination */}
-            {rangePag && (
-              <Pagination
-                currentPage={rangePage}
-                totalPages={rangePag.totalPages}
-                onPageChange={setRangePage}
+                onPageChange={applyRange ? setRangePage : setPage}
               />
             )}
           </>

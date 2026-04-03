@@ -241,9 +241,108 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
   }
 };
 
+// get
+export const getOnlinePindDanServices = async (req, res) => {
+  try {
+    const query = `
+      SELECT * 
+      FROM services 
+      WHERE puja_type = 'online_pind_dan' 
+      AND status = 'active'
+      ORDER BY priority DESC
+    `;
+
+    const [rows] = await db.execute(query);
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// export const bookOnlinePindDan = async (req, res) => {
+//   try {
+//     const { puja_type } = req.params;
+
+//     const [rows] = await db.query(
+//       `
+//       SELECT
+//         s.id,
+//         s.puja_name,
+//         s.puja_type,
+//         s.description,
+//         s.image_url,
+//         s.priority,
+
+//         MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
+//         MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
+//         MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
+//         MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
+
+//       FROM services s
+//       LEFT JOIN service_prices p
+//         ON s.id = p.service_id
+
+//       WHERE s.puja_type = ?
+
+//       GROUP BY
+//         s.id,
+//         s.puja_name,
+//         s.puja_type,
+//         s.description,
+//         s.image_url,
+//         s.priority
+
+//       ORDER BY s.priority DESC, s.id DESC
+//       `,
+//       [puja_type],
+//     );
+
+//     if (!rows.length) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No services found",
+//       });
+//     }
+
+//     // ✅ Sirf highest priority service
+//     const service = rows[0];
+
+//     // ✅ Benefits fetch
+//     const [benefits] = await db.query(
+//       `SELECT id, name, description, created_at
+//        FROM benefits
+//        WHERE service_id = ?
+//        ORDER BY created_at ASC`,
+//       [service.id],
+//     );
+
+//     const finalData = {
+//       ...service,
+//       benefits: benefits || [],
+//     };
+
+//     // ✅ Direct object send (no array)
+//     res.status(200).json(finalData);
+//   } catch (error) {
+//     console.error("Book Puja Error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch puja",
+//     });
+//   }
+// };
+
 export const bookOnlinePindDan = async (req, res) => {
   try {
-    const { puja_type } = req.params;
+    const { id } = req.params; // ✅ ab id le rahe hain
 
     const [rows] = await db.query(
       `
@@ -264,7 +363,7 @@ export const bookOnlinePindDan = async (req, res) => {
       LEFT JOIN service_prices p 
         ON s.id = p.service_id
 
-      WHERE s.puja_type = ?
+      WHERE s.id = ?   -- ✅ change here
 
       GROUP BY 
         s.id,
@@ -273,20 +372,17 @@ export const bookOnlinePindDan = async (req, res) => {
         s.description,
         s.image_url,
         s.priority
-
-      ORDER BY s.priority DESC, s.id DESC
       `,
-      [puja_type],
+      [id],
     );
 
     if (!rows.length) {
       return res.status(404).json({
         success: false,
-        message: "No services found",
+        message: "Service not found",
       });
     }
 
-    // ✅ Sirf highest priority service
     const service = rows[0];
 
     // ✅ Benefits fetch
@@ -303,8 +399,10 @@ export const bookOnlinePindDan = async (req, res) => {
       benefits: benefits || [],
     };
 
-    // ✅ Direct object send (no array)
-    res.status(200).json(finalData);
+    res.status(200).json({
+      success: true,
+      data: finalData, // ✅ consistent response
+    });
   } catch (error) {
     console.error("Book Puja Error:", error);
     res.status(500).json({
