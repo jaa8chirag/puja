@@ -43,7 +43,6 @@ const HomePujaPaymentDetails = () => {
     : "Guest User";
   const bookingId = generateBookingId();
 
-
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -65,30 +64,33 @@ const HomePujaPaymentDetails = () => {
   });
 
   const getPrice = (title) => {
-  const daan = contributionOptions2.find((c) => c.name === title);
-  return Number(daan?.price || 0);
-};
+    const daan = contributionOptions2.find((c) => c.name === title);
+    return Number(daan?.price || 0);
+  };
 
-const iconMap = {
-  "Vastra Dan":  <Shirt size={16} />,
-  "Anna Dan":    <Coffee size={16} />,
-  "Deep Dan":    <Flame size={16} />,
-  "Brahmin Dan": <UtensilsCrossed size={16} />,
-};
+  const iconMap = {
+    "Vastra Dan": <Shirt size={16} />,
+    "Anna Dan": <Coffee size={16} />,
+    "Deep Dan": <Flame size={16} />,
+    "Brahmin Dan": <UtensilsCrossed size={16} />,
+  };
 
-const contributionOptions = Array.isArray(contributionOptions2)
-  ? contributionOptions2
-      .filter((c) => c.name !== "Gau Seva" && c.name !== "Temple Donation" && c.name !== "Samagri Kit")
-      .map((c) => ({
-        id:    c.name,
-        name:  c.name,
-        price: Number(c.price),
-        icon:  iconMap[c.name] || <Sparkles size={16} />,
-        desc:  c.description || "",  // ✅ database se
-      }))
-  : [];
-
-
+  const contributionOptions = Array.isArray(contributionOptions2)
+    ? contributionOptions2
+        .filter(
+          (c) =>
+            c.name !== "Gau Seva" &&
+            c.name !== "Temple Donation" &&
+            c.name !== "Samagri Kit",
+        )
+        .map((c) => ({
+          id: c.name,
+          name: c.name,
+          price: Number(c.price),
+          icon: iconMap[c.name] || <Sparkles size={16} />,
+          desc: c.description || "", // ✅ database se
+        }))
+    : [];
 
   const selectedDonations = Object.keys(donations)
     .filter((key) => donations[key])
@@ -442,18 +444,28 @@ const contributionOptions = Array.isArray(contributionOptions2)
                 <div className="mt-3">
                   <div
                     onClick={() => toggleDonation("Gau Seva")}
-                    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
+                    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${
+                      donations["Gau Seva"]
                         ? "border-orange-500 bg-orange-50/30 shadow-sm"
                         : "border-orange-200 bg-white hover:border-orange-300"
-                      }`}
+                    }`}
                   >
                     {/* Checkbox */}
                     <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${donations["Gau Seva"] ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
-                        }`}
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+                        donations["Gau Seva"]
+                          ? "bg-orange-500 border-orange-500"
+                          : "border-orange-200 bg-white"
+                      }`}
                     >
                       {donations["Gau Seva"] && (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-3.5 h-3.5">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="4"
+                          className="w-3.5 h-3.5"
+                        >
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                       )}
@@ -468,8 +480,11 @@ const contributionOptions = Array.isArray(contributionOptions2)
                         Complete your Sankalp with Gau Seva
                       </h4>
                       <p className="text-[10px] text-gray-500 font-medium">
-  {contributionOptions2?.find((c) => c.name === "Gau Seva")?.description || "Feed a cow on your behalf as a sacred gesture"}
-</p>
+                        {contributionOptions2?.find(
+                          (c) => c.name === "Gau Seva",
+                        )?.description ||
+                          "Feed a cow on your behalf as a sacred gesture"}
+                      </p>
                     </div>
 
                     {/* Price */}
@@ -481,14 +496,6 @@ const contributionOptions = Array.isArray(contributionOptions2)
 
                 {/* Guarantees */}
                 <div className="space-y-3 pt-1">
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-1.5 text-orange-600/70 font-bold text-[10px] uppercase tracking-wider">
-                      <CheckCircle size={12} /> 100% Moneyback Guarantee
-                    </div>
-                    <div className="flex items-center gap-1.5 text-orange-600/70 font-bold text-[10px] uppercase tracking-wider">
-                      <CheckCircle size={12} /> No Hidden Charges
-                    </div>
-                  </div>
                   <div className="bg-[#F8F1E7] py-2.5 rounded-lg text-center border border-orange-200/50">
                     <p className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">
                       🙏 Fee includes Dakshina — No cash tips needed
@@ -503,18 +510,18 @@ const contributionOptions = Array.isArray(contributionOptions2)
                 className="lg:hidden bg-white rounded-2xl border border-orange-200 shadow-sm p-5"
               >
                 <MobileSummaryInline
-  puja={puja}
-  isSamagriSelected={isSamagriSelected}
-  basePrice={basePrice}
-  samagriPrice={samagriPrice}
-  dharmicTotal={dharmicTotal}
-  grandTotal={grandTotal}
-  donations={donations}
-  toggleDonation={toggleDonation}
-  dharmicRef={dharmicRef}
-  getPrice={getPrice}
-  contributionOptions2={contributionOptions2}
-/>
+                  puja={puja}
+                  isSamagriSelected={isSamagriSelected}
+                  basePrice={basePrice}
+                  samagriPrice={samagriPrice}
+                  dharmicTotal={dharmicTotal}
+                  grandTotal={grandTotal}
+                  donations={donations}
+                  toggleDonation={toggleDonation}
+                  dharmicRef={dharmicRef}
+                  getPrice={getPrice}
+                  contributionOptions2={contributionOptions2}
+                />
               </div>
             </div>
 
@@ -597,8 +604,11 @@ const contributionOptions = Array.isArray(contributionOptions2)
 
                       {/* ✅ Now will come below */}
                       <p className="text-[12px] text-gray-500 mt-1 ml-5 leading-snug">
-  {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Your donation helps maintain the temple, support daily rituals, and serve devotees."}
-</p>
+                        {contributionOptions2?.find(
+                          (c) => c.name === "Temple Donation",
+                        )?.description ||
+                          "Your donation helps maintain the temple, support daily rituals, and serve devotees."}
+                      </p>
                     </div>
 
                     <div className="flex justify-between items-center pt-2">
@@ -661,9 +671,6 @@ const contributionOptions = Array.isArray(contributionOptions2)
             <ArrowRight size={16} /> Pay ₹{grandTotal}
           </button>
         </div>
-        <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-          100% Moneyback · No Hidden Charges
-        </p>
       </div>
     </>
   );
@@ -673,8 +680,16 @@ const contributionOptions = Array.isArray(contributionOptions2)
    MOBILE INLINE SUMMARY
 ───────────────────────────────────────────── */
 const MobileSummaryInline = ({
-  puja, isSamagriSelected, basePrice, samagriPrice,
-  dharmicTotal, grandTotal, donations, toggleDonation, dharmicRef, getPrice,
+  puja,
+  isSamagriSelected,
+  basePrice,
+  samagriPrice,
+  dharmicTotal,
+  grandTotal,
+  donations,
+  toggleDonation,
+  dharmicRef,
+  getPrice,
   contributionOptions2,
 }) => (
   <div className="space-y-4">
@@ -755,8 +770,10 @@ const MobileSummaryInline = ({
 
         {/* ✅ ADD THIS LINE BELOW */}
         <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-  {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
-</p>
+          {contributionOptions2?.find((c) => c.name === "Temple Donation")
+            ?.description ||
+            "Helps in temple upkeep, rituals, and serving the community."}
+        </p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />
@@ -795,18 +812,28 @@ const MobileSummaryInline = ({
 const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
-    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
-      ? "border-orange-500 bg-orange-50/30 shadow-sm"
-      : "border-orange-200 hover:border-orange-300 bg-white"
-      }`}
+    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${
+      selected
+        ? "border-orange-500 bg-orange-50/30 shadow-sm"
+        : "border-orange-200 hover:border-orange-300 bg-white"
+    }`}
   >
     {/* ✅ CHECKBOX STYLE (Radio dot ki jagah) */}
     <div
-      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${selected ? "bg-orange-500 border-orange-500" : "border-orange-200 bg-white"
-        }`}
+      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+        selected
+          ? "bg-orange-500 border-orange-500"
+          : "border-orange-200 bg-white"
+      }`}
     >
       {selected && (
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-3.5 h-3.5">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth="4"
+          className="w-3.5 h-3.5"
+        >
           <polyline points="20 6 9 17 4 12" />
         </svg>
       )}
@@ -834,14 +861,19 @@ const ContributionCard = ({ option, selected, onToggle }) => (
 
 export default HomePujaPaymentDetails;
 
-export const HourDropdown = ({ value, onChange, inputBaseClass, labelClass }) => {
+export const HourDropdown = ({
+  value,
+  onChange,
+  inputBaseClass,
+  labelClass,
+}) => {
   // 7 AM se 5 PM tak ke hours generate karne ke liye
   const generateHours = () => {
     const hours = [];
     for (let i = 7; i <= 17; i++) {
       const period = i < 12 ? "AM" : "PM";
       const displayHour = i <= 12 ? i : i - 12; // 13 becomes 1 PM
-      
+
       // Select value format: "07:00 AM", "01:00 PM", etc.
       const timeString = `${displayHour < 10 ? "0" + displayHour : displayHour}:00 ${period}`;
       hours.push(timeString);
@@ -872,4 +904,3 @@ export const HourDropdown = ({ value, onChange, inputBaseClass, labelClass }) =>
     </div>
   );
 };
-

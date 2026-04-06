@@ -1,11 +1,17 @@
-import { MapPin, Calendar, ArrowRight, Search, Ticket, Sparkles } from "lucide-react";
+import {
+  MapPin,
+  Calendar,
+  ArrowRight,
+  Search,
+  Ticket,
+  Sparkles,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Pind_Dan() {
-
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,8 +24,8 @@ export default function Pind_Dan() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
         const data = await response.json();
         setServices(data.data);
@@ -30,9 +36,11 @@ export default function Pind_Dan() {
     getSevices();
   }, []);
 
-  const filteredServices = services.filter(service =>
-    service.puja_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (service.title && service.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredServices = services.filter(
+    (service) =>
+      service.puja_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.title &&
+        service.title.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
@@ -44,7 +52,6 @@ export default function Pind_Dan() {
       </div>
 
       <section className="relative max-w-7xl mx-auto px-6 pt-6 pb-5">
-
         {/* HEADER SECTION */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -57,16 +64,23 @@ export default function Pind_Dan() {
 
           <h1 className="text-5xl md:text-6xl font-serif leading-[1.1] mb-4 tracking-tight text-[#1A1108]">
             Pind <span className="text-orange-600 italic">Daan</span>
+            <span className="text-[#1A1108] mx-2 font-light">/</span>
+            Pitra <span className="text-orange-600 italic">Dosh</span>
           </h1>
 
           <p className="text-gray-600 text-base max-w-2xl mx-auto leading-relaxed">
-            Pind Daan is a sacred Hindu ritual offering peace to departed souls. By offering pind daan at holy sites, it frees ancestors from earthly attachments, helping them attain salvation.
+            Pind Daan is a sacred Hindu ritual offering peace to departed souls.
+            By offering pind daan at holy sites, it frees ancestors from earthly
+            attachments, helping them attain salvation.
           </p>
         </div>
 
         {/* SEARCH INPUT */}
         <div className="relative w-full max-w-2xl mx-auto mb-15">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500" size={20} />
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500"
+            size={20}
+          />
           <input
             type="text"
             value={searchTerm}
@@ -127,28 +141,40 @@ export default function Pind_Dan() {
                     <div className="flex items-center justify-between w-full mt-2">
                       <div className="flex flex-col gap-1.5 min-w-0">
                         <div className="flex items-center gap-2">
-                          <MapPin size={12} className="text-orange-500 shrink-0" />
+                          <MapPin
+                            size={12}
+                            className="text-orange-500 shrink-0"
+                          />
                           <p className="text-gray-500 text-xs line-clamp-1">
                             {service.address}
                           </p>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Calendar size={12} className="text-orange-500 shrink-0" />
+                          <Calendar
+                            size={12}
+                            className="text-orange-500 shrink-0"
+                          />
                           <div className="flex items-center gap-1.5 font-bold text-[12px] md:text-[13px] text-gray-700 whitespace-nowrap">
                             <span>
-                              {new Date(service.dateOfStart).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: 'short'
-                              })}
+                              {new Date(service.dateOfStart).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                },
+                              )}
                             </span>
                             <span className="text-orange-300">|</span>
                             <span className="text-gray-500 font-medium">
-                              {new Date(service.dateOfStart).toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                              })}
+                              {new Date(service.dateOfStart).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                },
+                              )}
                             </span>
                           </div>
                         </div>
@@ -165,7 +191,8 @@ export default function Pind_Dan() {
           ) : (
             <div className="col-span-full text-center mt-6">
               <h2 className="text-3xl md:text-5xl font-serif text-[#2f1e12] tracking-tight">
-                No <span className="text-orange-600 italic">Pind Daan Found</span>
+                No{" "}
+                <span className="text-orange-600 italic">Pind Daan Found</span>
               </h2>
               <p className="text-gray-500 mt-2">
                 Try searching with another keyword.

@@ -78,7 +78,9 @@ export default function HomeOnlineRitual() {
             <div className="h-[1px] w-12 bg-orange-300"></div>
           </div>
           <h2 className="text-5xl md:text-6xl font-serif text-[#2f1e12] tracking-tight mb-4">
-            Online <span className="text-orange-600 italic">Pind Dan</span>
+            Online Pind <span className="text-orange-600 italic">Daan</span>
+            <span className="text-[#2f1e12] mx-2 font-light">/</span>
+            Pitra <span className="text-orange-600 italic">Dosh</span>
           </h2>
           <p className="text-gray-600 text-base max-w-2xl mx-auto leading-relaxed">
             Bring the sanctity of the temple to your doorstep with authentic

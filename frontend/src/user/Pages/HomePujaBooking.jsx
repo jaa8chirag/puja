@@ -203,10 +203,11 @@ const HomePujaBooking = () => {
                   <button
                     key={tab}
                     onClick={() => scrollToSection(tab)}
-                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
-                      ? "text-orange-600 bg-orange-50/50"
-                      : "text-gray-400"
-                      }`}
+                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${
+                      activeTab === tab
+                        ? "text-orange-600 bg-orange-50/50"
+                        : "text-gray-400"
+                    }`}
                   >
                     {tab}
                     {activeTab === tab && (
@@ -219,7 +220,6 @@ const HomePujaBooking = () => {
 
             <div className="bg-white rounded-xl p-4 border border-orange-200">
               <div className="flex items-center justify-between gap-3">
-
                 {/* Left: Icon + Text + Download */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="p-2.5 rounded-lg bg-orange-50 flex-shrink-0">
@@ -231,7 +231,9 @@ const HomePujaBooking = () => {
                     </h3>
                     <p className="text-gray-500 text-[13px] mb-2">
                       You'll need to buy{" "}
-                      <span className="text-red-600 font-medium">30+ items.</span>
+                      <span className="text-red-600 font-medium">
+                        30+ items.
+                      </span>
                     </p>
                     <a
                       href={SAMAGRI_PDF_URL}
@@ -250,12 +252,12 @@ const HomePujaBooking = () => {
                     <div className="absolute inset-0 bg-gray-300 rounded-full" />
                     <div className="absolute w-4 h-4 bg-white rounded-full top-[3px] left-[3px]" />
                   </div>
-                  <span className="text-[11px] text-gray-400 whitespace-nowrap">Coming soon</span>
+                  <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                    Coming soon
+                  </span>
                 </div>
-
               </div>
             </div>
-
 
             {/* <div
               className={`bg-white rounded-xl p-5 border transition-all duration-300 shadow-sm ${samagriEnabled ? "border-orange-400" : "border-orange-200"}`}
@@ -528,6 +530,11 @@ const HomePujaBooking = () => {
                 >
                   Proceed to Book <ChevronRight size={18} strokeWidth={3} />
                 </button>
+                <div className="flex flex-col items-center gap-1 opacity-50">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                    Free cancellation up to 72 hours
+                  </span>
+                </div>
               </div>
             </div>
           </aside>
@@ -559,7 +566,7 @@ const HomePujaBooking = () => {
           </button>
         </div>
       </div>
-    </div >
+    </div>
   );
 };
 

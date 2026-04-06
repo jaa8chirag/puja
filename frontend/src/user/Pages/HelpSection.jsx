@@ -7,7 +7,7 @@ import {
   ChevronDown,
   ArrowLeft,
   MessageSquare,
-  Clock
+  Clock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ChatWidget from "./Chatwidget";
@@ -23,6 +23,7 @@ const HelpSection = () => {
   const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   const [conversations, setConversations] = useState([]);
+  const [contactInfo, setContactInfo] = useState({ phone: null, email: null });
 
   const loadData = async () => {
     setLoading(true);
@@ -46,11 +47,33 @@ const HelpSection = () => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/admin/personal-info`);
+        const json = await res.json();
+
+        if (json.success && Array.isArray(json.data)) {
+          const active = json.data.find((item) => item.is_active === 1);
+          if (active) {
+            setContactInfo({
+              phone: active.phone_name,
+              email: active.email,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("❌ Footer contact fetch error:", error);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
 
   const [formData, setFormData] = useState({
     category: "General Query",
     subject: "",
-    message: ""
+    message: "",
   });
 
   const handleSubmit = async (e) => {
@@ -65,17 +88,14 @@ const HelpSection = () => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `${API_BASE_URL}/puja/support-query`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/puja/support-query`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
       let result = {};
       try {
@@ -89,7 +109,7 @@ const HelpSection = () => {
         setFormData({
           category: "General Query",
           subject: "",
-          message: ""
+          message: "",
         });
       } else {
         alert("❌ " + (result.message || "Failed to submit query"));
@@ -139,7 +159,7 @@ const HelpSection = () => {
                 Call Now
               </p>
               <p className="text-sm font-bold text-gray-700">
-                +91 98765 43210
+                {contactInfo.phone ?? "Loading..."}
               </p>
             </div>
           </div>
@@ -153,7 +173,7 @@ const HelpSection = () => {
                 Email Us
               </p>
               <p className="text-sm font-bold text-gray-700">
-                support@srivedicpuja.com
+                {contactInfo.email ?? "Loading..."}
               </p>
             </div>
           </div>
@@ -162,10 +182,7 @@ const HelpSection = () => {
         {/* Form */}
         <div className="bg-white p-6 rounded-[15px] border mb-8 border-orange-200 shadow-sm">
           <div className="flex items-center gap-2 mb-6 font-bold text-gray-800 text-lg">
-            <Send
-              size={18}
-              className="text-orange-500 rotate-[-20deg]"
-            />
+            <Send size={18} className="text-orange-500 rotate-[-20deg]" />
             <span>Send a Message</span>
           </div>
 
@@ -181,7 +198,7 @@ const HelpSection = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      category: e.target.value
+                      category: e.target.value,
                     })
                   }
                   className="w-full bg-orange-50/50 border border-orange-100 rounded-2xl p-4 text-sm font-medium outline-none appearance-none focus:border-orange-400"
@@ -209,7 +226,7 @@ const HelpSection = () => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    subject: e.target.value
+                    subject: e.target.value,
                   })
                 }
                 placeholder="Brief description of your issue"
@@ -229,7 +246,7 @@ const HelpSection = () => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    message: e.target.value
+                    message: e.target.value,
                   })
                 }
                 placeholder="Describe your issue in detail..."
@@ -243,7 +260,9 @@ const HelpSection = () => {
               disabled={loading}
               className="w-full bg-orange-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-orange-100 hover:bg-orange-600 transition-all active:scale-95 disabled:bg-gray-300"
             >
-              {loading ? "Sending..." : (
+              {loading ? (
+                "Sending..."
+              ) : (
                 <>
                   <Send size={18} />
                   Send Message
@@ -255,24 +274,40 @@ const HelpSection = () => {
 
         {/* My Support Tickets Section */}
         <div className="bg-white rounded-[1rem] border border-orange-200 p-6 md:p-8 shadow-sm mb-8">
-          <h3 className="text-xl font-serif font-bold text-gray-800 mb-6">My Support Tickets</h3>
+          <h3 className="text-xl font-serif font-bold text-gray-800 mb-6">
+            My Support Tickets
+          </h3>
 
           {loading ? (
             <div className="py-20 text-center flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm text-gray-400 font-medium">Fetching your tickets...</p>
+              <p className="text-sm text-gray-400 font-medium">
+                Fetching your tickets...
+              </p>
             </div>
           ) : conversations.length > 0 ? (
             <div className="space-y-4">
               {conversations.map((query, i) => (
-                <div key={i} className="p-5 bg-white rounded-2xl border border-orange-200 shadow-sm hover:border-orange-300 transition-all">
+                <div
+                  key={i}
+                  className="p-5 bg-white rounded-2xl border border-orange-200 shadow-sm hover:border-orange-300 transition-all"
+                >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h4 className="text-base font-bold text-gray-800 mb-1">{query.subject}</h4>
-                      <p className="text-sm text-gray-500 leading-relaxed mb-4">{query.message}</p>
+                      <h4 className="text-base font-bold text-gray-800 mb-1">
+                        {query.subject}
+                      </h4>
+                      <p className="text-sm text-gray-500 leading-relaxed mb-4">
+                        {query.message}
+                      </p>
                     </div>
-                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider ${query.status === "Open" ? "bg-red-500 text-white" : "bg-yellow-500 text-white"
-                      }`}>
+                    <span
+                      className={`text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider ${
+                        query.status === "Open"
+                          ? "bg-red-500 text-white"
+                          : "bg-yellow-500 text-white"
+                      }`}
+                    >
                       {query.status === "Open" ? "● Open" : "✓ Resolved"}
                     </span>
                   </div>
@@ -283,7 +318,11 @@ const HelpSection = () => {
                     </span>
                     <span className="text-[11px] text-gray-400 flex items-center gap-1 font-medium">
                       <Clock size={12} />
-                      {new Date(query.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(query.created_at).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -292,7 +331,9 @@ const HelpSection = () => {
           ) : (
             <div className="py-16 text-center border-2 border-dashed border-gray-100 rounded-3xl">
               <MessageSquare size={40} className="text-gray-200 mx-auto mb-4" />
-              <p className="text-gray-400 font-bold">No support tickets found</p>
+              <p className="text-gray-400 font-bold">
+                No support tickets found
+              </p>
             </div>
           )}
         </div>

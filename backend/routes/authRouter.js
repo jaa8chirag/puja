@@ -17,6 +17,8 @@ import {
   allMembers,
   deleteMember,
   getDefaultAddress,
+  updateProfile,
+  getProfile,
 } from "../controllers/authController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -68,7 +70,9 @@ router.post("/signup-verify", upload.single("document"), signupVerify);
 router.post("/login-request", loginRequest);
 router.post("/verify-otp", verifyOtp);
 
-// update profile
+// Profile Routes
+router.get("/get-profile", verifyToken, getProfile);
+router.put("/update-profile", verifyToken, updateProfile);
 
 // -------- ADDRESS MANAGEMENT ROUTES --------
 

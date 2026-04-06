@@ -30,7 +30,13 @@ const ModalWrapper = ({ children, onClose }) => (
 );
 
 // ✅ Component ke BAHAR — re-render fix
-const ModalField = ({ icon: Icon, placeholder, type = "text", value, onChange }) => (
+const ModalField = ({
+  icon: Icon,
+  placeholder,
+  type = "text",
+  value,
+  onChange,
+}) => (
   <div className="relative">
     <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
     <input
@@ -80,7 +86,12 @@ const Users = () => {
   const [toast, setToast] = useState(null);
   const limit = 10;
 
-  const [newUser, setNewUser] = useState({ name: "", email: "", phone: "", role: "user" });
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "user",
+  });
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -106,7 +117,9 @@ const Users = () => {
   }, [page]);
 
   const filteredUsers = users.filter((u) =>
-    `${u.name} ${u.email} ${u.phone}`.toLowerCase().includes(search.toLowerCase()),
+    `${u.name} ${u.email} ${u.phone}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
   );
 
   const deleteUser = async (id) => {
@@ -172,13 +185,17 @@ const Users = () => {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-[60] px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 border animate-in slide-in-from-right-5 ${
+          className={`fixed bottom-6 right-6 z-[60] px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 border animate-in slide-in-from-right-5 ${
             toast.type === "error"
               ? "bg-rose-950/40 text-rose-400 border-rose-800/50 backdrop-blur-md"
               : "bg-emerald-950/40 text-emerald-400 border-emerald-800/50 backdrop-blur-md"
           }`}
         >
-          {toast.type === "error" ? <XCircle size={16} /> : <CheckCircle2 size={16} />}
+          {toast.type === "error" ? (
+            <XCircle size={16} />
+          ) : (
+            <CheckCircle2 size={16} />
+          )}
           {toast.message}
         </div>
       )}
@@ -189,7 +206,9 @@ const Users = () => {
           <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
             <UsersIcon className="text-orange-500" /> User Management
           </h1>
-          <p className="text-[12px] text-slate-500 font-medium">Manage all registered users</p>
+          <p className="text-[12px] text-slate-500 font-medium">
+            Manage all registered users
+          </p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -202,11 +221,15 @@ const Users = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="flex items-center justify-between px-4 py-3 rounded-2xl border bg-[#131e32] text-orange-500 border-orange-500/20 shadow-xl">
-          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Total</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
+            Total
+          </span>
           <span className="text-lg font-black">{total}</span>
         </div>
         <div className="flex items-center justify-between px-4 py-3 rounded-2xl border bg-[#131e32] text-emerald-500 border-emerald-500/20 shadow-xl">
-          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Current</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
+            Current
+          </span>
           <span className="text-lg font-black">{filteredUsers.length}</span>
         </div>
       </div>
@@ -240,12 +263,16 @@ const Users = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-500">
               <Loader2 size={32} className="animate-spin text-orange-500" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">Accessing Records...</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold">
+                Accessing Records...
+              </span>
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-600">
               <UsersIcon size={48} className="mb-3 opacity-20" />
-              <p className="text-xs font-bold uppercase tracking-widest">No matching users</p>
+              <p className="text-xs font-bold uppercase tracking-widest">
+                No matching users
+              </p>
             </div>
           ) : (
             <table className="w-full text-xs text-left">
@@ -253,7 +280,9 @@ const Users = () => {
                 <tr className="bg-[#0f172a] border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[10px]">
                   <th className="px-5 py-4 font-bold">User Identity</th>
                   <th className="px-5 py-4 font-bold">Contact Channel</th>
-                  <th className="px-5 py-4 text-center font-bold">Permissions</th>
+                  <th className="px-5 py-4 text-center font-bold">
+                    Permissions
+                  </th>
                   <th className="px-5 py-4 font-bold">Registered</th>
                   <th className="px-5 py-4 text-center font-bold">Bookings</th>
                   <th className="px-5 py-4 text-right font-bold">Actions</th>
@@ -271,32 +300,44 @@ const Users = () => {
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border ${avatarColor(u.name)}`}>
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border ${avatarColor(u.name)}`}
+                        >
                           {u.name?.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-bold text-slate-200">{u.name}</span>
+                        <span className="font-bold text-slate-200">
+                          {u.name}
+                        </span>
                       </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="space-y-1">
-                        <p className="text-slate-400 font-medium">{u.email || "No Email"}</p>
-                        <p className="text-orange-500/80 font-mono text-[10px]">{u.phone}</p>
+                        <p className="text-slate-400 font-medium">
+                          {u.email || "No Email"}
+                        </p>
+                        <p className="text-orange-500/80 font-mono text-[10px]">
+                          {u.phone}
+                        </p>
                       </div>
                     </td>
                     <td className="px-5 py-4 text-center">
-                      <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${
-                        u.role === "admin"
-                          ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                          : u.role === "customerCare"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                            : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                      }`}>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${
+                          u.role === "admin"
+                            ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                            : u.role === "customerCare"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                              : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                        }`}
+                      >
                         {u.role}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-slate-500 font-medium">
                       {new Date(u.created_at).toLocaleDateString("en-IN", {
-                        day: "2-digit", month: "short", year: "numeric",
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
                       })}
                     </td>
                     <td className="px-5 py-4 text-center">
@@ -338,7 +379,12 @@ const Users = () => {
 
       {/* ADD / EDIT MODAL */}
       {(showAddModal || editingUser) && (
-        <ModalWrapper onClose={() => { setShowAddModal(false); setEditingUser(null); }}>
+        <ModalWrapper
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingUser(null);
+          }}
+        >
           <div className="px-6 py-5 border-b border-slate-800 bg-[#0f172a]/50">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
@@ -355,7 +401,10 @@ const Users = () => {
                 </div>
               </div>
               <button
-                onClick={() => { setShowAddModal(false); setEditingUser(null); }}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingUser(null);
+                }}
                 className="text-slate-500 hover:text-white transition"
               >
                 <X size={20} />
@@ -412,7 +461,10 @@ const Users = () => {
 
           <div className="px-6 py-5 bg-[#0f172a]/50 border-t border-slate-800 flex gap-3">
             <button
-              onClick={() => { setShowAddModal(false); setEditingUser(null); }}
+              onClick={() => {
+                setShowAddModal(false);
+                setEditingUser(null);
+              }}
               className="flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-700 text-slate-400 hover:bg-slate-800 transition"
             >
               Discard
@@ -422,7 +474,11 @@ const Users = () => {
               disabled={actionLoading === "add" || actionLoading === "edit"}
               className="flex-1 flex items-center justify-center gap-2 py-3 text-[11px] font-black uppercase tracking-widest rounded-2xl bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-900/20 transition disabled:opacity-50"
             >
-              {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              {actionLoading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Plus size={14} />
+              )}
               Commit
             </button>
           </div>

@@ -660,7 +660,7 @@ export const getUserBookings = async (req, res) => {
     console.error("Fetch Bookings Error:", error);
     res.status(500).json({
       success: false,
-      message: "Bookings fetch nahi ho payi",
+      message: "Bookings Not Fetched",
     });
   }
 };

@@ -164,7 +164,7 @@ const Th = ({ children, center }) => (
 const ToastNotification = ({ toasts }) => {
   if (toasts.length === 0) return null;
   return (
-    <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none">
       {toasts.map((toast) => (
         <div
           key={toast.id}
@@ -1062,9 +1062,10 @@ const CustomerCareDashboard = () => {
               key={item.id}
               onClick={() => handleTabChange(item.id)}
               className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200
-                ${activeTab === item.id
-                  ? "bg-gradient-to-r from-blue-500/15 to-indigo-500/8 text-blue-300 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.06)_inset]"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04] border border-transparent"
+                ${
+                  activeTab === item.id
+                    ? "bg-gradient-to-r from-blue-500/15 to-indigo-500/8 text-blue-300 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.06)_inset]"
+                    : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04] border border-transparent"
                 }`}
             >
               {/* Icon + badge */}
@@ -1427,32 +1428,36 @@ const CustomerCareDashboard = () => {
                               {activeTab === "pandits" ? (
                                 // Pandit — Online / Offline
                                 <span
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${person.is_online
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                                    person.is_online
                                       ? "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"
                                       : "bg-slate-400/10 text-slate-400 border-slate-400/25"
-                                    }`}
+                                  }`}
                                 >
                                   <span
-                                    className={`w-1.5 h-1.5 rounded-full ${person.is_online
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      person.is_online
                                         ? "bg-emerald-400"
                                         : "bg-red-400"
-                                      }`}
+                                    }`}
                                   />
                                   {person.is_online ? "Online" : "Offline"}
                                 </span>
                               ) : (
                                 // User — Active / Blocked
                                 <span
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${person.is_blocked
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                                    person.is_blocked
                                       ? "bg-rose-400/10 text-rose-400 border-rose-400/25"
                                       : "bg-emerald-400/10 text-emerald-400 border-emerald-400/25"
-                                    }`}
+                                  }`}
                                 >
                                   <span
-                                    className={`w-1.5 h-1.5 rounded-full ${person.is_blocked
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      person.is_blocked
                                         ? "bg-rose-400"
                                         : "bg-emerald-400"
-                                      }`}
+                                    }`}
                                   />
                                   {person.is_blocked ? "Blocked" : "Active"}
                                 </span>
@@ -1848,8 +1853,9 @@ const CustomerCareDashboard = () => {
                         </div>
                         {/* ✅ Online/Offline dot on avatar */}
                         <span
-                          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#080f1c] ${pandit.is_online ? "bg-emerald-400" : "bg-slate-500"
-                            }`}
+                          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#080f1c] ${
+                            pandit.is_online ? "bg-emerald-400" : "bg-slate-500"
+                          }`}
                         />
                       </div>
                       <div className="min-w-0">
@@ -1862,10 +1868,11 @@ const CustomerCareDashboard = () => {
                           </p>
                           {/* ✅ Online/Offline badge */}
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${pandit.is_online
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                              pandit.is_online
                                 ? "bg-emerald-400/10 text-emerald-400"
                                 : "bg-slate-400/10 text-slate-400"
-                              }`}
+                            }`}
                           >
                             {pandit.is_online ? "Online" : "Offline"}
                           </span>

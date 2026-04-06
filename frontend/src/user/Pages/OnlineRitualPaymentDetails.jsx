@@ -81,14 +81,19 @@ const OnlineRitualPaymentDetails = () => {
 
   const contributionOptions = Array.isArray(contributionOptions2)
     ? contributionOptions2
-      .filter((c) => c.name !== "Gau Seva" && c.name !== "Temple Donation" && c.name !== "Samagri Kit")
-      .map((c) => ({
-        id: c.name,
-        name: c.name,
-        price: Number(c.price),
-        icon: iconMap[c.name] || <Sparkles size={16} />,
-        desc: c.description || "",  // ✅ database se
-      }))
+        .filter(
+          (c) =>
+            c.name !== "Gau Seva" &&
+            c.name !== "Temple Donation" &&
+            c.name !== "Samagri Kit",
+        )
+        .map((c) => ({
+          id: c.name,
+          name: c.name,
+          price: Number(c.price),
+          icon: iconMap[c.name] || <Sparkles size={16} />,
+          desc: c.description || "", // ✅ database se
+        }))
     : [];
   const selectedDonations = Object.keys(donations)
     .filter((key) => donations[key])
@@ -444,10 +449,11 @@ const OnlineRitualPaymentDetails = () => {
                 {/* Gau Seva */}
                 <div
                   onClick={() => toggleDonation("Gau Seva")}
-                  className={`p-4 flex items-center gap-4 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
-                    ? "border-orange-500 bg-orange-50/30"
-                    : "border-orange-200 bg-white hover:border-orange-300"
-                    }`}
+                  className={`p-4 flex items-center gap-4 transition-all cursor-pointer rounded-xl border-2 ${
+                    donations["Gau Seva"]
+                      ? "border-orange-500 bg-orange-50/30"
+                      : "border-orange-200 bg-white hover:border-orange-300"
+                  }`}
                 >
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${donations["Gau Seva"] ? "bg-orange-500 border-orange-500" : "border-orange-200"}`}
@@ -462,7 +468,9 @@ const OnlineRitualPaymentDetails = () => {
                       Complete your Sankalp with Gau Seva
                     </h4>
                     <p className="text-[10px] text-gray-500 font-medium">
-                      {contributionOptions2.find((c) => c.name === "Gau Seva")?.description || "Feed a cow on your behalf as a sacred gesture"}
+                      {contributionOptions2.find((c) => c.name === "Gau Seva")
+                        ?.description ||
+                        "Feed a cow on your behalf as a sacred gesture"}
                     </p>
                   </div>
                   <span className="text-orange-600 font-black text-sm whitespace-nowrap">
@@ -472,14 +480,6 @@ const OnlineRitualPaymentDetails = () => {
 
                 {/* Guarantees */}
                 <div className="space-y-3 pt-1">
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-1.5 text-orange-600/70 font-bold text-[10px] uppercase tracking-wider">
-                      <CheckCircle size={12} /> 100% Moneyback Guarantee
-                    </div>
-                    <div className="flex items-center gap-1.5 text-orange-600/70 font-bold text-[10px] uppercase tracking-wider">
-                      <CheckCircle size={12} /> No Hidden Charges
-                    </div>
-                  </div>
                   <div className="bg-[#F8F1E7] py-2.5 rounded-lg text-center border border-orange-200/50">
                     <p className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">
                       🙏 Fee includes Dakshina — No cash tips needed
@@ -593,7 +593,10 @@ const OnlineRitualPaymentDetails = () => {
 
                       {/* ✅ NEW TEXT BELOW */}
                       <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-                        {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
+                        {contributionOptions2?.find(
+                          (c) => c.name === "Temple Donation",
+                        )?.description ||
+                          "Helps in temple upkeep, daily rituals, and serving devotees."}
                       </p>
                     </div>
 
@@ -657,9 +660,6 @@ const OnlineRitualPaymentDetails = () => {
             <ArrowRight size={16} /> Pay ₹{grandTotal}
           </button>
         </div>
-        <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-          100% Moneyback · No Hidden Charges
-        </p>
       </div>
     </>
   );
@@ -669,8 +669,16 @@ const OnlineRitualPaymentDetails = () => {
    MOBILE INLINE SUMMARY
 ───────────────────────────────────────────── */
 const MobileSummaryInline = ({
-  puja, isSamagriSelected, basePrice, samagriPrice,
-  dharmicTotal, grandTotal, donations, toggleDonation, dharmicRef, getPrice,
+  puja,
+  isSamagriSelected,
+  basePrice,
+  samagriPrice,
+  dharmicTotal,
+  grandTotal,
+  donations,
+  toggleDonation,
+  dharmicRef,
+  getPrice,
   contributionOptions2,
 }) => (
   <div className="space-y-4">
@@ -748,7 +756,9 @@ const MobileSummaryInline = ({
 
         {/* ✅ Niche aayega */}
         <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
-          {contributionOptions2?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving the community."}
+          {contributionOptions2?.find((c) => c.name === "Temple Donation")
+            ?.description ||
+            "Helps in temple upkeep, rituals, and serving the community."}
         </p>
       </div>
 
@@ -786,10 +796,11 @@ const MobileSummaryInline = ({
 const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
-    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
-      ? "border-orange-500 bg-orange-50/30"
-      : "border-orange-200 hover:border-orange-300"
-      }`}
+    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${
+      selected
+        ? "border-orange-500 bg-orange-50/30"
+        : "border-orange-200 hover:border-orange-300"
+    }`}
   >
     <div
       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? "bg-orange-500 border-orange-500" : "border-orange-200"}`}
