@@ -19,8 +19,14 @@ export const getAllContributions = async (req, res) => {
 export const addContribution = async (req, res) => {
   const { name, price, is_active, description } = req.body;
   try {
-    const sql = "INSERT INTO contribution_types (name, price, is_active, description) VALUES (?, ?, ?, ?)";
-    const [result] = await db.query(sql, [name, price, is_active ?? 1, description || ""]);
+    const sql =
+      "INSERT INTO contribution_types (name, price, is_active, description) VALUES (?, ?, ?, ?)";
+    const [result] = await db.query(sql, [
+      name,
+      price,
+      is_active ?? 1,
+      description || "",
+    ]);
     res.status(201).json({ success: true, id: result.insertId });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -32,7 +38,8 @@ export const updateContribution = async (req, res) => {
   const { id } = req.params;
   const { name, price, is_active, description } = req.body;
   try {
-    const sql = "UPDATE contribution_types SET name=?, price=?, is_active=?, description=? WHERE id=?";
+    const sql =
+      "UPDATE contribution_types SET name=?, price=?, is_active=?, description=? WHERE id=?";
     await db.query(sql, [name, price, is_active, description || "", id]);
     res.status(200).json({ success: true, message: "Updated" });
   } catch (error) {
@@ -833,49 +840,99 @@ export const getAllServices = async (req, res) => {
     let whereClause = `WHERE 1=1`;
     const params = [];
 
+    // Category/puja_type filter
     if (puja_type || category) {
       whereClause += ` AND s.puja_type = ?`;
       params.push(puja_type || category);
     }
+
+    // Search filter
     if (search) {
       whereClause += ` AND (s.puja_name LIKE ? OR t.address LIKE ?)`;
       params.push(`%${search}%`, `%${search}%`);
     }
+
+    // Status filter
     if (status && status !== "all") {
       whereClause += ` AND s.status = ?`;
       params.push(status);
     }
 
+    // ✅ Count total services
     const [countResult] = await db.query(
-      `SELECT COUNT(DISTINCT s.id) as total FROM services s LEFT JOIN temples t ON s.id = t.service_id ${whereClause}`,
+      `SELECT COUNT(DISTINCT s.id) as total 
+       FROM services s 
+       LEFT JOIN temples t ON s.id = t.service_id
+       ${whereClause}`,
       params,
     );
 
-    // UPDATED: Added s.priority and s.is_featured in SELECT and ORDER BY
-    const [rows] = await db.query(
-      `SELECT s.*, sp.id as price_id, sp.pricing_type, sp.price,
-              t.about as temple_about, t.address as temple_address, t.dateOfStart as temple_date
+    // ✅ Step 1: Get paginated service IDs with ORDER BY columns included
+    const [serviceIds] = await db.query(
+      `SELECT s.id, s.is_featured, s.priority, s.created_at
        FROM services s
-       LEFT JOIN service_prices sp ON s.id = sp.service_id
        LEFT JOIN temples t ON s.id = t.service_id
        ${whereClause}
-       ORDER BY s.priority DESC, s.created_at DESC LIMIT ? OFFSET ?`,
+       GROUP BY s.id, s.is_featured, s.priority, s.created_at
+       ORDER BY s.is_featured DESC, s.priority DESC, s.created_at DESC
+       LIMIT ? OFFSET ?`,
       [...params, limit, offset],
     );
 
+    // Agar koi service nahi mili
+    if (serviceIds.length === 0) {
+      return res.json({
+        success: true,
+        totalServices: 0,
+        totalPages: 0,
+        services: [],
+      });
+    }
+
+    // ✅ Step 2: Get full details for these service IDs
+    const ids = serviceIds.map((row) => row.id);
+    const placeholders = ids.map(() => "?").join(",");
+
+    const [rows] = await db.query(
+      `SELECT s.*, 
+              sp.id as price_id, 
+              sp.pricing_type, 
+              sp.price,
+              t.about, 
+              t.address, 
+              t.dateOfStart
+       FROM services s
+       LEFT JOIN service_prices sp ON s.id = sp.service_id
+       LEFT JOIN temples t ON s.id = t.service_id
+       WHERE s.id IN (${placeholders})
+       ORDER BY 
+         FIELD(s.id, ${placeholders}),
+         sp.id`,
+      [...ids, ...ids], // ids ko 2 baar pass karna padega (FIELD aur WHERE dono ke liye)
+    );
+
+    // ✅ Group by service ID
     const serviceMap = {};
     rows.forEach((row) => {
       if (!serviceMap[row.id]) {
         serviceMap[row.id] = {
-          ...row,
-          about: row.temple_about,
-          address: row.temple_address,
-          dateOfStart: row.temple_date,
+          id: row.id,
+          puja_name: row.puja_name,
+          puja_type: row.puja_type,
+          description: row.description,
+          image_url: row.image_url,
+          created_at: row.created_at,
+          status: row.status,
+          priority: row.priority,
+          is_featured: row.is_featured,
+          price_id: row.price_id,
+          pricing_type: row.pricing_type,
+          price: row.price,
+          about: row.about,
+          address: row.address,
+          dateOfStart: row.dateOfStart,
           prices: [],
         };
-        delete serviceMap[row.id].temple_about;
-        delete serviceMap[row.id].temple_address;
-        delete serviceMap[row.id].temple_date;
       }
       if (row.price_id) {
         serviceMap[row.id].prices.push({
@@ -886,17 +943,20 @@ export const getAllServices = async (req, res) => {
       }
     });
 
+    // ✅ Maintain original order from Step 1
+    const orderedServices = ids.map((id) => serviceMap[id]).filter(Boolean);
+
     res.json({
       success: true,
       totalServices: countResult[0].total,
       totalPages: Math.ceil(countResult[0].total / limit),
-      services: Object.values(serviceMap),
+      services: orderedServices,
     });
   } catch (error) {
+    console.error("getAllServices Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
-
 export const createService = async (req, res) => {
   const connection = await db.getConnection();
   try {

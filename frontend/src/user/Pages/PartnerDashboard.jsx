@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   Calendar,
@@ -12,10 +12,53 @@ import {
   IndianRupee,
   Star,
   CheckCircle,
+  Mail,
+  Home,
+  ChevronDown,
+  Building2,
+  CreditCard,
+  Hash,
+  Smartphone,
+  ShieldCheck,
+  Fingerprint,
+  CheckCircle2,
+  ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+const INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Delhi",
+];
 
 /* ── HELPERS ── */
 const fmtDate = (d) => {
@@ -61,7 +104,47 @@ const statusStyle = (s = "") => {
   );
 };
 
-/* ── COMPONENTS ── */
+/* ── STEP INDICATOR ── */
+const ProfileStepIndicator = ({ currentStep }) => {
+  const steps = [
+    { label: "Personal", num: 1 },
+    { label: "Payment", num: 2 },
+  ];
+  return (
+    <div className="flex items-center justify-center w-full gap-0 mb-1">
+      {steps.map((step, i) => (
+        <div key={step.num} className="flex items-center">
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all duration-300
+              ${
+                currentStep > step.num
+                  ? "bg-orange-500 border-orange-500 text-white"
+                  : currentStep === step.num
+                    ? "bg-white border-orange-500 text-orange-500 shadow-md shadow-orange-100"
+                    : "bg-white border-gray-200 text-gray-300"
+              }`}
+            >
+              {currentStep > step.num ? <CheckCircle2 size={14} /> : step.num}
+            </div>
+            <span
+              className={`text-[9px] font-black uppercase tracking-wider mt-1 ${currentStep === step.num ? "text-orange-500" : "text-gray-300"}`}
+            >
+              {step.label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div
+              className={`w-16 h-[2px] mb-4 mx-1 transition-all duration-500 ${currentStep > step.num ? "bg-orange-400" : "bg-gray-100"}`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ── STAT CARD ── */
 const StatCard = ({ icon, value, label }) => (
   <div className="flex-1 bg-[#FDFAF4] border border-[#EDE8DC] rounded-2xl p-4 flex flex-col items-center gap-1 shadow-sm min-w-0">
     <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-400">
@@ -76,7 +159,7 @@ const StatCard = ({ icon, value, label }) => (
   </div>
 );
 
-// ── CHANGE 1: onRefresh prop add kiya, pending/accepted logic update kiya ──
+/* ── PUJA CARD ── */
 const PujaCard = ({ puja, onComplete, onRefresh }) => {
   const st = statusStyle(puja.status);
   const [otpInput, setOtpInput] = useState("");
@@ -86,12 +169,11 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
 
   const handleNavigate = () => {
     const address = puja.address || puja.city;
-    if (address) {
+    if (address)
       window.open(
         `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
         "_blank",
       );
-    }
   };
 
   const handleVerifyOtp = async () => {
@@ -104,10 +186,7 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
         { request_id: puja.request_id, otp: otpInput },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      if (res.data.success) {
-        // OTP verify hone par list refresh karo → status accepted aayega DB se
-        onRefresh();
-      }
+      if (res.data.success) onRefresh();
     } catch (e) {
       setOtpError(e.response?.data?.message || "Invalid OTP");
     } finally {
@@ -128,8 +207,7 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
             </p>
             {Number(puja.samagrikit) === 1 && (
               <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-600">
-                <ShoppingBag size={12} />
-                Samagri Kit Included
+                <ShoppingBag size={12} /> Samagri Kit Included
               </span>
             )}
           </div>
@@ -140,7 +218,6 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
           {st.label}
         </span>
       </div>
-
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[14px] text-[#6b5840]">
         <span className="flex items-center gap-2">
           <Clock size={16} className="text-orange-400" />
@@ -151,7 +228,6 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
           {[puja.address, puja.city, puja.state].filter(Boolean).join(", ")}
         </span>
       </div>
-
       <div className="mt-4 flex items-center justify-between border-t border-[#EDE8DC] pt-4 gap-3 flex-wrap">
         <button
           onClick={handleNavigate}
@@ -159,9 +235,7 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
         >
           <Navigation size={15} /> Navigate
         </button>
-
         <div className="flex items-center gap-3 flex-wrap justify-end">
-          {/* pending = OTP input dikhao */}
           {puja.status === "pending" && (
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-1.5">
@@ -191,8 +265,6 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
               )}
             </div>
           )}
-
-          {/* accepted = Complete button dikhao */}
           {puja.status === "accepted" && (
             <button
               onClick={onComplete}
@@ -201,7 +273,6 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
               <CheckCircle size={15} /> Complete
             </button>
           )}
-
           <span
             className={`text-[16px] font-bold ${puja.status === "completed" ? "text-green-600" : "text-[#1a1208]"}`}
           >
@@ -221,10 +292,27 @@ const PartnerDashboard = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [profileStep, setProfileStep] = useState(1);
   const [showStatusConfirm, setShowStatusConfirm] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
+  const [profilePaymentMethod, setProfilePaymentMethod] = useState("bank");
+  const [showProfileStateList, setShowProfileStateList] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const profileStateRef = useRef(null);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        profileStateRef.current &&
+        !profileStateRef.current.contains(e.target)
+      )
+        setShowProfileStateList(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -257,7 +345,6 @@ const PartnerDashboard = () => {
 
   const handleMarkAsComplete = async (id) => {
     if (!window.confirm("Is this puja completed?")) return;
-
     try {
       const res = await axios.put(
         `${API_BASE_URL}/partner/complete-puja/${id}`,
@@ -281,11 +368,14 @@ const PartnerDashboard = () => {
       if (res.data.success) {
         setProfile(res.data.user);
         setIsOnline(res.data.user.is_online === 1);
+        if (res.data.user.payment_method)
+          setProfilePaymentMethod(res.data.user.payment_method);
       }
     } catch (e) {
       console.error(e);
     }
   };
+
   const handleToggleClick = () => {
     setPendingStatus(!isOnline);
     setShowStatusConfirm(true);
@@ -298,9 +388,7 @@ const PartnerDashboard = () => {
         { is_online: pendingStatus },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      if (res.data.success) {
-        setIsOnline(pendingStatus);
-      }
+      if (res.data.success) setIsOnline(pendingStatus);
     } catch (e) {
       console.error("Status update failed", e);
     } finally {
@@ -308,25 +396,42 @@ const PartnerDashboard = () => {
       setPendingStatus(null);
     }
   };
+
+  const handleNextToPayment = () => {
+    if (!profile.name || !profile.city || !profile.state) {
+      setProfileError("Kripya Name, City aur State bharen.");
+      return;
+    }
+    setProfileError("");
+    setProfileStep(2);
+  };
+
   const handleUpdate = async () => {
     try {
-      await axios.put(`${API_BASE_URL}/partner/update-profile`, profile, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        `${API_BASE_URL}/partner/update-profile`,
+        { ...profile, paymentMethod: profilePaymentMethod },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       setEditing(false);
+      setProfileError("");
+      setProfileStep(1);
       alert("Profile Updated Successfully");
     } catch (e) {
-      console.error(e);
+      setProfileError(e.response?.data?.message || "Error updating profile");
     }
   };
 
-  // ── UPDATED LOGIC FOR EARNINGS ──
-  // Sirf 'completed' status wali pujas ka paisa jodenge
+  const closeProfile = () => {
+    setShowProfile(false);
+    setEditing(false);
+    setProfileStep(1);
+    setProfileError("");
+  };
+
   const totalEarnings = pujas
     .filter((p) => p.status === "completed")
     .reduce((s, p) => s + (Number(p.price) || 0), 0);
-
-  // Sirf Pending/Accepted/Confirmed pujas ko 'Upcoming' mein gineinge
   const upcomingCount = pujas.filter(
     (p) =>
       p.status !== "completed" &&
@@ -456,7 +561,6 @@ const PartnerDashboard = () => {
               </div>
             ) : (
               pujas.map((puja) => (
-                // ── CHANGE 3: onRefresh prop pass kiya ──
                 <PujaCard
                   key={puja.id}
                   puja={puja}
@@ -465,9 +569,9 @@ const PartnerDashboard = () => {
                 />
               ))
             ))}
+
           {activeTab === "earnings" && (
             <div className="space-y-4">
-              {/* Hero Earnings Card */}
               <div
                 className="rounded-2xl p-6 shadow-lg relative overflow-hidden"
                 style={{
@@ -476,7 +580,7 @@ const PartnerDashboard = () => {
                 }}
               >
                 <p className="text-[13px] font-bold text-white/80 uppercase tracking-widest">
-                  Total Earnings ()
+                  Total Earnings
                 </p>
                 <p className="text-5xl font-bold text-white mt-2">
                   ₹{totalEarnings.toLocaleString("en-IN")}
@@ -488,13 +592,10 @@ const PartnerDashboard = () => {
                     done
                   </span>
                   <span className="flex items-center gap-1 text-white/90 text-[13px] font-semibold">
-                    <Star size={13} fill="white" />
-                    {profile?.rating || "4.9"}
+                    <Star size={13} fill="white" /> {profile?.rating || "4.9"}
                   </span>
                 </div>
               </div>
-
-              {/* Completed Pujas List */}
               <div className="bg-[#FDFAF4] border border-[#EDE8DC] rounded-2xl p-5 shadow-sm">
                 <p className="text-[13px] font-bold uppercase tracking-widest text-[#a89880] mb-3">
                   Completed Pujas
@@ -541,55 +642,442 @@ const PartnerDashboard = () => {
         </div>
       </div>
 
-      {/* PROFILE POPUP */}
+      {/* ── PROFILE POPUP — 2 Step ── */}
       {showProfile && profile && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-          <div className="bg-[#FDFAF4] w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 relative shadow-2xl overflow-y-auto max-h-[90vh] border border-[#EDE8DC]">
-            <button
-              onClick={() => {
-                setShowProfile(false);
-                setEditing(false);
-              }}
-              className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-[#F0EBE1] hover:bg-red-50 transition"
-            >
-              <X size={20} className="text-[#6b5840]" />
-            </button>
-            <h2 className="text-lg font-bold text-[#1a1208] mb-6">
-              My Profile
-            </h2>
-            {["name", "phone", "email", "gotra"].map((f) => (
-              <div key={f} className="mb-4">
-                <label className="text-[12px] uppercase tracking-wider font-bold text-[#a89880]">
-                  {f}
-                </label>
-                <input
-                  value={profile[f] || ""}
-                  disabled={!editing || f === "phone"}
-                  onChange={(e) =>
-                    setProfile({ ...profile, [f]: e.target.value })
-                  }
-                  className={`w-full border border-[#EDE8DC] rounded-xl px-4 py-3 mt-1.5 text-base ${!editing ? "bg-[#F5F0E8] cursor-not-allowed" : "bg-white"} font-medium`}
-                />
+          <div className="bg-[#FDFAF4] w-full sm:max-w-[500px] rounded-t-3xl sm:rounded-[28px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-orange-50/50 relative overflow-y-auto max-h-[92vh]">
+            {/* Sticky Header */}
+            <div className="sticky top-0 bg-[#FDFAF4] z-10 px-6 pt-6 pb-4 border-b border-[#EDE8DC]">
+              <button
+                onClick={closeProfile}
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[#F0EBE1] hover:bg-red-50 transition"
+              >
+                <X size={18} className="text-[#6b5840]" />
+              </button>
+              <h2 className="text-xl font-serif font-black text-[#3D2B1D]">
+                My Profile
+              </h2>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mt-0.5 mb-4">
+                Partner Account Settings
+              </p>
+              <ProfileStepIndicator currentStep={profileStep} />
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              {profileError && (
+                <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                  <p className="text-red-700 text-[10px] font-bold uppercase">
+                    {profileError}
+                  </p>
+                </div>
+              )}
+
+              {/* ── STEP 1: Personal Info + Address ── */}
+              {profileStep === 1 && (
+                <div className="space-y-5">
+                  {/* Personal Info */}
+                  <div>
+                    <p className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider mb-3">
+                      Personal Information
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
+                          Full Name
+                        </label>
+                        <div
+                          className={`flex bg-[#FBF9F7] border rounded-xl transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
+                        >
+                          <User
+                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            size={16}
+                          />
+                          <input
+                            disabled={!editing}
+                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                            placeholder="Enter name"
+                            value={profile.name || ""}
+                            onChange={(e) =>
+                              setProfile({ ...profile, name: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
+                          Gotra
+                        </label>
+                        <div
+                          className={`flex bg-[#FBF9F7] border rounded-xl transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
+                        >
+                          <Fingerprint
+                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            size={16}
+                          />
+                          <input
+                            disabled={!editing}
+                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                            placeholder="Optional"
+                            value={profile.gotra || ""}
+                            onChange={(e) =>
+                              setProfile({ ...profile, gotra: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
+                          Mobile
+                        </label>
+                        <div className="flex bg-[#F5F0E8] border border-[#EDE8DC] rounded-xl overflow-hidden cursor-not-allowed">
+                          <span className="pl-3 py-3 text-gray-400 font-black text-xs border-r border-[#EDE8DC] pr-2">
+                            +91
+                          </span>
+                          <input
+                            disabled
+                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] cursor-not-allowed"
+                            value={profile.phone || ""}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
+                          Email
+                        </label>
+                        <div
+                          className={`flex bg-[#FBF9F7] border rounded-xl transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
+                        >
+                          <Mail
+                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            size={16}
+                          />
+                          <input
+                            disabled={!editing}
+                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                            placeholder="acharya@mail.com"
+                            value={profile.email || ""}
+                            onChange={(e) =>
+                              setProfile({ ...profile, email: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Address */}
+                  <div>
+                    <p className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider mb-3">
+                      Address
+                    </p>
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
+                          Street / Landmark
+                        </label>
+                        <div
+                          className={`flex bg-[#FBF9F7] border rounded-xl transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
+                        >
+                          <Home
+                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            size={16}
+                          />
+                          <input
+                            disabled={!editing}
+                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                            placeholder="Street, Landmark"
+                            value={profile.address || ""}
+                            onChange={(e) =>
+                              setProfile({
+                                ...profile,
+                                address: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {/* State */}
+                        <div
+                          className="space-y-1 relative"
+                          ref={profileStateRef}
+                        >
+                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
+                            State
+                          </label>
+                          <div
+                            onClick={() =>
+                              editing &&
+                              setShowProfileStateList(!showProfileStateList)
+                            }
+                            className={`flex bg-[#FBF9F7] border rounded-xl py-3 px-3 justify-between items-center transition-all ${editing ? "cursor-pointer border-gray-300 hover:border-orange-400" : "border-[#EDE8DC] cursor-not-allowed"}`}
+                          >
+                            <span className="text-xs font-bold text-[#3D2B1D] truncate">
+                              {profile.state || "State"}
+                            </span>
+                            <ChevronDown
+                              size={14}
+                              className={`text-gray-300 transition-transform shrink-0 ${showProfileStateList ? "rotate-180" : ""}`}
+                            />
+                          </div>
+                          {showProfileStateList && (
+                            <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-2xl max-h-44 overflow-y-auto">
+                              {INDIAN_STATES.map((s) => (
+                                <div
+                                  key={s}
+                                  onClick={() => {
+                                    setProfile({ ...profile, state: s });
+                                    setShowProfileStateList(false);
+                                  }}
+                                  className="px-4 py-2.5 hover:bg-orange-50 cursor-pointer text-xs font-bold text-[#3D2B1D] border-b border-gray-50"
+                                >
+                                  {s}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {/* City */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
+                            City
+                          </label>
+                          <div
+                            className={`bg-[#FBF9F7] border rounded-xl px-3 py-3 ${editing ? "border-gray-300" : "border-[#EDE8DC]"}`}
+                          >
+                            <input
+                              disabled={!editing}
+                              className="w-full bg-transparent outline-none text-xs font-bold text-[#3D2B1D] disabled:cursor-not-allowed"
+                              placeholder="City"
+                              value={profile.city || ""}
+                              onChange={(e) =>
+                                setProfile({ ...profile, city: e.target.value })
+                              }
+                            />
+                          </div>
+                        </div>
+                        {/* Pincode */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
+                            Pincode
+                          </label>
+                          <div
+                            className={`bg-[#FBF9F7] border rounded-xl px-3 py-3 ${editing ? "border-gray-300" : "border-[#EDE8DC]"}`}
+                          >
+                            <input
+                              disabled={!editing}
+                              maxLength={6}
+                              className="w-full bg-transparent outline-none text-xs font-bold text-[#3D2B1D] disabled:cursor-not-allowed"
+                              placeholder="Pin"
+                              value={profile.pincode || ""}
+                              onChange={(e) =>
+                                setProfile({
+                                  ...profile,
+                                  pincode: e.target.value.replace(/\D/g, ""),
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 1 Buttons */}
+                  {!editing ? (
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="w-full bg-orange-400 text-white font-black py-4 rounded-xl shadow-lg text-[10px] uppercase tracking-[0.2em] h-14 active:scale-[0.98] transition-all"
+                    >
+                      Edit Profile
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleNextToPayment}
+                      className="w-full bg-orange-400 text-white font-black py-4 rounded-xl shadow-lg text-[10px] uppercase tracking-[0.2em] h-14 active:scale-[0.98] transition-all"
+                    >
+                      Next: Payment Details →
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* ── STEP 2: Payment Details ── */}
+              {profileStep === 2 && (
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider mb-1">
+                      Payment Details
+                    </p>
+                    <p className="text-[10px] text-gray-400 mb-4">
+                      Payments will be sent to this account
+                    </p>
+
+                    <div className="flex bg-[#F6F3F0] p-1 rounded-xl mb-4">
+                      <button
+                        onClick={() => setProfilePaymentMethod("bank")}
+                        className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all ${profilePaymentMethod === "bank" ? "bg-white text-orange-600 shadow-sm" : "text-gray-400"}`}
+                      >
+                        <Building2 size={12} /> Bank Account
+                      </button>
+                      <button
+                        onClick={() => setProfilePaymentMethod("upi")}
+                        className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all ${profilePaymentMethod === "upi" ? "bg-white text-orange-600 shadow-sm" : "text-gray-400"}`}
+                      >
+                        <Smartphone size={12} /> UPI
+                      </button>
+                    </div>
+
+                    {profilePaymentMethod === "bank" && (
+                      <div className="space-y-4">
+                        {[
+                          {
+                            label: "Account Holder Name",
+                            field: "accountHolderName",
+                            icon: (
+                              <User
+                                size={16}
+                                className="ml-3 my-auto text-gray-300 shrink-0"
+                              />
+                            ),
+                            placeholder: "As per bank records",
+                            upper: false,
+                          },
+                          {
+                            label: "Bank Name",
+                            field: "bankName",
+                            icon: (
+                              <Building2
+                                size={16}
+                                className="ml-3 my-auto text-gray-300 shrink-0"
+                              />
+                            ),
+                            placeholder: "e.g. State Bank of India",
+                            upper: false,
+                          },
+                          {
+                            label: "Account Number",
+                            field: "bankAccountNumber",
+                            icon: (
+                              <CreditCard
+                                size={16}
+                                className="ml-3 my-auto text-gray-300 shrink-0"
+                              />
+                            ),
+                            placeholder: "Enter account number",
+                            upper: false,
+                          },
+                          {
+                            label: "IFSC Code",
+                            field: "ifscCode",
+                            icon: (
+                              <Hash
+                                size={16}
+                                className="ml-3 my-auto text-gray-300 shrink-0"
+                              />
+                            ),
+                            placeholder: "e.g. SBIN0001234",
+                            upper: true,
+                          },
+                        ].map(({ label, field, icon, placeholder, upper }) => (
+                          <div key={field} className="space-y-1">
+                            <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
+                              {label}
+                            </label>
+                            <div className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl focus-within:border-orange-500 transition-all">
+                              {icon}
+                              <input
+                                className={`w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 ${upper ? "uppercase" : ""}`}
+                                placeholder={placeholder}
+                                maxLength={
+                                  field === "ifscCode" ? 11 : undefined
+                                }
+                                value={profile[field] || ""}
+                                onChange={(e) =>
+                                  setProfile({
+                                    ...profile,
+                                    [field]: upper
+                                      ? e.target.value.toUpperCase()
+                                      : e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {profilePaymentMethod === "upi" && (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
+                          UPI ID
+                        </label>
+                        <div className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl focus-within:border-orange-500 transition-all">
+                          <Smartphone
+                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            size={16}
+                          />
+                          <input
+                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300"
+                            placeholder="yourname@paytm / @gpay"
+                            value={profile.upiId || ""}
+                            onChange={(e) =>
+                              setProfile({ ...profile, upiId: e.target.value })
+                            }
+                          />
+                        </div>
+                        <p className="text-[9px] text-gray-400 ml-1">
+                          Supported: Google Pay, PhonePe, Paytm, BHIM, etc.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-start gap-2 p-3 bg-orange-50 rounded-xl border border-orange-100 mt-4">
+                      <ShieldCheck
+                        size={14}
+                        className="text-orange-400 mt-0.5 shrink-0"
+                      />
+                      <p className="text-[9px] text-orange-700 font-bold leading-relaxed">
+                        Your payment details are end-to-end encrypted. They will
+                        only be used for payment transfers.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 2 Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setProfileStep(1);
+                        setProfileError("");
+                      }}
+                      className="flex-1 py-4 bg-gray-100 text-gray-500 font-black rounded-xl text-[10px] uppercase tracking-widest h-14 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                    >
+                      <ArrowLeft size={14} /> Back
+                    </button>
+                    <button
+                      onClick={handleUpdate}
+                      className="flex-[2] py-4 bg-green-600 text-white font-black rounded-xl shadow-lg text-[10px] uppercase tracking-[0.15em] h-14 active:scale-[0.98] transition-all"
+                    >
+                      Save Changes ✓
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Secure badge */}
+              <div className="flex justify-center pb-2">
+                <div className="flex items-center gap-2 text-[9px] font-black text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100">
+                  <ShieldCheck size={12} strokeWidth={3} /> SECURE PROFILE
+                  UPDATE
+                </div>
               </div>
-            ))}
-            {!editing ? (
-              <button
-                onClick={() => setEditing(true)}
-                className="w-full bg-orange-400 text-white font-bold py-3.5 rounded-xl mt-5 shadow-md"
-              >
-                Edit Profile
-              </button>
-            ) : (
-              <button
-                onClick={handleUpdate}
-                className="w-full bg-green-600 text-white font-bold py-3.5 rounded-xl mt-5 shadow-md"
-              >
-                Save Changes
-              </button>
-            )}
+            </div>
           </div>
         </div>
       )}
+
       {/* ONLINE/OFFLINE CONFIRM POPUP */}
       {showStatusConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -627,6 +1115,7 @@ const PartnerDashboard = () => {
           </div>
         </div>
       )}
+
       {/* SUPPORT */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#F5F0E8] border-t border-[#EDE8DC] px-4 sm:px-6 py-4 z-40">
         <button className="w-full bg-[#EDE8DC] hover:bg-[#e3dcce] py-4 rounded-xl text-base font-bold text-[#6b5840] transition">

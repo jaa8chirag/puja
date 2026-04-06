@@ -80,8 +80,8 @@ const Footer = () => {
 
             <p className="hidden lg:block text-xs text-gray-600 mt-3 leading-relaxed max-w-xs">
               Sri Vedic Puja Authentic rituals, simplified. We connect you with
-              100% verified Pandits for offline and online pujas across Delhi
-              NCR. Your devotion, our dedication.
+              100% verified Pandits for offline (across Delhi NCR) and online
+              pujas. Your devotion, our dedication.
             </p>
 
             <div className="flex gap-2 lg:mt-4">
@@ -178,13 +178,13 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
                 type="email"
                 placeholder="Subscribe"
-                className="w-full bg-white/80 border border-orange-100 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400"
+                className="w-full bg-white/80 border border-orange-100 rounded-lg px-3 py-2 pr-10 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400"
               />
-              <button className="absolute right-1 top-1 p-1 bg-orange-500 text-white rounded-md">
+              <button className="absolute right-1 top-1/2 -translate-y-1/2 p-1 bg-orange-500 text-white rounded-md flex items-center justify-center transition-colors hover:bg-orange-600">
                 <ArrowUpRight size={14} />
               </button>
             </div>

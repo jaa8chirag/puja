@@ -14,10 +14,9 @@ export const signupRequest = async (req, res) => {
       return res.status(400).json({ message: "Name and Phone are required" });
     }
 
-    const [existing] = await db.query(
-      "SELECT id FROM users WHERE phone = ?",
-      [phone]
-    );
+    const [existing] = await db.query("SELECT id FROM users WHERE phone = ?", [
+      phone,
+    ]);
 
     if (existing.length > 0) {
       return res
@@ -36,12 +35,13 @@ export const signupRequest = async (req, res) => {
     console.log(`\n--- OTP FOR ${phone}: ${otp} ---\n`);
 
     res.status(200).json({ message: "OTP sent successfully" });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// update patnar profile
 
 // =============================
 // 2️⃣ SIGNUP VERIFY
@@ -93,13 +93,7 @@ export const signupVerify = async (req, res) => {
     // 1️⃣ Insert into users
     const [userResult] = await connection.query(
       "INSERT INTO users (name, phone, email, gotra, role) VALUES (?, ?, ?, ?, ?)",
-      [
-        name,
-        phone,
-        email || null,
-        gotra || null,
-        role || "user",
-      ]
+      [name, phone, email || null, gotra || null, role || "user"],
     );
 
     const newUserId = userResult.insertId;
@@ -118,7 +112,7 @@ export const signupVerify = async (req, res) => {
           address_type || "home",
           pincode || null,
           1,
-        ]
+        ],
       );
     }
 
@@ -126,15 +120,11 @@ export const signupVerify = async (req, res) => {
     if (role === "pandit") {
       await connection.query(
         "INSERT INTO pandits (user_id, pandit_type, document_url) VALUES (?, ?, ?)",
-        [
-          newUserId,
-          panditType || "Standard",
-          documentPath,
-        ]
+        [newUserId, panditType || "Standard", documentPath],
       );
 
       // 4️⃣ Insert Payment Details — sirf pandit ke liye
-      if (paymentMethod && ['bank', 'upi'].includes(paymentMethod)) {
+      if (paymentMethod && ["bank", "upi"].includes(paymentMethod)) {
         await connection.query(
           `INSERT INTO partner_payment_details
            (user_id, payment_method, account_holder_name, bank_name, bank_account_number, ifsc_code, upi_id)
@@ -147,7 +137,7 @@ export const signupVerify = async (req, res) => {
             bankAccountNumber || null,
             ifscCode ? ifscCode.toUpperCase() : null,
             upiId || null,
-          ]
+          ],
         );
       }
     }
@@ -158,7 +148,7 @@ export const signupVerify = async (req, res) => {
     const token = jwt.sign(
       { id: newUserId, name, phone, role: role || "user" },
       process.env.JWT_SECRET || "secret",
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     res.status(201).json({
@@ -167,7 +157,6 @@ export const signupVerify = async (req, res) => {
       role: role || "user",
       user_id: newUserId,
     });
-
   } catch (error) {
     console.error("Signup Error:", error);
     if (connection) await connection.rollback();
