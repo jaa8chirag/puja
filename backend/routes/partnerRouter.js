@@ -6,7 +6,7 @@ import {
   getPanditProfile,
   markPujaComplete,
   toggleOnlineStatus,
-  updatePanditProfile,
+  updateProfile,
   verifyPujaOtp,
 } from "../controllers/partnerController.js";
 
@@ -17,7 +17,8 @@ router.get("/my-pujas", verifyToken, getMyAssignedPujas);
 router.get("/profile", verifyToken, getPanditProfile);
 
 // ✅ Add this PUT route
-router.put("/update-profile", verifyToken, updatePanditProfile);
+// router.put("/update-profile", verifyToken, updatePanditProfile);
+router.put("/update-profile", verifyToken, updateProfile);
 
 // mark complete puja
 router.put("/complete-puja/:id", verifyToken, markPujaComplete);

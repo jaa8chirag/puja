@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChartNoAxesCombined } from 'lucide-react';
+import { ChartNoAxesCombined } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -116,9 +116,11 @@ export default function AnalyticsDashboard() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-            <ChartNoAxesCombined className="text-orange-500" /> Contributions
+            <ChartNoAxesCombined className="text-orange-500" /> Analytics
           </h1>
-          <p className="text-[12px] text-slate-500 font-medium">Manage donation types & pricing</p>
+          <p className="text-[12px] text-slate-500 font-medium">
+            Manage donation types & pricing
+          </p>
         </div>
       </div>
 

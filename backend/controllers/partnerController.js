@@ -48,72 +48,197 @@ export const getMyAssignedPujas = async (req, res) => {
     });
   }
 };
-export const updatePanditProfile = async (req, res) => {
-  try {
-    const panditId = req.user.id;
-    const { email, gotra, address } = req.body; // name and phone removed
 
-    // 1️⃣ Update users table (only email & gotra)
-    await db.query("UPDATE users SET email = ?, gotra = ? WHERE id = ?", [
+export const updateProfile = async (req, res) => {
+  let connection;
+
+  try {
+    const partnerId = req.user.id; // JWT se aayega
+
+    const {
+      name,
       email,
       gotra,
-      panditId,
-    ]);
+      address,
+      city,
+      state,
+      pincode,
+      address_type,
+      paymentMethod,
+      accountHolderName,
+      bankName,
+      bankAccountNumber,
+      ifscCode,
+      upiId,
+    } = req.body;
 
-    // 2️⃣ Update addresses table (default address)
+    const documentPath = req.file ? req.file.path : null;
+
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // 1️⃣ Update users table
+    await connection.query(
+      `UPDATE users SET name = ?, email = ?, gotra = ? WHERE id = ?`,
+      [name, email || null, gotra || null, partnerId],
+    );
+
+    // 2️⃣ Update Address (agar address_id ho to update, warna insert)
     if (address) {
-      const [rows] = await db.query(
-        "SELECT id FROM addresses WHERE user_id = ? AND is_default = 1",
-        [panditId],
+      const [existing] = await connection.query(
+        `SELECT id FROM addresses WHERE user_id = ? AND is_default = 1 LIMIT 1`,
+        [partnerId],
       );
 
-      if (rows.length > 0) {
-        // Update existing default address
-        await db.query(
-          `UPDATE addresses 
-           SET address_line1 = ?, city = ?, state = ?, pincode = ?
-           WHERE id = ?`,
+      if (existing.length > 0) {
+        await connection.query(
+          `UPDATE addresses SET address_line1 = ?, city = ?, state = ?, pincode = ?, address_type = ?
+           WHERE user_id = ? AND is_default = 1`,
           [
-            address.address_line1,
-            address.city,
-            address.state,
-            address.pincode,
-            rows[0].id,
+            address,
+            city,
+            state,
+            pincode || null,
+            address_type || "home",
+            partnerId,
           ],
         );
       } else {
-        // Insert new default address if none exists
-        await db.query(
-          `INSERT INTO addresses 
-           (user_id, address_line1, city, state, pincode, address_type, is_default, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, 'home', 1, NOW(), NOW())`,
+        await connection.query(
+          `INSERT INTO addresses (user_id, address_line1, city, state, address_type, pincode, is_default)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
-            panditId,
-            address.address_line1,
-            address.city,
-            address.state,
-            address.pincode,
+            partnerId,
+            address,
+            city,
+            state,
+            address_type || "home",
+            pincode || null,
+            1,
           ],
         );
       }
     }
 
-    res.json({ success: true, message: "Profile updated successfully" });
+    // 3️⃣ Update Pandit document (agar naya document upload kiya)
+    if (documentPath) {
+      await connection.query(
+        `UPDATE pandits SET document_url = ? WHERE user_id = ?`,
+        [documentPath, partnerId],
+      );
+    }
+
+    // 4️⃣ Update Payment Details
+    if (paymentMethod && ["bank", "upi"].includes(paymentMethod)) {
+      const [existingPayment] = await connection.query(
+        `SELECT id FROM partner_payment_details WHERE user_id = ? LIMIT 1`,
+        [partnerId],
+      );
+
+      if (existingPayment.length > 0) {
+        await connection.query(
+          `UPDATE partner_payment_details
+           SET payment_method = ?, account_holder_name = ?, bank_name = ?,
+               bank_account_number = ?, ifsc_code = ?, upi_id = ?
+           WHERE user_id = ?`,
+          [
+            paymentMethod,
+            accountHolderName || null,
+            bankName || null,
+            bankAccountNumber || null,
+            ifscCode ? ifscCode.toUpperCase() : null,
+            upiId || null,
+            partnerId,
+          ],
+        );
+      } else {
+        await connection.query(
+          `INSERT INTO partner_payment_details
+           (user_id, payment_method, account_holder_name, bank_name, bank_account_number, ifsc_code, upi_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            partnerId,
+            paymentMethod,
+            accountHolderName || null,
+            bankName || null,
+            bankAccountNumber || null,
+            ifscCode ? ifscCode.toUpperCase() : null,
+            upiId || null,
+          ],
+        );
+      }
+    }
+
+    await connection.commit();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile Updated Successfully!",
+    });
   } catch (error) {
-    console.error("Update Pandit Profile Error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Update Profile Error:", error);
+    if (connection) await connection.rollback();
+    res.status(500).json({
+      success: false,
+      message: "Error updating profile",
+      error: error.message,
+    });
+  } finally {
+    if (connection) connection.release();
   }
 };
+// export const getPanditProfile = async (req, res) => {
+//   try {
+//     const panditId = req.user.id;
 
+//     // 1️⃣ Basic user info
+//     // const [userRows] = await db.query(
+//     //   "SELECT id, name, phone, email, gotra FROM users WHERE id = ?",
+//     //   [panditId],
+//     // );
+//     const [userRows] = await db.query(
+//       "SELECT id, name, phone, email, gotra, is_online FROM users WHERE id = ?",
+//       [panditId],
+//     );
+
+//     if (userRows.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "User not found" });
+//     }
+
+//     const user = userRows[0];
+
+//     // 2️⃣ Default address from addresses table
+//     const [addressRows] = await db.query(
+//       `SELECT address_line1, city, state, pincode
+//    FROM addresses
+//    WHERE user_id = ?
+//    ORDER BY is_default DESC, id ASC
+//    LIMIT 1`,
+//       [panditId],
+//     );
+
+//     // Add address to user object (if exists)
+//     if (addressRows.length > 0) {
+//       user.address = addressRows[0]; // {address_line1, city, state, pincode}
+//     } else {
+//       user.address = null;
+//     }
+
+//     res.json({
+//       success: true,
+//       user,
+//     });
+//   } catch (error) {
+//     console.error("Get Pandit Profile Error:", error);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
 export const getPanditProfile = async (req, res) => {
   try {
     const panditId = req.user.id;
 
-    // 1️⃣ Basic user info
-    // const [userRows] = await db.query(
-    //   "SELECT id, name, phone, email, gotra FROM users WHERE id = ?",
-    //   [panditId],
-    // );
     const [userRows] = await db.query(
       "SELECT id, name, phone, email, gotra, is_online FROM users WHERE id = ?",
       [panditId],
@@ -127,33 +252,45 @@ export const getPanditProfile = async (req, res) => {
 
     const user = userRows[0];
 
-    // 2️⃣ Default address from addresses table
+    // Address
     const [addressRows] = await db.query(
-      `SELECT address_line1, city, state, pincode
-   FROM addresses
-   WHERE user_id = ?
-   ORDER BY is_default DESC, id ASC
-   LIMIT 1`,
+      `SELECT address_line1 AS address, city, state, pincode
+       FROM addresses WHERE user_id = ?
+       ORDER BY is_default DESC, id ASC LIMIT 1`,
       [panditId],
     );
 
-    // Add address to user object (if exists)
     if (addressRows.length > 0) {
-      user.address = addressRows[0]; // {address_line1, city, state, pincode}
-    } else {
-      user.address = null;
+      user.address = addressRows[0].address;
+      user.city = addressRows[0].city;
+      user.state = addressRows[0].state;
+      user.pincode = addressRows[0].pincode;
     }
 
-    res.json({
-      success: true,
-      user,
-    });
+    // ✅ Payment details — ye naya add kiya
+    const [paymentRows] = await db.query(
+      `SELECT payment_method, account_holder_name AS accountHolderName,
+              bank_name AS bankName, bank_account_number AS bankAccountNumber,
+              ifsc_code AS ifscCode, upi_id AS upiId
+       FROM partner_payment_details WHERE user_id = ? LIMIT 1`,
+      [panditId],
+    );
+
+    if (paymentRows.length > 0) {
+      user.payment_method = paymentRows[0].payment_method;
+      user.accountHolderName = paymentRows[0].accountHolderName;
+      user.bankName = paymentRows[0].bankName;
+      user.bankAccountNumber = paymentRows[0].bankAccountNumber;
+      user.ifscCode = paymentRows[0].ifscCode;
+      user.upiId = paymentRows[0].upiId;
+    }
+
+    res.json({ success: true, user });
   } catch (error) {
     console.error("Get Pandit Profile Error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 export const markPujaComplete = async (req, res) => {
   try {
     const panditId = req.user.id;
