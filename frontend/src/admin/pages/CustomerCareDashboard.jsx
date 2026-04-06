@@ -1344,7 +1344,7 @@ const CustomerCareDashboard = () => {
                                   }
                                   className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
                                 >
-                                  Complete
+                                  Mark as Completed
                                 </button>
                               )}
                             </div>

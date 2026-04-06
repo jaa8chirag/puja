@@ -209,40 +209,40 @@ const KathaPujaBooking = () => {
 
             {/* SAMAGRI TOGGLE */}
 
-            <div className="bg-white rounded-xl p-5 border border-orange-200 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
+            <div className="bg-white rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center justify-between gap-3">
 
-                {/* Left Side: Icon & Text */}
-                <div className="flex items-start gap-4">
-                  {/* Icon Box */}
-                  <div className="p-3 rounded-lg bg-orange-50 text-orange-600">
-                    <Box size={24} />
+                {/* Left: Icon + Text + Download */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="p-2.5 rounded-lg bg-orange-50 flex-shrink-0">
+                    <Box size={22} className="text-orange-600" />
                   </div>
-
-                  {/* Text Content */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-[16px] text-gray-800 tracking-tight">
-                      All-in-One Samagri Kit
+                  <div>
+                    <h3 className="font-medium text-[15px] text-gray-800 mb-0.5">
+                      All-in-one samagri kit
                     </h3>
-                    <p className="text-gray-500 text-[13px]">
+                    <p className="text-gray-500 text-[13px] mb-2">
                       You'll need to buy{" "}
-                      <span className="text-red-500 font-bold">
-                        30+ items.
-                      </span>
+                      <span className="text-red-600 font-medium">30+ items.</span>
                     </p>
+                    <a
+                      href={SAMAGRI_PDF_URL}
+                      download="Puja_Samagri_Checklist.pdf"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-orange-200 rounded-lg text-[12px] font-medium text-orange-900 hover:bg-orange-50 transition-all active:scale-95"
+                    >
+                      <Download size={13} className="text-orange-600" />
+                      Download list
+                    </a>
                   </div>
                 </div>
 
-                {/* Right Side: Download Button */}
-                <div className="flex-shrink-0">
-                  <a
-                    href={SAMAGRI_PDF_URL}
-                    download="Puja_Samagri_Checklist.pdf"
-                    className="flex items-center gap-2 px-4 py-2 border border-orange-200 rounded-lg text-[12px] font-bold text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-all shadow-sm active:scale-95"
-                  >
-                    <Download size={15} className="text-orange-600" />
-                    Download List
-                  </a>
+                {/* Right: Disabled Toggle */}
+                <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div className="relative w-10 h-[22px] opacity-40 cursor-not-allowed pointer-events-none">
+                    <div className="absolute inset-0 bg-gray-300 rounded-full" />
+                    <div className="absolute w-4 h-4 bg-white rounded-full top-[3px] left-[3px]" />
+                  </div>
+                  <span className="text-[11px] text-gray-400 whitespace-nowrap">Coming soon</span>
                 </div>
 
               </div>
@@ -415,7 +415,7 @@ const KathaPujaBooking = () => {
                   <span className="font-bold text-gray-900 underline decoration-yellow-400">
                     WhatsApp
                   </span>{" "}
-                  on the day of your booking.
+                  on the day of your puja.
                 </p>
               </div>
             </div>
@@ -511,7 +511,7 @@ const KathaPujaBooking = () => {
                   Proceed to Book <ChevronRight size={18} strokeWidth={3} />
                 </button>
                 <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                  Free cancellation up to 24 hours before.
+                  Free cancellation up to 72 hours.
                 </div>
               </div>
             </div>

@@ -667,7 +667,7 @@ const Bookings = () => {
                             >
                               {updatingStatusId === `${b.id}-completed`
                                 ? "..."
-                                : "Complete"}
+                                : "Mark as Completed"}
                             </button>
                           )}
                           {b.status === "completed" && (

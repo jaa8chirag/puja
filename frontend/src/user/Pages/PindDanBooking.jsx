@@ -687,7 +687,7 @@ const PindDanBooking = () => {
                   </div>
                 </button>
                 <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Free cancellation up to 24 hours before
+                  Free cancellation up to 72 hours.
                 </p>
               </div>
             </div>

@@ -78,7 +78,7 @@ export default function Home() {
             <div className="flex gap-3 mt-8">
               <div className="flex flex-col items-center gap-1">
                 <button
-                  className="bg-orange-500 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-sm sm:text-base"
+                  className="bg-orange-500 text-white font-bold py-3 px-12 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-sm sm:text-base"
                   onClick={() => navigate("/kundli")}
                 >
                   Find Your Kundli
@@ -90,13 +90,13 @@ export default function Home() {
 
               <div className="flex flex-col items-center gap-1">
                 <button
-                  className="bg-white text-orange-500 font-bold py-3 px-6 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base"
+                  className="bg-white text-orange-500 font-bold py-3 px-12 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base"
                   onClick={() => navigate("/nameCorrection")}
                 >
                   Name correction
                 </button>
                 <p className="text-xs text-gray-600">
-                  Free with any puja booking
+                  Rename it to Free after puja completion
                 </p>
               </div>
             </div>

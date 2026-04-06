@@ -9,15 +9,18 @@ import {
   Zap,
   Users,
   MessageSquare,
-  MapPin,
+  Box,
   Sparkles,
   Gem,
   Moon,
+  Download
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 // const SERVICE_ID = 48; // Online Pind Dan service ID
+
+const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
 
 // ── Fallback benefits agar backend se nahi aaye ──
 const FALLBACK_BENEFITS = [
@@ -174,10 +177,10 @@ const OnlineRitual = () => {
   const benefits =
     service?.benefits && service.benefits.length > 0
       ? service.benefits.map((b, i) => ({
-          icon: getBenefitIcon(b.name, i),
-          title: b.name,
-          desc: b.description || "Divine blessing",
-        }))
+        icon: getBenefitIcon(b.name, i),
+        title: b.name,
+        desc: b.description || "Divine blessing",
+      }))
       : FALLBACK_BENEFITS;
 
   if (loading) {
@@ -242,11 +245,10 @@ const OnlineRitual = () => {
                   <button
                     key={tab}
                     onClick={() => scrollToSection(tab)}
-                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${
-                      activeTab === tab
+                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
                         ? "text-orange-600 bg-orange-50/50"
                         : "text-gray-400"
-                    }`}
+                      }`}
                   >
                     {tab}
                     {activeTab === tab && (
@@ -256,6 +258,45 @@ const OnlineRitual = () => {
                 ))}
               </div>
             </nav>
+
+            <div className="bg-white rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center justify-between gap-3">
+
+                {/* Left: Icon + Text + Download */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="p-2.5 rounded-lg bg-orange-50 flex-shrink-0">
+                    <Box size={22} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-[15px] text-gray-800 mb-0.5">
+                      All-in-one samagri kit
+                    </h3>
+                    <p className="text-gray-500 text-[13px] mb-2">
+                      You'll need to buy{" "}
+                      <span className="text-red-600 font-medium">30+ items.</span>
+                    </p>
+                    <a
+                      href={SAMAGRI_PDF_URL}
+                      download="Puja_Samagri_Checklist.pdf"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-orange-200 rounded-lg text-[12px] font-medium text-orange-900 hover:bg-orange-50 transition-all active:scale-95"
+                    >
+                      <Download size={13} className="text-orange-600" />
+                      Download list
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right: Disabled Toggle */}
+                <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div className="relative w-10 h-[22px] opacity-40 cursor-not-allowed pointer-events-none">
+                    <div className="absolute inset-0 bg-gray-300 rounded-full" />
+                    <div className="absolute w-4 h-4 bg-white rounded-full top-[3px] left-[3px]" />
+                  </div>
+                  <span className="text-[11px] text-gray-400 whitespace-nowrap">Coming soon</span>
+                </div>
+
+              </div>
+            </div>
 
             {/* CONTENT SECTIONS */}
             <div className="bg-white rounded-2xl border border-orange-200 overflow-hidden shadow-sm">
@@ -270,9 +311,8 @@ const OnlineRitual = () => {
                   </div>
                   <div>
                     <p
-                      className={`text-[15px] text-gray-600 leading-relaxed text-justify transition-all ${
-                        !aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""
-                      }`}
+                      className={`text-[15px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""
+                        }`}
                     >
                       {service?.description}
                     </p>
@@ -329,7 +369,7 @@ const OnlineRitual = () => {
                   <span className="font-bold text-gray-900 underline decoration-yellow-400">
                     WhatsApp
                   </span>{" "}
-                  on the day of your booking.
+                  on the day of your puja.
                 </p>
               </div>
             </div>
@@ -458,9 +498,8 @@ const FAQItem = ({ q, a }) => {
         />
       </div>
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          open ? "max-h-96 mt-3 opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-96 mt-3 opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <p className="text-[14px] text-gray-500 leading-relaxed font-medium">
           {a}

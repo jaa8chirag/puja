@@ -438,7 +438,7 @@ export const addMember = async (req, res) => {
     res.json({ message: "Family member added" });
   } catch (error) {
     console.log("Server", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Fill all Details" });
   }
 };
 
