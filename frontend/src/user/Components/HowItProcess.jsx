@@ -114,16 +114,14 @@ const Slide4 = () => (
       <p className="text-white font-bold text-sm mb-3">
         Aashirwad Box Includes
       </p>
-      {["Sacred Prasad", "Puja Samagri", "Deity Photo", "Blessing Letter"].map(
-        (item) => (
-          <div
-            key={item}
-            className="flex items-center gap-2 text-white/90 text-xs py-1.5 border-b border-white/10 last:border-0"
-          >
-            <span className="text-green-300">✓</span> {item}
-          </div>
-        ),
-      )}
+      {["Sacred Prasad", "Deity Photo", "Blessing Letter"].map((item) => (
+        <div
+          key={item}
+          className="flex items-center gap-2 text-white/90 text-xs py-1.5 border-b border-white/10 last:border-0"
+        >
+          <span className="text-green-300">✓</span> {item}
+        </div>
+      ))}
     </div>
     <p className="text-white/80 text-xs text-center">
       🏠 Delivered to your registered address

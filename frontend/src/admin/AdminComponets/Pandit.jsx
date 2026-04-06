@@ -409,7 +409,7 @@ const Pandits = () => {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${
+          className={`fixed bottom-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${
             toast.type === "error"
               ? "bg-rose-950 border-rose-800 text-rose-400"
               : "bg-emerald-950 border-emerald-800 text-emerald-400"

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Phone, Mail, ChevronRight, ArrowLeft, Headphones } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  ChevronRight,
+  ArrowLeft,
+  Headphones,
+  Loader2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -7,8 +14,11 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const HelpSupportSection = () => {
   const navigate = useNavigate();
   const [contactInfo, setContactInfo] = useState({ phone: null, email: null });
+  const [faqs, setFaqs] = useState([]); // ✅ Dynamic FAQs State
+  const [loadingFaqs, setLoadingFaqs] = useState(true);
 
   useEffect(() => {
+    // ── Fetch Contact Info (Personal Info Table) ──
     const fetchContactInfo = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/admin/personal-info`);
@@ -23,23 +33,27 @@ const HelpSupportSection = () => {
         console.error("❌ HelpSupport contact fetch error:", error);
       }
     };
-    fetchContactInfo();
-  }, []);
 
-  const faqs = [
-    {
-      question: "How do I cancel a booking?",
-      answer: "You can cancel a booking from the 'My Bookings' section.",
-    },
-    {
-      question: "Do I need to arrange Samagri?",
-      answer: "No, we offer optional Samagri kits.",
-    },
-    {
-      question: "How are Pandits verified?",
-      answer: "All our Pandits undergo a thorough verification process.",
-    },
-  ];
+    // ── Fetch Dynamic FAQs from Backend ──
+    const fetchFaqs = async () => {
+      setLoadingFaqs(true);
+      try {
+        // Aapka backend route: /api/faq/get-all
+        const res = await fetch(`${API_BASE_URL}/admin/faq/get-all`);
+        const json = await res.json();
+        if (json.success) {
+          setFaqs(json.faqs);
+        }
+      } catch (error) {
+        console.error("❌ FAQ fetch error:", error);
+      } finally {
+        setLoadingFaqs(false);
+      }
+    };
+
+    fetchContactInfo();
+    fetchFaqs();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-8 font-sans antialiased text-[#2D2D2D]">
@@ -77,27 +91,41 @@ const HelpSupportSection = () => {
               sub="Live assistance"
             />
           </div>
-          <ContactCard
-            icon={<Phone className="text-blue-500" size={24} />}
-            title="Call Support"
-            sub={contactInfo.phone ?? "Loading..."}
-          />
-          <ContactCard
-            icon={<Mail className="text-purple-500" size={24} />}
-            title="Email Us"
-            sub={contactInfo.email ?? "Loading..."}
-          />
+          <a href={`tel:${contactInfo.phone}`}>
+            <ContactCard
+              icon={<Phone className="text-blue-500" size={24} />}
+              title="Call Support"
+              sub={contactInfo.phone ?? "Loading..."}
+            />
+          </a>
+          <a href={`mailto:${contactInfo.email}`}>
+            <ContactCard
+              icon={<Mail className="text-purple-500" size={24} />}
+              title="Email Us"
+              sub={contactInfo.email ?? "Loading..."}
+            />
+          </a>
         </div>
 
-        {/* FAQ Section */}
+        {/* FAQ Section (UI exact same as before) */}
         <div className="bg-white rounded-[2rem] border border-orange-100 p-6 md:p-8 shadow-sm mb-10">
           <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">
-            Common Questions
+            Frequently Asked Questions
           </h3>
           <div className="flex flex-col">
-            {faqs.map((faq, i) => (
-              <FAQItem key={i} q={faq.question} a={faq.answer} />
-            ))}
+            {loadingFaqs ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="animate-spin text-orange-500" size={24} />
+              </div>
+            ) : faqs.length > 0 ? (
+              faqs.map((faq) => (
+                <FAQItem key={faq.id} q={faq.question} a={faq.answer} />
+              ))
+            ) : (
+              <p className="text-center text-gray-400 text-sm py-4">
+                No FAQs found.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -107,10 +135,10 @@ const HelpSupportSection = () => {
 
 // Sub-components
 const ContactCard = ({ icon, title, sub }) => (
-  <div className="bg-white p-4 rounded-2xl border border-orange-200 text-center flex flex-col items-center hover:shadow-xl hover:border-orange-300 transition-all duration-300">
+  <div className="bg-white p-4 h-full rounded-2xl border border-orange-200 text-center flex flex-col items-center hover:shadow-xl hover:border-orange-300 transition-all duration-300">
     <div className="mb-4 bg-gray-50 p-4 rounded-full">{icon}</div>
     <h4 className="text-sm font-bold text-gray-900 mb-1">{title}</h4>
-    <p className="text-xs text-gray-400 font-medium">{sub}</p>
+    <p className="text-xs text-gray-400 font-medium break-all">{sub}</p>
   </div>
 );
 

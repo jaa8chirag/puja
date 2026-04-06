@@ -130,22 +130,6 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            {/* My-Booking — sirf logged in user ke liye */}
-            {user && (
-              <NavLink
-                to="/my-booking"
-                className={({ isActive }) =>
-                  `font-semibold text-[15px] transition-colors ${
-                    isActive
-                      ? "text-orange-600"
-                      : "text-black hover:text-orange-600"
-                  }`
-                }
-              >
-                My-Booking
-              </NavLink>
-            )}
-
             {/* ── Pind-Dan Dropdown ── */}
             <li
               className="relative group list-none"
@@ -193,6 +177,22 @@ const Navbar = () => {
                 </div>
               )}
             </li>
+
+            {/* My-Booking — sirf logged in user ke liye */}
+            {user && (
+              <NavLink
+                to="/my-booking"
+                className={({ isActive }) =>
+                  `font-semibold text-[15px] transition-colors ${
+                    isActive
+                      ? "text-orange-600"
+                      : "text-black hover:text-orange-600"
+                  }`
+                }
+              >
+                My-Booking
+              </NavLink>
+            )}
 
             {/* ── Gallery Dropdown ── */}
             <li

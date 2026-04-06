@@ -25,8 +25,9 @@ import fetch from "node-fetch";
 import { generatePDF } from "./controllers/pdfReport.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getPageBySlug } from "./controllers/adminController.js";
-import paymentRouter from "./routes/payment.routes.js"
-import dataRouter from "./routes/aartiAndEventRoutes.js"
+import paymentRouter from "./routes/payment.routes.js";
+import dataRouter from "./routes/aartiAndEventRoutes.js";
+import faqRouter from "./routes/faqRoutes.js";
 
 dotenv.config();
 
@@ -548,7 +549,10 @@ app.use("/api/admin/verify-pandit", verifypandiRoutes);
 // Public Pages Route (no auth needed)
 app.get("/api/pages/:slug", getPageBySlug);
 app.use("/api/payment", paymentRouter);
-app.use("/api/content",dataRouter)
+app.use("/api/content", dataRouter);
+
+// faqs routes
+app.use("/api/admin/faq", faqRouter);
 
 const startServer = async () => {
   try {

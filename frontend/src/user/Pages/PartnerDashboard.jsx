@@ -104,8 +104,8 @@ const statusStyle = (s = "") => {
   );
 };
 
-/* ── STEP INDICATOR ── */
-const ProfileStepIndicator = ({ currentStep }) => {
+/* ── STEP INDICATOR (Clickable Fix) ── */
+const ProfileStepIndicator = ({ currentStep, setStep }) => {
   const steps = [
     { label: "Personal", num: 1 },
     { label: "Payment", num: 2 },
@@ -114,7 +114,10 @@ const ProfileStepIndicator = ({ currentStep }) => {
     <div className="flex items-center justify-center w-full gap-0 mb-1">
       {steps.map((step, i) => (
         <div key={step.num} className="flex items-center">
-          <div className="flex flex-col items-center">
+          <div
+            className="flex flex-col items-center cursor-pointer group"
+            onClick={() => setStep(step.num)}
+          >
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all duration-300
               ${
@@ -123,12 +126,12 @@ const ProfileStepIndicator = ({ currentStep }) => {
                   : currentStep === step.num
                     ? "bg-white border-orange-500 text-orange-500 shadow-md shadow-orange-100"
                     : "bg-white border-gray-200 text-gray-300"
-              }`}
+              } group-hover:scale-110`}
             >
               {currentStep > step.num ? <CheckCircle2 size={14} /> : step.num}
             </div>
             <span
-              className={`text-[9px] font-black uppercase tracking-wider mt-1 ${currentStep === step.num ? "text-orange-500" : "text-gray-300"}`}
+              className={`text-[9px] font-black uppercase tracking-wider mt-1 transition-colors ${currentStep === step.num ? "text-orange-500" : "text-gray-300 group-hover:text-gray-500"}`}
             >
               {step.label}
             </span>
@@ -404,6 +407,7 @@ const PartnerDashboard = () => {
     }
     setProfileError("");
     setProfileStep(2);
+    setEditing(true);
   };
 
   const handleUpdate = async () => {
@@ -508,7 +512,6 @@ const PartnerDashboard = () => {
       </div>
 
       <div className="w-full px-4 sm:px-6">
-        {/* STATS */}
         <div className="flex gap-3 mt-6">
           <StatCard
             icon={<IndianRupee size={22} />}
@@ -527,7 +530,6 @@ const PartnerDashboard = () => {
           />
         </div>
 
-        {/* TABS */}
         <div className="mt-6 bg-[#EDE8DC] rounded-2xl p-1.5 flex">
           {[
             {
@@ -551,7 +553,6 @@ const PartnerDashboard = () => {
           ))}
         </div>
 
-        {/* CONTENT */}
         <div className="mt-6 space-y-4">
           {activeTab === "schedule" &&
             (pujas.length === 0 ? (
@@ -569,7 +570,6 @@ const PartnerDashboard = () => {
                 />
               ))
             ))}
-
           {activeTab === "earnings" && (
             <div className="space-y-4">
               <div
@@ -642,11 +642,10 @@ const PartnerDashboard = () => {
         </div>
       </div>
 
-      {/* ── PROFILE POPUP — 2 Step ── */}
+      {/* ── PROFILE POPUP ── */}
       {showProfile && profile && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-[#FDFAF4] w-full sm:max-w-[500px] rounded-t-3xl sm:rounded-[28px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-orange-50/50 relative overflow-y-auto max-h-[92vh]">
-            {/* Sticky Header */}
             <div className="sticky top-0 bg-[#FDFAF4] z-10 px-6 pt-6 pb-4 border-b border-[#EDE8DC]">
               <button
                 onClick={closeProfile}
@@ -660,7 +659,15 @@ const PartnerDashboard = () => {
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mt-0.5 mb-4">
                 Partner Account Settings
               </p>
-              <ProfileStepIndicator currentStep={profileStep} />
+
+              {/* Profile Step Indicator Fixed */}
+              <ProfileStepIndicator
+                currentStep={profileStep}
+                setStep={(s) => {
+                  setProfileStep(s);
+                  setEditing(true); // Auto-enable edit when clicking tabs
+                }}
+              />
             </div>
 
             <div className="px-6 py-5 space-y-5">
@@ -672,10 +679,8 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              {/* ── STEP 1: Personal Info + Address ── */}
               {profileStep === 1 && (
                 <div className="space-y-5">
-                  {/* Personal Info */}
                   <div>
                     <p className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider mb-3">
                       Personal Information
@@ -764,8 +769,6 @@ const PartnerDashboard = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Address */}
                   <div>
                     <p className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider mb-3">
                       Address
@@ -797,7 +800,6 @@ const PartnerDashboard = () => {
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
-                        {/* State */}
                         <div
                           className="space-y-1 relative"
                           ref={profileStateRef}
@@ -837,7 +839,6 @@ const PartnerDashboard = () => {
                             </div>
                           )}
                         </div>
-                        {/* City */}
                         <div className="space-y-1">
                           <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
                             City
@@ -856,7 +857,6 @@ const PartnerDashboard = () => {
                             />
                           </div>
                         </div>
-                        {/* Pincode */}
                         <div className="space-y-1">
                           <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
                             Pincode
@@ -883,26 +883,26 @@ const PartnerDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Step 1 Buttons */}
-                  {!editing ? (
-                    <button
-                      onClick={() => setEditing(true)}
-                      className="w-full bg-orange-400 text-white font-black py-4 rounded-xl shadow-lg text-[10px] uppercase tracking-[0.2em] h-14 active:scale-[0.98] transition-all"
-                    >
-                      Edit Profile
-                    </button>
-                  ) : (
+                  {/* Step 1 Buttons Navigation Fixed */}
+                  <div className="flex gap-3">
+                    {!editing && (
+                      <button
+                        onClick={() => setEditing(true)}
+                        className="flex-1 bg-white border border-orange-200 text-orange-500 font-black py-4 rounded-xl text-[10px] uppercase tracking-[0.2em] h-14 active:scale-[0.98] transition-all"
+                      >
+                        Edit Info
+                      </button>
+                    )}
                     <button
                       onClick={handleNextToPayment}
-                      className="w-full bg-orange-400 text-white font-black py-4 rounded-xl shadow-lg text-[10px] uppercase tracking-[0.2em] h-14 active:scale-[0.98] transition-all"
+                      className={`${!editing ? "flex-[2]" : "w-full"} bg-orange-400 text-white font-black py-4 rounded-xl shadow-lg text-[10px] uppercase tracking-[0.2em] h-14 active:scale-[0.98] transition-all`}
                     >
                       Next: Payment Details →
                     </button>
-                  )}
+                  </div>
                 </div>
               )}
 
-              {/* ── STEP 2: Payment Details ── */}
               {profileStep === 2 && (
                 <div className="space-y-5">
                   <div>
@@ -912,7 +912,6 @@ const PartnerDashboard = () => {
                     <p className="text-[10px] text-gray-400 mb-4">
                       Payments will be sent to this account
                     </p>
-
                     <div className="flex bg-[#F6F3F0] p-1 rounded-xl mb-4">
                       <button
                         onClick={() => setProfilePaymentMethod("bank")}
@@ -1045,7 +1044,6 @@ const PartnerDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Step 2 Buttons */}
                   <div className="flex gap-3">
                     <button
                       onClick={() => {
@@ -1066,7 +1064,6 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              {/* Secure badge */}
               <div className="flex justify-center pb-2">
                 <div className="flex items-center gap-2 text-[9px] font-black text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100">
                   <ShieldCheck size={12} strokeWidth={3} /> SECURE PROFILE

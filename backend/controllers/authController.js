@@ -41,8 +41,6 @@ export const signupRequest = async (req, res) => {
   }
 };
 
-// update patnar profile
-
 // =============================
 // 2️⃣ SIGNUP VERIFY
 // =============================
@@ -255,6 +253,66 @@ export const verifyOtp = async (req, res) => {
   } catch (error) {
     console.error("Verify OTP Error:", error);
     res.status(500).json({ message: "Verification failed" });
+  }
+};
+
+// profile update
+// =============================
+// UPDATE PROFILE - Step 1: Personal Details
+// =============================
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, email, gotra } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    await db.query(
+      "UPDATE users SET name = ?, email = ?, gotra = ? WHERE id = ?",
+      [name, email || null, gotra || null, userId],
+    );
+
+    res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to update profile", error: error.message });
+  }
+};
+
+// =============================
+// GET PROFILE - Full profile with default address
+// =============================
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const [userRows] = await db.query(
+      "SELECT id, name, phone, email, gotra, role FROM users WHERE id = ?",
+      [userId],
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const [addressRows] = await db.query(
+      "SELECT * FROM addresses WHERE user_id = ? AND is_default = 1 LIMIT 1",
+      [userId],
+    );
+
+    res.status(200).json({
+      user: userRows[0],
+      defaultAddress: addressRows[0] || null,
+    });
+  } catch (error) {
+    console.error("Get Profile Error:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch profile", error: error.message });
   }
 };
 

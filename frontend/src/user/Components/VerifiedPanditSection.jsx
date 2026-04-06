@@ -45,14 +45,14 @@ const PanditCard = ({ pandit }) => {
           </div>
 
           <div className="flex flex-wrap justify-center items-center text-gray-300 text-[11px] md:text-[13px] font-medium tracking-wide opacity-90 gap-1">
-            
             {/* Show Location */}
             {hasLocation ? (
               <span className="flex items-center gap-1">
-                <MapPin size={12} className="text-orange-400" /> {pandit.location}
+                <MapPin size={12} className="text-orange-400" />{" "}
+                {pandit.location}
               </span>
             ) : null}
-            
+
             {/* Dot: Dono valid hone par hi dikhega */}
             {hasLocation && hasExperience ? (
               <span className="mx-1 opacity-50">•</span>
@@ -61,10 +61,10 @@ const PanditCard = ({ pandit }) => {
             {/* Show Experience: Agar 0 hai toh null return karega (kuch nahi dikhega) */}
             {hasExperience ? (
               <span className="flex items-center gap-1">
-                <Briefcase size={12} className="text-orange-400" /> {pandit.experience} Years Exp.
+                <Briefcase size={12} className="text-orange-400" />{" "}
+                {pandit.experience} Years Exp.
               </span>
             ) : null}
-            
           </div>
         </div>
       </div>
@@ -130,7 +130,7 @@ const VerifiedPanditSection = () => {
           ref={scrollRef}
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="flex overflow-x-auto gap-5 md:gap-7 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth"
+          className="flex overflow-x-auto justify-start md:justify-center gap-5 md:gap-7 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth"
         >
           {pandits.map((item, index) => (
             <PanditCard key={item.id || index} pandit={item} />

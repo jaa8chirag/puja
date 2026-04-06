@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Tumhara existing folder: uploads/verifyPanditImg
+    // Folder: uploads/verifyPanditImg
     cb(null, path.join(__dirname, "../uploads/verifyPanditImg"));
   },
   filename: (req, file, cb) => {
@@ -22,14 +22,15 @@ const fileFilter = (req, file, cb) => {
   if (allowed.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Sirf JPG, PNG, WEBP allowed hai"), false);
+    // Error for wrong file types
+    cb(new Error("Only JPG, PNG, and WEBP images are allowed!"), false);
   }
 };
 
 const uploadVerifyPandit = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+  limits: { fileSize: 5 * 1024 * 1024 }, // ✅ Fixed to 5MB
 });
 
 export default uploadVerifyPandit;
