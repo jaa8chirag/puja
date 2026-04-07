@@ -912,23 +912,49 @@ export const PindDanSingle = async (req, res) => {
 export const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;
-    // User ID ko verify karein (Agar aap req.user use kar rahe hain toh)
     const userId = req.user ? req.user.id : null;
 
-    // Database query - dhyaan dein ki aapka table name 'puja_request' hi ho
-    const [result] = await db.query("DELETE FROM puja_requests WHERE id = ?", [
-      id,
-    ]);
+    const [rows] = await db.query(
+      "SELECT status FROM puja_requests WHERE id = ? AND user_id = ?",
+      [id, userId],
+    );
 
-    if (result.affectedRows === 0) {
+    if (rows.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Booking nahi mili." });
     }
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Deleted successfully" });
+    const currentStatus = rows[0].status;
+
+    if (currentStatus === "completed") {
+      return res.status(400).json({
+        success: false,
+        message: "Completed puja ko cancel nahi kiya ja sakta.",
+      });
+    }
+
+    if (currentStatus === "declined" || currentStatus === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Ye booking pehle hi cancel ho chuki hai.",
+      });
+    }
+
+    await db.query(
+      "UPDATE puja_requests SET status = 'cancelled', otp = NULL WHERE id = ?",
+      [id],
+    );
+
+    await db.query(
+      "UPDATE request_assignments SET status = 'cancelled', updated_at = NOW() WHERE request_id = ?",
+      [id],
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking cancel ho gayi hai.",
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
