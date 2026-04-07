@@ -229,7 +229,7 @@ const buildPujaCards = (doshas, allServices) => {
       pujaName: service.puja_name || service.name || service.title,
       pujaId: id,
       price: service.price || service.amount || "",
-      bookingUrl: `${process.env.FRONTEND_URL}/homePuja/${id}`,
+      bookingUrl: `${process.env.FRONTEND_URL}/home-Puja/${id}`,
     });
   });
 

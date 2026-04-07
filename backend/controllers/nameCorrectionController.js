@@ -13,6 +13,8 @@ import express from "express";
 import Groq from "groq-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import db from "../config/db.js";
+import checkServiceLimit from "../middleware/checkServiceLimit.js"
+import {verifyToken} from "../middleware/auth.js";
 const router = express.Router();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -855,7 +857,7 @@ router.post("/analyze", async (req, res) => {
           getCompatibility(chaldean.root, lp.root) +
           getCompatibility(pythagorean.root, bn) +
           getCompatibility(pythagorean.root, lp.root)) /
-          4,
+        4,
       ),
     };
 
@@ -912,50 +914,51 @@ router.post("/analyze", async (req, res) => {
 });
 
 //POST /api/name/name-correction
-router.post("/name-correction", async (req, res) => {
-  try {
-    const { name, dob, userId } = req.body;
+router.post("/name-correction", verifyToken,
+  checkServiceLimit(), async (req, res) => {
+    try {
+      const { name, dob, userId } = req.body;
 
-    // 1. Validation
-    if (
-      !name ||
-      typeof name !== "string" ||
-      name.trim().length < 2 ||
-      !dob ||
-      !userId
-    ) {
-      return res.status(400).json({
+      // 1. Validation
+      if (
+        !name ||
+        typeof name !== "string" ||
+        name.trim().length < 2 ||
+        !dob ||
+        !userId
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: "All fields (name, dob, userId) are required.",
+        });
+      }
+
+      // 2. Database Insertion (Using await)
+      const sql =
+        "INSERT INTO name_correction (name, dob, userid) VALUES (?, ?, ?)";
+      const values = [name.trim(), dob, userId];
+
+      // Yahan await lagane se code response ka intezar karega
+      const [result] = await db.execute(sql, values);
+
+      // 3. Success Response (Yeh tabhi chalega jab upar wala kaam pura ho jayega)
+      return res.status(201).json({
+        success: true,
+        message: "Correction request submitted successfully!",
+        data: {
+          id: result.insertId,
+          name,
+          dob,
+          userId,
+        },
+      });
+    } catch (error) {
+      console.error("Error details:", error); // Terminal mein error check karein
+      return res.status(500).json({
         success: false,
-        error: "All fields (name, dob, userId) are required.",
+        error: "Internal server error: " + error.message,
       });
     }
-
-    // 2. Database Insertion (Using await)
-    const sql =
-      "INSERT INTO name_correction (name, dob, userid) VALUES (?, ?, ?)";
-    const values = [name.trim(), dob, userId];
-
-    // Yahan await lagane se code response ka intezar karega
-    const [result] = await db.execute(sql, values);
-
-    // 3. Success Response (Yeh tabhi chalega jab upar wala kaam pura ho jayega)
-    return res.status(201).json({
-      success: true,
-      message: "Correction request submitted successfully!",
-      data: {
-        id: result.insertId,
-        name,
-        dob,
-        userId,
-      },
-    });
-  } catch (error) {
-    console.error("Error details:", error); // Terminal mein error check karein
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error: " + error.message,
-    });
-  }
-});
+  });
 
 export default router;

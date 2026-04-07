@@ -10,6 +10,7 @@ export default function NameCorrectionDummy() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
 
   const token = localStorage.getItem("token");
   const userId = jwtDecode(token)?.id;
@@ -17,6 +18,7 @@ export default function NameCorrectionDummy() {
   const saveData = async () => {
     setError("");
     setSuccess(false);
+    setLimitReached(false);
     if (!name.trim()) return setError("Please enter a name.");
     if (!dob) return setError("Please enter date of birth.");
     setLoading(true);
@@ -32,6 +34,11 @@ export default function NameCorrectionDummy() {
       });
 
       const data = await res.json();
+
+      if (data.limitReached) {
+        setLimitReached(true);
+        return;
+      }
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Server error");
@@ -84,75 +91,107 @@ export default function NameCorrectionDummy() {
           </div>
         </div>
 
-        {/* Form */}
-        <div className="bg-white border border-amber-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm">
-          <h2 className="text-amber-700 font-semibold text-base mb-5 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700">
-              1
-            </span>
-            Enter Your Details
-          </h2>
+        {/* Limit Reached — full block, form ke upar */}
+        {limitReached ? (
+          <div className="bg-white border border-orange-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm text-center">
+            <div className="text-5xl mb-4">🔒</div>
+            <h2 className="text-orange-700 font-black text-2xl mb-2">
+              Service Limit Reached
+            </h2>
+            <p className="text-amber-700 text-sm mb-1">
+              You have already used the Name Correction service.
+            </p>
+            <p className="text-amber-500 text-sm mb-6">
+              Please contact our expert to use the service again.
+            </p>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-amber-600 text-xs uppercase tracking-wider mb-1.5 block">
-                Full Name (as currently used)
-              </label>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Ramesh Kumar Sharma"
-                className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 placeholder-amber-300 focus:outline-none focus:border-amber-400 transition-colors text-base"
-              />
-            </div>
-            <div className="md:w-1/2">
-              <label className="text-amber-600 text-xs uppercase tracking-wider mb-1.5 block">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 focus:outline-none focus:border-amber-400 transition-colors text-sm"
-              />
-            </div>
+            <a
+              href="https://wa.me/91XXXXXXXXXX"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm"
+            >
+              📱 Contact on WhatsApp
+            </a>
+
+            <button
+              onClick={() => setLimitReached(false)}
+              className="block mx-auto mt-4 text-amber-400 hover:text-amber-600 text-xs underline transition-colors"
+            >
+              Back to Main Page
+            </button>
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mt-4 bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
-              ⚠️ {error}
-            </div>
-          )}
-
-          {/* Success Message */}
-          {success && (
-            <div className="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
-              ✅ Request submitted successfully! We'll analyze your name soon.
-            </div>
-          )}
-
-          <button
-            onClick={saveData}
-            disabled={loading}
-            className="mt-6 w-full py-4 rounded-xl font-bold text-base tracking-wide transition-all disabled:opacity-50 text-white"
-            style={{
-              background: loading
-                ? "#d4b896"
-                : "linear-gradient(135deg,#d97706,#b45309,#92400e)",
-              boxShadow: loading ? "none" : "0 4px 20px rgba(180,83,9,0.25)",
-            }}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-3">
-                <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                Submitting…
+        ) : (
+          /* Form */
+          <div className="bg-white border border-amber-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm">
+            <h2 className="text-amber-700 font-semibold text-base mb-5 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700">
+                1
               </span>
-            ) : (
-              "🔢 Analyze Name (AI-Powered)"
+              Enter Your Details
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-amber-600 text-xs uppercase tracking-wider mb-1.5 block">
+                  Full Name (as currently used)
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Ramesh Kumar Sharma"
+                  className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 placeholder-amber-300 focus:outline-none focus:border-amber-400 transition-colors text-base"
+                />
+              </div>
+              <div className="md:w-1/2">
+                <label className="text-amber-600 text-xs uppercase tracking-wider mb-1.5 block">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 focus:outline-none focus:border-amber-400 transition-colors text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mt-4 bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
+                ⚠️ {error}
+              </div>
             )}
-          </button>
-        </div>
+
+            {/* Success Message */}
+            {success && (
+              <div className="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
+                ✅ Request submitted successfully! We'll analyze your name soon.
+              </div>
+            )}
+
+            <button
+              onClick={saveData}
+              disabled={loading}
+              className="mt-6 w-full py-4 rounded-xl font-bold text-base tracking-wide transition-all disabled:opacity-50 text-white"
+              style={{
+                background: loading
+                  ? "#d4b896"
+                  : "linear-gradient(135deg,#d97706,#b45309,#92400e)",
+                boxShadow: loading ? "none" : "0 4px 20px rgba(180,83,9,0.25)",
+              }}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-3">
+                  <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                  Submitting…
+                </span>
+              ) : (
+                "🔢 Analyze Name (AI-Powered)"
+              )}
+            </button>
+          </div>
+        )}
 
         <div className="text-center mt-14 text-amber-400 text-xs space-y-1">
           <p>🔮 Chaldean · 📐 Pythagorean</p>

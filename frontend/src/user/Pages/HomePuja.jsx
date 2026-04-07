@@ -139,7 +139,7 @@ export default function HomePuja() {
             filteredServices.map((service) => (
               <div
                 key={service.id}
-                onClick={() => navigate(`/homePuja/${service.id}`)}
+                onClick={() => navigate(`/home-Puja/${service.id}`)}
                 className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-200 cursor-pointer flex flex-col hover:-translate-y-2 active:scale-[0.98]"
               >
                 {/* Image */}

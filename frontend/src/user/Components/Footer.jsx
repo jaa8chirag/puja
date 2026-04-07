@@ -41,7 +41,7 @@ const Footer = () => {
 
   const footerLinks = {
     services: [
-      { label: "Home Puja", to: "/homePuja" },
+      { label: "Home Puja", to: "/home-Puja" },
       { label: "Temple Puja", to: "/temple-puja" },
       { label: "Pind Dan", to: "/pind-dan" },
       { label: "Katha/Jaap", to: "/katha-jaap" },

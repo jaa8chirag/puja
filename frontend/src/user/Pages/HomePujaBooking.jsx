@@ -522,7 +522,7 @@ const HomePujaBooking = () => {
               <div className="space-y-4">
                 <button
                   onClick={() =>
-                    navigate(`/homePuja/payment-details/${id}`, {
+                    navigate(`/home-Puja/payment-details/${id}`, {
                       state: { isSamagriSelected: samagriEnabled },
                     })
                   }
@@ -556,7 +556,7 @@ const HomePujaBooking = () => {
           </div>
           <button
             onClick={() =>
-              navigate(`/homePuja/payment-details/${id}`, {
+              navigate(`/home-Puja/payment-details/${id}`, {
                 state: { isSamagriSelected: samagriEnabled },
               })
             }

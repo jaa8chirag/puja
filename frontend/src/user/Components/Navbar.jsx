@@ -78,7 +78,7 @@ const Navbar = () => {
 
   const navItems = [
     { to: "/", label: "Home", icon: <Home size={18} /> },
-    { to: "/homePuja", label: "Home-Puja", icon: <Globe size={18} /> },
+    { to: "/home-Puja", label: "Home-Puja", icon: <Globe size={18} /> },
     { to: "/temple-puja", label: "Temple-Puja", icon: <User size={18} /> },
     { to: "/katha-jaap", label: "Katha-Jaap", icon: <User size={18} /> },
   ];
@@ -163,7 +163,7 @@ const Navbar = () => {
                     </button>
                     <button
                       onClick={() => {
-                        navigate("/online-pinddan_home");
+                        navigate("/online-pinddan");
                         setPindDanOpen(false);
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-all group/item"
@@ -419,7 +419,7 @@ const Navbar = () => {
                   </button>
                   <button
                     onClick={() => {
-                      navigate("/online-pinddan_home");
+                      navigate("/online-pinddan");
                       setMenuOpen(false);
                       setMobilePindDanOpen(false);
                     }}

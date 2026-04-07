@@ -187,54 +187,8 @@ export const updateProfile = async (req, res) => {
     if (connection) connection.release();
   }
 };
-// export const getPanditProfile = async (req, res) => {
-//   try {
-//     const panditId = req.user.id;
 
-//     // 1️⃣ Basic user info
-//     // const [userRows] = await db.query(
-//     //   "SELECT id, name, phone, email, gotra FROM users WHERE id = ?",
-//     //   [panditId],
-//     // );
-//     const [userRows] = await db.query(
-//       "SELECT id, name, phone, email, gotra, is_online FROM users WHERE id = ?",
-//       [panditId],
-//     );
 
-//     if (userRows.length === 0) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "User not found" });
-//     }
-
-//     const user = userRows[0];
-
-//     // 2️⃣ Default address from addresses table
-//     const [addressRows] = await db.query(
-//       `SELECT address_line1, city, state, pincode
-//    FROM addresses
-//    WHERE user_id = ?
-//    ORDER BY is_default DESC, id ASC
-//    LIMIT 1`,
-//       [panditId],
-//     );
-
-//     // Add address to user object (if exists)
-//     if (addressRows.length > 0) {
-//       user.address = addressRows[0]; // {address_line1, city, state, pincode}
-//     } else {
-//       user.address = null;
-//     }
-
-//     res.json({
-//       success: true,
-//       user,
-//     });
-//   } catch (error) {
-//     console.error("Get Pandit Profile Error:", error);
-//     res.status(500).json({ success: false, message: "Server error" });
-//   }
-// };
 export const getPanditProfile = async (req, res) => {
   try {
     const panditId = req.user.id;

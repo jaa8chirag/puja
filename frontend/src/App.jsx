@@ -100,7 +100,7 @@ function App() {
           <Route path="/blogs/:id" element={<BlogDetail />} />
 
           <Route path="/temples" element={<FullTemplePage />} />
-          <Route path="/online-pinddan_home" element={<HomeOnlineRitual />} />
+          <Route path="/online-pinddan" element={<HomeOnlineRitual />} />
 
           <Route path="/online-ritual/:id" element={<OnlineRitual />} />
 
@@ -127,7 +127,7 @@ function App() {
           <Route path="/cancellationpolicy" element={<CancelationPolicy />} />
 
           {/* Home Puja */}
-          <Route path="/homePuja">
+          <Route path="/home-Puja">
             <Route index element={<HomePuja />} />
             <Route path=":id" element={<HomePujaBooking />} />
 
