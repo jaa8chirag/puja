@@ -335,7 +335,7 @@ const MyBookings = () => {
                 >
                   {/* Puja type badge */}
                   <div
-                    className={`absolute top-0 right-0 px-3 py-1 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest text-white z-10 ${
+                    className={`absolute top-0 right-0 px-3 py-1 rounded-bl-2xl rounded-tr-2xl text-[10px] font-black uppercase tracking-widest text-white z-10 ${
                       isTemplePuja ? "bg-orange-500" : "bg-blue-500"
                     }`}
                   >

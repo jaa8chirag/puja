@@ -7,12 +7,12 @@ const CATEGORIES = ["All", "Jyotish", "Vastu", "Puja Vidhi", "Rashifal", "Upay"]
 export default function Blog() {
   const navigate = useNavigate();
 
-  const [blogs, setBlogs]             = useState([]);
-  const [featured, setFeatured]       = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState('');
-  const [active, setActive]           = useState("All");
-  const [search, setSearch]           = useState("");
+  const [blogs, setBlogs] = useState([]);
+  const [featured, setFeatured] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [active, setActive] = useState("All");
+  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
@@ -21,10 +21,10 @@ export default function Blog() {
       try {
         const params = new URLSearchParams();
         if (active !== "All") params.set("category", active);
-        if (search)           params.set("search", search);
+        if (search) params.set("search", search);
         params.set("limit", "20");
 
-        const res  = await fetch(`${API_BASE_URL}/blogs?${params}`);
+        const res = await fetch(`${API_BASE_URL}/blogs?${params}`);
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
 
@@ -177,7 +177,7 @@ export default function Blog() {
                     )}
                     <div className="flex items-center justify-between flex-wrap gap-3">
                       <div className="flex items-center gap-3 text-xs text-orange-200/60 flex-wrap">
-                        {featured.author    && <span>✍️ {featured.author}</span>}
+                        {featured.author && <span>✍️ {featured.author}</span>}
                         {featured.created_at && <span>📅 {new Date(featured.created_at).toLocaleDateString('hi-IN')}</span>}
                         {featured.read_time && <span>⏱ {featured.read_time} read</span>}
                         {featured.views > 0 && <span>👁 {featured.views}</span>}
@@ -244,12 +244,12 @@ function BlogCard({ blog, imageUrl, onRead }) {
   return (
     <div
       onClick={onRead}
-      className="group cursor-pointer rounded-2xl overflow-hidden border border-orange-200 bg-white hover:border-orange-400 transition-all duration-300 hover:-translate-y-1.5 flex flex-col"
+      className="group cursor-pointer rounded-2xl overflow-hidden bg-white hover:border-orange-400 transition-all duration-300 hover:-translate-y-1.5 flex flex-col"
       style={{ boxShadow: '0 2px 16px rgba(180,83,9,0.07)', transition: 'all 0.3s ease' }}
       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 12px 36px rgba(180,83,9,0.16)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 16px rgba(180,83,9,0.07)'}
     >
-      {/* Image — h-48 → h-56 (bada) */}
+      {/* Image — no badges on top */}
       <div className="relative h-56 overflow-hidden shrink-0">
         {imageUrl ? (
           <img
@@ -263,61 +263,37 @@ function BlogCard({ blog, imageUrl, onRead }) {
             <span className="text-6xl opacity-20">🛕</span>
           </div>
         )}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 45%, rgba(0,0,0,0.58))' }} />
-
-        <div className="absolute top-3 left-3 flex gap-2">
-          {blog.category && (
-            <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-orange-500/90 text-white shadow-sm">
-              {blog.category}
-            </span>
-          )}
-        </div>
-        {blog.read_time && (
-          <div className="absolute top-3 right-3">
-            <span className="text-[11px] px-2.5 py-1 rounded-full bg-black/40 text-orange-200 backdrop-blur-sm">
-              ⏱ {blog.read_time}
-            </span>
-          </div>
-        )}
-        {blog.tag && (
-          <div className="absolute bottom-3 left-3">
-            <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/15 text-white border border-white/20 backdrop-blur-sm">
-              {blog.tag}
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* Body — p-5 → p-6, bada text */}
-      <div className="p-6 flex flex-col flex-1">
-        <h3 className="text-[#3d1500] font-bold text-[17px] mt-0.5 mb-2.5 leading-snug group-hover:text-orange-700 transition-colors line-clamp-2"
+      {/* Body */}
+      <div className="p-5 flex flex-col flex-1">
+        {/* Date + Read time — image jaisa style */}
+
+        <h3 className="text-orange-800 font-bold text-[17px] mb-2 leading-snug group-hover:text-orange-700 transition-colors line-clamp-2"
           style={{ fontFamily: "'Georgia', serif" }}>
           {blog.title}
         </h3>
+
         {blog.excerpt && (
-          <p className="text-orange-900/55 text-[13px] leading-relaxed line-clamp-3 mb-4">
+          <p className="text-orange-700 text-[14px] leading-relaxed line-clamp-3">
             {blog.excerpt}
           </p>
         )}
-        <div className="flex items-center justify-between border-t border-orange-100 pt-4 mt-auto">
-          <div>
-            {blog.author && (
-              <p className="text-orange-700/70 text-[13px] font-semibold">✍️ {blog.author}</p>
-            )}
-            {blog.created_at && (
-              <p className="text-orange-400/60 text-[11px] mt-0.5">
-                {new Date(blog.created_at).toLocaleDateString('hi-IN')}
-              </p>
-            )}
-          </div>
-          <span
-            className="text-[13px] font-bold px-4 py-2 rounded-xl text-white group-hover:scale-105 transition-all shadow-sm"
-            style={{ background: 'linear-gradient(135deg, #c2410c, #ea580c)' }}
-          >
-            Information →
-          </span>
-        </div>
       </div>
+        <div className="flex justify-between p-4 px-6">
+          {blog.created_at && (
+            <span className="flex items-center gap-1.5 text-[13px] text-orange-800">
+              <span className="text-[12px]">📅</span>
+              {new Date(blog.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+          )}
+          {blog.read_time && (
+            <span className="flex items-center gap-1.5 text-[13px] text-orange-800">
+              <span className="text-[12px]">🕐</span>
+              {blog.read_time}
+            </span>
+          )}
+        </div>
     </div>
   );
 }

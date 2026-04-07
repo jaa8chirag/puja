@@ -54,7 +54,7 @@ export default function BlogDetail() {
           className="flex items-center gap-2 text-orange-600/70 hover:text-orange-700 transition-colors text-sm mb-8 group font-semibold"
         >
           <span className="group-hover:-translate-x-1 transition-transform inline-block">←</span>
-          Wapas Blogs par
+          Back to Blog Page
         </button>
 
         {/* Loading */}
@@ -72,7 +72,7 @@ export default function BlogDetail() {
             <p className="text-red-600 font-semibold mb-2">{error}</p>
             <button onClick={() => navigate('/blogs')}
               className="mt-4 px-5 py-2 rounded-xl text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 transition-colors">
-              Blogs par Wapas Jayen
+              Back to Blog
             </button>
           </div>
         )}
@@ -173,7 +173,7 @@ export default function BlogDetail() {
 // ── Blog Content Renderer ─────────────────────────────────────
 function BlogContent({ content }) {
   if (!content?.trim()) return (
-    <p className="text-orange-400/60 text-sm italic">Content abhi available nahi hai.</p>
+    <p className="text-orange-400/60 text-sm italic">Content not available.</p>
   );
 
   return (

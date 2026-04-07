@@ -9,6 +9,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 function buildPrompt(k) {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
   const rows = Object.entries(k.planets)
     .map(([n,p]) =>
       `${n.padEnd(10)} | ${p.rashi.padEnd(14)} | ${String(p.degree).padEnd(6)}° | H${String(p.house).padEnd(2)} | ${p.strength}${p.retrograde?' ℞':''}`
@@ -32,6 +35,12 @@ Deeply versed in BPHS, KP Astrology, Jaimini Sutras.
 DATA SOURCE: ${srcNote}
 AYANAMSA: Lahiri ${k.ayanamsa}° (Tropical → Sidereal)
 HOUSE SYSTEM: Whole Sign — houses count from Lagna
+
+
+=== CURRENT DATE ===
+Today      : ${today.toISOString().split('T')[0]}
+Current Year: ${currentYear}
+IMPORTANT  : All Best & Caution Periods MUST start from ${currentMonth}. Never use ${currentYear - 1} or earlier as future dates.
 
 === NATIVE ===
 Name    : ${k.nativeInfo.name}
@@ -125,7 +134,7 @@ Health  : agree/disagree with A — why
 5. [Fifth]
 
 ### Best & Caution Periods (Next 2 Years)
-[Specific months/periods]
+[Start from ${currentMonth}. Give specific month ranges for ${currentYear} and ${currentYear + 1} only.]
 <<VERDICT_END>>`;
 }
 
