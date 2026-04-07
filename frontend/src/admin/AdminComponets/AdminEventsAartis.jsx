@@ -15,6 +15,7 @@ import {
   LayoutGrid,
   Info,
   Navigation,
+  Edit,
 } from "lucide-react";
 
 const ModalField = ({
@@ -54,12 +55,14 @@ const AdminEventsAartis = () => {
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
     location: "",
     description: "",
-    schedule: "", // This maps to date/time/timings
+    schedule: "",
     about: "",
     map_url: "",
     image: null,
@@ -95,10 +98,67 @@ const AdminEventsAartis = () => {
     fetchData();
   }, [activeTab]);
 
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      location: "",
+      description: "",
+      schedule: "",
+      about: "",
+      map_url: "",
+      image: null,
+    });
+    setEditMode(false);
+    setEditingId(null);
+  };
+
+  const handleEdit = async (item) => {
+    setEditMode(true);
+    setEditingId(item.id);
+    setActionLoading(true);
+
+    try {
+      // Agar Mandir hai to pehle full details fetch karo
+      if (activeTab === "mandir") {
+        const res = await axios.get(
+          `${API_BASE_URL}/content/mandir/${item.id}`,
+        );
+        const fullDetails = res.data.data;
+
+        setFormData({
+          title: fullDetails.name || "",
+          location: fullDetails.location || "",
+          description: fullDetails.description || "",
+          schedule: fullDetails.timings || "",
+          about: fullDetails.about || "",
+          map_url: fullDetails.map_url || "",
+          image: null,
+        });
+      } else {
+        // Event/Aarti ke liye list se hi kaam chal jayega
+        setFormData({
+          title: item.title || "",
+          location: item.location || "",
+          description: item.description || "",
+          schedule: item.date || item.time || "",
+          about: "",
+          map_url: "",
+          image: null,
+        });
+      }
+
+      setShowModal(true);
+    } catch (err) {
+      console.error("Error fetching details:", err);
+      showToast("Failed to fetch details", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic Validation
     if (!formData.title || !formData.schedule) {
       return showToast("Title and Schedule are required", "error");
     }
@@ -108,7 +168,6 @@ const AdminEventsAartis = () => {
 
     try {
       if (activeTab === "mandir") {
-        // Mandir Controller expects these exact names
         postData.append("name", formData.title);
         postData.append("location", formData.location || "");
         postData.append("about", formData.about || "");
@@ -116,40 +175,48 @@ const AdminEventsAartis = () => {
         postData.append("timings", formData.schedule);
         postData.append("map_url", formData.map_url || "");
       } else {
-        // Aarti/Event Controller (addContent) expects 'timeDate'
         postData.append("type", activeTab);
         postData.append("title", formData.title);
         postData.append("location", formData.location || "");
         postData.append("description", formData.description || "");
-
-        // 🔥 THE FIX: Backend 'timeDate' मांग रहा है, तो 'timeDate' ही भेजेंगे
         postData.append("timeDate", formData.schedule);
       }
 
-      // Image Handle
       if (formData.image) {
         postData.append("image", formData.image);
       }
 
-      const url =
-        activeTab === "mandir"
-          ? `${API_BASE_URL}/content/mandir/add`
-          : `${API_BASE_URL}/content/add`;
+      let url;
+      let method;
 
-      const res = await axios.post(url, postData);
+      if (editMode) {
+        // Edit Mode
+        if (activeTab === "mandir") {
+          url = `${API_BASE_URL}/content/mandir/update/${editingId}`;
+          method = "put";
+        } else {
+          url = `${API_BASE_URL}/content/edit/${editingId}`;
+          method = "put";
+        }
+      } else {
+        // Add Mode
+        url =
+          activeTab === "mandir"
+            ? `${API_BASE_URL}/content/mandir/add`
+            : `${API_BASE_URL}/content/add`;
+        method = "post";
+      }
 
-      if (res.data.success || res.status === 201) {
-        showToast(`${activeTab} added successfully!`);
+      const res = await axios[method](url, postData);
+
+      if (res.data.success || res.status === 200 || res.status === 201) {
+        showToast(
+          editMode
+            ? `${activeTab} updated successfully!`
+            : `${activeTab} added successfully!`,
+        );
         setShowModal(false);
-        setFormData({
-          title: "",
-          location: "",
-          description: "",
-          schedule: "",
-          about: "",
-          map_url: "",
-          image: null,
-        });
+        resetForm();
         fetchData();
       }
     } catch (err) {
@@ -210,7 +277,10 @@ const AdminEventsAartis = () => {
           </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
           className="flex items-center gap-2 bg-orange-500 text-white px-5 py-2.5 rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-lg"
         >
           <Plus size={16} /> Add {activeTab}
@@ -299,7 +369,6 @@ const AdminEventsAartis = () => {
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border bg-sky-500/10 text-sky-400 border-sky-500/20 uppercase tracking-tighter">
                           <Clock size={12} />
-                          {/* Show date for Event, time for Aarti, timings for Mandir */}
                           {item.date || item.time || item.timings || "N/A"}
                         </span>
                       </td>
@@ -310,12 +379,20 @@ const AdminEventsAartis = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => deleteItem(item.id || item._id)}
-                          className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-500 transition-all"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-blue-400 transition-all"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            onClick={() => deleteItem(item.id || item._id)}
+                            className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-500 transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -341,10 +418,13 @@ const AdminEventsAartis = () => {
           <div className="bg-[#131e32] w-full max-w-md rounded-3xl shadow-2xl border border-slate-800 max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-5 border-b border-slate-800 sticky top-0 bg-[#131e32] z-10 flex justify-between items-center">
               <h3 className="text-sm font-black text-white uppercase tracking-tight">
-                Add {activeTab}
+                {editMode ? `Edit ${activeTab}` : `Add ${activeTab}`}
               </h3>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
                 className="text-slate-500 hover:text-white transition"
               >
                 <X size={20} />
@@ -434,14 +514,21 @@ const AdminEventsAartis = () => {
                   className="flex items-center gap-3 text-[10px] text-slate-400 cursor-pointer"
                 >
                   <ImageIcon size={16} />{" "}
-                  {formData.image ? formData.image.name : "Select Image"}
+                  {formData.image
+                    ? formData.image.name
+                    : editMode
+                      ? "Change Image (Optional)"
+                      : "Select Image"}
                 </label>
               </div>
 
               <div className="pt-4 flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                  }}
                   className="flex-1 py-3 text-[11px] font-black uppercase rounded-2xl border border-slate-700 text-slate-400"
                 >
                   Cancel
@@ -449,10 +536,12 @@ const AdminEventsAartis = () => {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-3 text-[11px] font-black uppercase rounded-2xl bg-orange-500 text-white shadow-lg active:scale-95 transition-all"
+                  className="flex-1 py-3 text-[11px] font-black uppercase rounded-2xl bg-orange-500 text-white shadow-lg active:scale-95 transition-all disabled:opacity-50"
                 >
                   {actionLoading ? (
                     <Loader2 className="animate-spin mx-auto" size={14} />
+                  ) : editMode ? (
+                    "Update"
                   ) : (
                     "Submit"
                   )}

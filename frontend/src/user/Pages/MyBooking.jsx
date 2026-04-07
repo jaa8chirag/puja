@@ -69,7 +69,18 @@ const MyBookings = () => {
       );
       const data = await response.json();
       if (data.success) {
-        setBookings(bookings.filter((b) => b.id !== bookingId));
+        setBookings((currentBookings) =>
+          currentBookings.map((b) =>
+            b.id === bookingId
+              ? {
+                  ...b,
+                  status: "cancelled",
+                  assignment_status: "cancelled",
+                  otp: null,
+                }
+              : b,
+          ),
+        );
         setErrorMsg("Booking cancelled successfully!");
         setTimeout(() => setErrorMsg(""), 3000);
       } else {
@@ -87,11 +98,18 @@ const MyBookings = () => {
 
   // ── Reusable Cancel Button with Tooltip ──
   const CancelButton = ({ booking, isExpired, isCompleted, size = "md" }) => {
-    const isDisabled = isExpired || isCompleted;
+    const isCancelled =
+      booking.assignment_status === "declined" ||
+      booking.status === "declined" ||
+      booking.assignment_status === "cancelled" ||
+      booking.status === "cancelled";
+    const isDisabled = isExpired || isCompleted || isCancelled;
 
-    const tooltipText = isCompleted
-      ? "Puja completed, cannot cancel"
-      : "Puja date & time expired, cannot cancel";
+    const tooltipText = isCancelled
+      ? "Booking already cancelled"
+      : isCompleted
+        ? "Puja completed, cannot cancel"
+        : "Puja date & time expired, cannot cancel";
 
     const baseClass =
       size === "sm"
