@@ -141,7 +141,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       state,
       devoteeName,
       ticket_type,
-      donations, 
+      donations,
       bookingId,
       total_price,
       samagriKit,
@@ -180,7 +180,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
         otp,
         bookingId,
         ticket_type || null,
-        0, 
+        0,
         devoteeName || "User",
         total_price,
         samagriKit ? 1 : 0,
@@ -287,78 +287,6 @@ export const getOnlinePindDanServices = async (req, res) => {
   }
 };
 
-// export const bookOnlinePindDan = async (req, res) => {
-//   try {
-//     const { puja_type } = req.params;
-
-//     const [rows] = await db.query(
-//       `
-//       SELECT
-//         s.id,
-//         s.puja_name,
-//         s.puja_type,
-//         s.description,
-//         s.image_url,
-//         s.priority,
-
-//         MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
-//         MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
-//         MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
-//         MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
-
-//       FROM services s
-//       LEFT JOIN service_prices p
-//         ON s.id = p.service_id
-
-//       WHERE s.puja_type = ?
-
-//       GROUP BY
-//         s.id,
-//         s.puja_name,
-//         s.puja_type,
-//         s.description,
-//         s.image_url,
-//         s.priority
-
-//       ORDER BY s.priority DESC, s.id DESC
-//       `,
-//       [puja_type],
-//     );
-
-//     if (!rows.length) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "No services found",
-//       });
-//     }
-
-//     // ✅ Sirf highest priority service
-//     const service = rows[0];
-
-//     // ✅ Benefits fetch
-//     const [benefits] = await db.query(
-//       `SELECT id, name, description, created_at
-//        FROM benefits
-//        WHERE service_id = ?
-//        ORDER BY created_at ASC`,
-//       [service.id],
-//     );
-
-//     const finalData = {
-//       ...service,
-//       benefits: benefits || [],
-//     };
-
-//     // ✅ Direct object send (no array)
-//     res.status(200).json(finalData);
-//   } catch (error) {
-//     console.error("Book Puja Error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch puja",
-//     });
-//   }
-// };
 
 export const bookOnlinePindDan = async (req, res) => {
   try {
@@ -536,8 +464,8 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       if (couponRows.length > 0) {
         const couponId = couponRows[0].id;
         await connection.query(
-          "INSERT INTO coupon_usage (user_id, coupon_id, puja_request_id, discount_amount) VALUES (?, ?, ?, ?)",
-          [userId, couponId, pujaRequestId, discount_amount || 0],
+          "INSERT INTO coupon_usage (user_id, coupon_id, order_id) VALUES (?, ?, ?)",
+          [userId, couponId, bookingId]
         );
         await connection.query(
           "UPDATE coupons SET used_count = used_count + 1 WHERE id = ?",
@@ -651,8 +579,8 @@ export const bookingDetails = async (req, res) => {
       if (couponRows.length > 0) {
         const couponId = couponRows[0].id;
         await connection.query(
-          "INSERT INTO coupon_usage (user_id, coupon_id, puja_request_id, discount_amount) VALUES (?, ?, ?, ?)",
-          [userId, couponId, pujaRequestId, discount_amount || 0],
+          "INSERT INTO coupon_usage (user_id, coupon_id, order_id) VALUES (?, ?, ?)",
+          [userId, couponId, bookingId]
         );
         await connection.query(
           "UPDATE coupons SET used_count = used_count + 1 WHERE id = ?",
@@ -670,10 +598,10 @@ export const bookingDetails = async (req, res) => {
     });
   } catch (error) {
     await connection.rollback();
-    console.error(error);
+    console.error("Temple Booking Error:", error);
     res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: error.message || "Server Error",
     });
   } finally {
     connection.release();

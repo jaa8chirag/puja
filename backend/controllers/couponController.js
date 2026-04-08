@@ -74,7 +74,7 @@ export const validateCoupon = async (req, res) => {
 
     // 3. Check Total Usage Limit
     if (coupon.used_count >= coupon.usage_limit) {
-      return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
+      return res.status(400).json({ success: false, message: "Coupon expired" });
     }
 
     // 4. Check Per-User Limit (One use per user)
