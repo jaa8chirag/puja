@@ -30,7 +30,10 @@ export default function AgentPanel() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const socket = io(SOCKET_URL, { auth: { token } });
+    const socket = io(SOCKET_URL, { 
+      auth: { token },
+      transports: ["polling", "websocket"]
+    });
     socketRef.current = socket;
 
     socket.on("connect", () => setIsConnected(true));
