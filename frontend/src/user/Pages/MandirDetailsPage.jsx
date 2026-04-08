@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { MapPin, ArrowLeft, Info, Navigation, Clock, Sparkles, Landmark, ShieldCheck, CalendarDays, Car, Utensils } from "lucide-react";
+import HTMLContent from "../../Components/HTMLContent";
 
 const MandirDetailsPage = () => {
     const { id } = useParams();
@@ -60,7 +61,7 @@ const MandirDetailsPage = () => {
                             </h3>
                             <p className="text-gray-700 leading-relaxed text-lg">{mandir.about}</p>
                             <hr className="my-6 border-orange-100" />
-                            <div className="text-gray-600 whitespace-pre-line">{mandir.description}</div>
+                            <HTMLContent content={mandir.description} className="text-gray-600" />
                         </div>
                     </div>
 

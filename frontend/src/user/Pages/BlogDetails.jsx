@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import "../../Components/quill-content.css";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -128,7 +129,7 @@ export default function BlogDetail() {
               <div className="rounded-2xl overflow-hidden mb-8 border border-orange-200"
                 style={{ boxShadow: '0 4px 24px rgba(180,83,9,0.12)' }}>
                 <img
-                  src={blog.image_url.startsWith('http') ? blog.image_url : `http://localhost:5000/api/uploads/${blog.image_url}`}
+                  src={blog.image_url.startsWith('http') ? blog.image_url : blog.image_url.startsWith('/uploads/') ? `${API_BASE_URL.replace('/api', '')}${blog.image_url}` : `${API_BASE_URL}/uploads/${blog.image_url}`}
                   alt={blog.title}
                   className="w-full h-64 md:h-80 object-cover"
                 />
@@ -175,6 +176,19 @@ function BlogContent({ content }) {
   if (!content?.trim()) return (
     <p className="text-orange-400/60 text-sm italic">Content not available.</p>
   );
+
+  // Check if content contains HTML tags (likely from Quill)
+  const containsHTML = /<\/?[a-z][\s\S]*>/i.test(content);
+
+  if (containsHTML) {
+    return (
+      <div 
+        className="quill-content text-sm leading-relaxed" 
+        style={{ fontFamily: "'Georgia', serif" }}
+        dangerouslySetInnerHTML={{ __html: content }} 
+      />
+    );
+  }
 
   return (
     <div className="space-y-2 text-sm leading-relaxed" style={{ fontFamily: "'Georgia', serif" }}>

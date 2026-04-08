@@ -141,13 +141,14 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       state,
       devoteeName,
       ticket_type,
-      donations, // 👈 string aayegi
+      donations, 
       bookingId,
       total_price,
       samagriKit,
+      coupon_code,
+      discount_amount
     } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    // console.log("home or katha booking details--", req.body);
     const userId = req.user.id;
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]
@@ -156,19 +157,17 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
     // ==============================
     // ✅ HANDLE DONATIONS (STRING)
     // ==============================
-
     let totalDonationAmount = 0;
-
     const donationNames = donations
       ? donations.split(",").map((d) => d.trim())
       : [];
 
-    // 1️⃣ Insert puja request first
+    // 1️⃣ Insert puja request
     const [result] = await connection.query(
       `
       INSERT INTO puja_requests 
-      (user_id, service_id, preferred_date, preferred_time, address, city, state, status,otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending',?, ?, ?, ?, ?, ?, ?)
+      (user_id, service_id, preferred_date, preferred_time, address, city, state, status, otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -181,7 +180,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
         otp,
         bookingId,
         ticket_type || null,
-        0, // 👈 temporarily 0 (later update karenge)
+        0, 
         devoteeName || "User",
         total_price,
         samagriKit ? 1 : 0,
@@ -189,6 +188,27 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
     );
 
     const pujaRequestId = result.insertId;
+
+    // 2️⃣ Record Coupon Usage (If provided)
+    if (coupon_code) {
+      const [coupons] = await connection.query(
+        "SELECT id FROM coupons WHERE code = ?",
+        [coupon_code.toUpperCase()]
+      );
+      if (coupons.length > 0) {
+        const couponId = coupons[0].id;
+        // Insert usage record
+        await connection.query(
+          "INSERT INTO coupon_usage (user_id, coupon_id, order_id) VALUES (?, ?, ?)",
+          [userId, couponId, bookingId]
+        );
+        // Increment used count
+        await connection.query(
+          "UPDATE coupons SET used_count = used_count + 1 WHERE id = ?",
+          [couponId]
+        );
+      }
+    }
 
     // 2️⃣ Fetch price from DB & insert contributions
     for (let name of donationNames) {
@@ -426,10 +446,12 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       state,
       devoteeName,
       ticket_type,
-      donations, // 👈 string aayegi
+      donations,
       bookingId,
       total_price,
       samagriKit,
+      coupon_code,
+      discount_amount,
     } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     console.log("home or katha booking details--", req.body);
@@ -505,6 +527,25 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       [totalDonationAmount, pujaRequestId],
     );
 
+    // 4️⃣ Record Coupon Usage (if applied)
+    if (coupon_code) {
+      const [couponRows] = await connection.query(
+        "SELECT id FROM coupons WHERE code = ?",
+        [coupon_code],
+      );
+      if (couponRows.length > 0) {
+        const couponId = couponRows[0].id;
+        await connection.query(
+          "INSERT INTO coupon_usage (user_id, coupon_id, puja_request_id, discount_amount) VALUES (?, ?, ?, ?)",
+          [userId, couponId, pujaRequestId, discount_amount || 0],
+        );
+        await connection.query(
+          "UPDATE coupons SET used_count = used_count + 1 WHERE id = ?",
+          [couponId],
+        );
+      }
+    }
+
     await connection.commit();
 
     res.status(201).json({
@@ -543,6 +584,8 @@ export const bookingDetails = async (req, res) => {
       donations,
       bookingId,
       total_price,
+      coupon_code,
+      discount_amount,
     } = req.body;
     console.log("booking details", req.body);
     const userId = req.user.id;
@@ -597,6 +640,25 @@ export const bookingDetails = async (req, res) => {
           donation.amount,
         ],
       );
+    }
+
+    // ✅ Record Coupon Usage (if applied)
+    if (coupon_code) {
+      const [couponRows] = await connection.query(
+        "SELECT id FROM coupons WHERE code = ?",
+        [coupon_code],
+      );
+      if (couponRows.length > 0) {
+        const couponId = couponRows[0].id;
+        await connection.query(
+          "INSERT INTO coupon_usage (user_id, coupon_id, puja_request_id, discount_amount) VALUES (?, ?, ?, ?)",
+          [userId, couponId, pujaRequestId, discount_amount || 0],
+        );
+        await connection.query(
+          "UPDATE coupons SET used_count = used_count + 1 WHERE id = ?",
+          [couponId],
+        );
+      }
     }
 
     await connection.commit();

@@ -62,7 +62,6 @@ export const deleteContribution = async (req, res) => {
 export const AdminLoginRequest = async (req, res) => {
   try {
     const { phone, role } = req.body;
-
     // Database mein check karein ki user hai aur uska role 'admin' hai
     const [rows] = await db.query(
       "SELECT id, role FROM users WHERE phone = ? AND role = ?",
@@ -139,7 +138,7 @@ export const AdminVerifyOtp = async (req, res) => {
           phone: rows[0].phone,
           role: rows[0].role, // isme 'admin' value hogi
         },
-        process.env.JWT_SECRET || "admin_secret_key", // Admin ke liye alag secret bhi use kar sakte hain
+        process.env.JWT_SECRET || "supersecretkey", // Admin ke liye alag secret bhi use kar sakte hain
         { expiresIn: "1d" }, // Admin session security ke liye chota rakhein (e.g. 1 day)
       );
 
@@ -2315,7 +2314,7 @@ export const updatePage = async (req, res) => {
 
     const [result] = await db.query(
       `UPDATE pages SET title = ?, sections = ?, updated_by = ? WHERE slug = ?`,
-      [title, JSON.stringify(sections), req.admin?.name || "admin", slug],
+      [title, sections, req.admin?.name || "admin", slug],
     );
 
     if (result.affectedRows === 0) {

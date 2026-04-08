@@ -1,6 +1,7 @@
 import { MapPin, Calendar, ArrowRight, Search, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { stripHtml } from "../../utils/stripHtml";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const upcomingPujas = [
@@ -129,7 +130,7 @@ export default function KathaPuja() {
 
                     {service.description && (
                       <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-3">
-                        {service.description}
+                        {stripHtml(service.description)}
                       </p>
                     )}
                   </div>

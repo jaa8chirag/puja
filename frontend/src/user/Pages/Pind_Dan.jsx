@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { stripHtml } from "../../utils/stripHtml";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -135,7 +136,7 @@ export default function Pind_Dan() {
                     </h3>
 
                     <p className="text-gray-700 text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
-                      {service.about}
+                      {stripHtml(service.about)}
                     </p>
 
                     <div className="flex items-center justify-between w-full mt-2">

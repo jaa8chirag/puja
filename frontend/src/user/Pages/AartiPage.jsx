@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Clock, MapPin, Loader2 } from "lucide-react";
+import { stripHtml } from "../../utils/stripHtml";
 
 const AartiPage = () => {
   const [aartiData, setAartiData] = useState([]);
@@ -76,7 +77,7 @@ const AartiPage = () => {
                 </div>
 
                 <p className="text-gray-600 text-sm leading-6 line-clamp-6">
-                  {aarti.description}
+                  {stripHtml(aarti.description)}
                 </p>
               </div>
             </div>

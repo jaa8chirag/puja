@@ -14,8 +14,15 @@ import {
   ArrowRight,
   UtensilsCrossed,
   Coffee,
-  CheckCircle,
+  Activity,
+  Droplets,
+  Leaf,
+  Home,
+  Bird,
+  BookOpen,
   ShieldCheck,
+  CheckCircle,
+  X,
 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
@@ -34,6 +41,12 @@ const HomePujaPaymentDetails = () => {
   const isSamagriSelected = location.state?.isSamagriSelected || false;
   const [errorMsg, setErrorMsg] = useState("");
   const [contributionOptions2, setContributionOptions2] = useState([]);
+
+  // 📝 Coupon State
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
 
   const generateBookingId = () =>
     `BK-${Math.random().toString(36).substring(2, 8)}`;
@@ -59,6 +72,12 @@ const HomePujaPaymentDetails = () => {
     "Anna Dan": false,
     "Deep Dan": false,
     "Brahmin Dan": false,
+    "Vidya Dan": false,
+    "Aushadhi Dan": false,
+    "Jal Dan": false,
+    "Vriksh Dan": false,
+    "Aashray Dan": false,
+    "Jeev Daya": false,
     "Gau Seva": false,
     "Temple Donation": false,
   });
@@ -68,29 +87,36 @@ const HomePujaPaymentDetails = () => {
     return Number(daan?.price || 0);
   };
 
+  const getDescription = (name) => {
+    const item = contributionOptions2.find((c) => c.name === name);
+    return item?.description || "";
+  };
+
   const iconMap = {
     "Vastra Dan": <Shirt size={16} />,
     "Anna Dan": <Coffee size={16} />,
     "Deep Dan": <Flame size={16} />,
     "Brahmin Dan": <UtensilsCrossed size={16} />,
+    "Vidya Dan": <BookOpen size={16} />,
+    "Aushadhi Dan": <Activity size={16} />,
+    "Jal Dan": <Droplets size={16} />,
+    "Vriksh Dan": <Leaf size={16} />,
+    "Aashray Dan": <Home size={16} />,
+    "Jeev Daya": <Bird size={16} />,
   };
 
-  const contributionOptions = Array.isArray(contributionOptions2)
-    ? contributionOptions2
-        .filter(
-          (c) =>
-            c.name !== "Gau Seva" &&
-            c.name !== "Temple Donation" &&
-            c.name !== "Samagri Kit",
-        )
-        .map((c) => ({
-          id: c.name,
-          name: c.name,
-          price: Number(c.price),
-          icon: iconMap[c.name] || <Sparkles size={16} />,
-          desc: c.description || "", // ✅ database se
-        }))
-    : [];
+  const contributionList = [
+    { id: "Vastra Dan", name: "Vastra Dan", price: getPrice("Vastra Dan"), icon: iconMap["Vastra Dan"], desc: getDescription("Vastra Dan") || "Donate clothes to the needy" },
+    { id: "Anna Dan", name: "Anna Dan", price: getPrice("Anna Dan"), icon: iconMap["Anna Dan"], desc: getDescription("Anna Dan") || "Provide meals to the hungry" },
+    { id: "Deep Dan", name: "Deep Dan", price: getPrice("Deep Dan"), icon: iconMap["Deep Dan"], desc: getDescription("Deep Dan") || "Light lamps at sacred temples" },
+    { id: "Brahmin Dan", name: "Brahmin Dan", price: getPrice("Brahmin Dan"), icon: iconMap["Brahmin Dan"], desc: getDescription("Brahmin Dan") || "Feed Brahmins after ceremony" },
+    { id: "Vidya Dan", name: "Vidya Dan", price: getPrice("Vidya Dan"), icon: iconMap["Vidya Dan"], desc: getDescription("Vidya Dan") || "Support education for children" },
+    { id: "Aushadhi Dan", name: "Aushadhi Dan", price: getPrice("Aushadhi Dan"), icon: iconMap["Aushadhi Dan"], desc: getDescription("Aushadhi Dan") || "Donate medicines to the sick" },
+    { id: "Jal Dan", name: "Jal Dan", price: getPrice("Jal Dan"), icon: iconMap["Jal Dan"], desc: getDescription("Jal Dan") || "Provide clean water to those in need" },
+    { id: "Vriksh Dan", name: "Vriksh Dan", price: getPrice("Vriksh Dan"), icon: iconMap["Vriksh Dan"], desc: getDescription("Vriksh Dan") || "Plant trees for a greener future" },
+    { id: "Aashray Dan", name: "Aashray Dan", price: getPrice("Aashray Dan"), icon: iconMap["Aashray Dan"], desc: getDescription("Aashray Dan") || "Support shelter for the homeless" },
+    { id: "Jeev Daya", name: "Jeev Daya", price: getPrice("Jeev Daya"), icon: iconMap["Jeev Daya"], desc: getDescription("Jeev Daya") || "Feed and care for animals" },
+  ];
 
   const selectedDonations = Object.keys(donations)
     .filter((key) => donations[key])
@@ -113,7 +139,8 @@ const HomePujaPaymentDetails = () => {
       donations: selectedDonations,
       total_price: grandTotal,
       samagriKit: isSamagriSelected,
-      // otp,
+      coupon_code: appliedCoupon ? appliedCoupon.code : null,
+      discount_amount: discountAmount,
     };
     try {
       const response = await fetch(
@@ -186,8 +213,41 @@ const HomePujaPaymentDetails = () => {
   const toggleDonation = (id) =>
     setDonations((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  // 🎟️ Coupon Logic
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setIsApplying(true);
+    setCouponError("");
+    try {
+      const response = await fetch(`${API_BASE_URL}/coupons/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: couponInput }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAppliedCoupon(data.data);
+        setCouponInput("");
+      } else {
+        setCouponError(data.message);
+      }
+    } catch (error) {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError("");
+  };
+
   const getDharmicTotal = () => {
-    let sum = contributionOptions.reduce(
+    let sum = contributionList.reduce(
       (acc, opt) => (donations[opt.id] ? acc + opt.price : acc),
       0,
     );
@@ -202,7 +262,11 @@ const HomePujaPaymentDetails = () => {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const grandTotal = basePrice + samagriPrice + dharmicTotal;
+  const grandTotalBeforeDiscount = basePrice + samagriPrice + dharmicTotal;
+  const discountAmount = appliedCoupon
+    ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
+    : 0;
+  const grandTotal = grandTotalBeforeDiscount - discountAmount;
 
   const inputBaseClass =
     "w-full bg-gray-50 border border-orange-200 rounded-xl px-3 py-3 text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all font-medium text-sm";
@@ -430,7 +494,7 @@ const HomePujaPaymentDetails = () => {
                 {/* Mobile: compact card (no icon bg, inline layout) | Desktop: original */}
                 {/* Cards Grid (Top 4) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {contributionOptions.map((option) => (
+                  {contributionList.map((option) => (
                     <ContributionCard
                       key={option.id}
                       option={option}
@@ -444,19 +508,17 @@ const HomePujaPaymentDetails = () => {
                 <div className="mt-3">
                   <div
                     onClick={() => toggleDonation("Gau Seva")}
-                    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${
-                      donations["Gau Seva"]
+                    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
                         ? "border-orange-500 bg-orange-50/30 shadow-sm"
                         : "border-orange-200 bg-white hover:border-orange-300"
-                    }`}
+                      }`}
                   >
                     {/* Checkbox */}
                     <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-                        donations["Gau Seva"]
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${donations["Gau Seva"]
                           ? "bg-orange-500 border-orange-500"
                           : "border-orange-200 bg-white"
-                      }`}
+                        }`}
                     >
                       {donations["Gau Seva"] && (
                         <svg
@@ -521,6 +583,14 @@ const HomePujaPaymentDetails = () => {
                   dharmicRef={dharmicRef}
                   getPrice={getPrice}
                   contributionOptions2={contributionOptions2}
+                  couponInput={couponInput}
+                  setCouponInput={setCouponInput}
+                  appliedCoupon={appliedCoupon}
+                  handleApplyCoupon={handleApplyCoupon}
+                  removeCoupon={removeCoupon}
+                  isApplying={isApplying}
+                  couponError={couponError}
+                  discountAmount={discountAmount}
                 />
               </div>
             </div>
@@ -548,89 +618,145 @@ const HomePujaPaymentDetails = () => {
                     </div> */}
                   </div>
 
-                  <div
-                    onClick={() =>
-                      dharmicRef.current?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      })
-                    }
-                    className="cursor-pointer group flex items-center justify-between p-3 rounded-xl border border-orange-200 bg-orange-50/50 hover:bg-orange-50 transition-all"
-                  >
-                    <div className="flex items-center gap-2 text-orange-500 font-black uppercase text-[11px] tracking-widest">
-                      <Heart
-                        size={14}
-                        fill="currentColor"
-                        className="group-hover:scale-110 transition-transform"
-                      />
-                      Dharmic Total
-                    </div>
-                    <span className="text-orange-600 font-black text-sm">
-                      ₹{dharmicTotal}
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 pt-2">
-                    <div className="flex justify-between items-center text-[11px] font-bold text-gray-700 uppercase">
-                      <span>Base Price</span>
-                      <span className="text-gray-900 font-black">
-                        ₹{basePrice}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[11px] font-bold text-gray-700 uppercase">
-                      {/* <span>Samagri Kit</span>
-                      <span className="text-gray-900 font-black">
-                        +₹{samagriPrice}
-                      </span> */}
-                    </div>
-
-                    <div className="flex flex-col py-2 border-y border-orange-200">
-                      <div className="flex items-center justify-between">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={donations["Temple Donation"]}
-                            onChange={() => toggleDonation("Temple Donation")}
-                            className="w-3.5 h-3.5 accent-orange-500"
+                    <div className="space-y-4">
+                      <div
+                        onClick={() =>
+                          dharmicRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          })
+                        }
+                        className="cursor-pointer group flex items-center justify-between p-3 rounded-xl border border-orange-200 bg-orange-50/50 hover:bg-orange-50 transition-all"
+                      >
+                        <div className="flex items-center gap-2 text-orange-500 font-black uppercase text-[11px] tracking-widest">
+                          <Heart
+                            size={14}
+                            fill="currentColor"
+                            className="group-hover:scale-110 transition-transform"
                           />
-                          <span className="text-[10px] font-bold text-gray-700 uppercase">
-                            Temple Donation
-                          </span>
-                        </label>
-                        <span className="text-[10px] font-black text-orange-500">
-                          +₹{getPrice("Temple Donation")}
+                          Dharmic Total
+                        </div>
+                        <span className="text-orange-600 font-black text-sm">
+                          ₹{dharmicTotal}
                         </span>
                       </div>
 
-                      {/* ✅ Now will come below */}
-                      <p className="text-[12px] text-gray-500 mt-1 ml-5 leading-snug">
-                        {contributionOptions2?.find(
-                          (c) => c.name === "Temple Donation",
-                        )?.description ||
-                          "Your donation helps maintain the temple, support daily rituals, and serve devotees."}
-                      </p>
-                    </div>
+                      <div className="space-y-3 pt-2">
+                        <div className="flex justify-between items-center text-[11px] font-bold text-gray-700 uppercase px-1">
+                          <span>Base Price</span>
+                          <span className="text-gray-900 font-black">
+                            ₹{basePrice}
+                          </span>
+                        </div>
 
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-lg font-bold text-gray-900">
-                        Total
-                      </span>
-                      <span className="text-2xl font-black text-orange-600">
-                        ₹{grandTotal}
-                      </span>
-                    </div>
+                        {/* Temple Donation Section */}
+                        <div className="flex flex-col py-3 border-y border-orange-200 px-1">
+                          <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                checked={donations["Temple Donation"]}
+                                onChange={() => toggleDonation("Temple Donation")}
+                                className="w-4 h-4 accent-orange-500 rounded"
+                              />
+                              <span className="text-[11px] font-bold text-gray-700 uppercase group-hover:text-orange-600 transition-colors">
+                                Temple Donation
+                              </span>
+                            </label>
+                            <span className="text-[11px] font-black text-orange-500">
+                              +₹{getPrice("Temple Donation")}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 mt-1 ml-6 leading-snug">
+                            {contributionOptions2?.find(
+                              (c) => c.name === "Temple Donation",
+                            )?.description ||
+                              "Your donation helps maintain the temple and support daily rituals."}
+                          </p>
+                        </div>
 
-                    <button
-                      onClick={handlePayment}
-                      className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 text-white font-bold py-3.5 rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
-                    >
-                      Pay ₹{grandTotal} <ArrowRight size={16} />
-                    </button>
+                        {/* 🎟️ Premium Coupon Section */}
+                        <div className="py-2 border-y border-dashed border-orange-100 my-2">
+                          {!appliedCoupon ? (
+                            <div className="space-y-3">
+                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block ml-1 mb-1">Have a Coupon?</label>
+                              <div className="flex gap-2 w-full">
+                                <input 
+                                  type="text" 
+                                  placeholder="PROMO CODE"
+                                  value={couponInput}
+                                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                  className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-xs md:text-sm font-bold uppercase focus:outline-none focus:border-orange-500 transition-all min-w-0"
+                                />
+                                <button 
+                                  onClick={handleApplyCoupon}
+                                  disabled={isApplying || !couponInput}
+                                  className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-black uppercase disabled:opacity-50 hover:bg-orange-700 transition-all shadow-md active:scale-95"
+                                >
+                                  {isApplying ? "..." : "Apply"}
+                                </button>
+                              </div>
+                              {couponError && <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-wider">{couponError}</p>}
+                            </div>
+                          ) : (
+                            <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between group animate-in fade-in zoom-in duration-300">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-green-500 p-2 rounded-lg text-white shadow-sm ring-4 ring-green-100">
+                                  <CheckCircle size={18} />
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-green-700 uppercase tracking-[0.1em]">Coupon Applied</p>
+                                  <p className="text-[15px] font-black text-green-800 leading-none mt-1">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={removeCoupon} 
+                                className="text-slate-400 hover:text-red-500 hover:bg-white p-2 rounded-full transition-all hover:shadow-sm"
+                              >
+                                <X size={20} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
 
-                    <div className="bg-gray-100/50 py-2 rounded-lg text-center">
-                      <p className="text-[9px] font-bold text-gray-700 uppercase tracking-tighter">
-                        💰 Total Fee includes Dakshina — No tips required
-                      </p>
+                        {discountAmount > 0 && (
+                          <div className="flex justify-between items-center text-[11px] font-bold text-green-600 uppercase tracking-widest px-1">
+                            <span>Coupon Discount</span>
+                            <span className="font-black">
+                              -₹{discountAmount}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-center pt-3 mt-2 border-t border-orange-100">
+                          <span className="text-lg font-bold text-gray-900 tracking-tight">
+                            Final Total
+                          </span>
+                          <div className="text-right">
+                            {discountAmount > 0 && (
+                              <p className="text-[12px] font-bold text-gray-400 line-through mb-0.5">
+                                ₹{grandTotal + discountAmount}
+                              </p>
+                            )}
+                            <span className="text-2xl font-black text-orange-600">
+                              ₹{grandTotal}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handlePayment}
+                          className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 text-white font-black py-4 rounded-xl shadow-xl shadow-orange-100 flex items-center justify-center gap-3 active:scale-[0.98] transition-all group overflow-hidden relative"
+                        >
+                          <span className="relative z-10 uppercase tracking-widest text-[14px]">Proceed to Pay</span>
+                          <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+                        </button>
+
+                        <div className="bg-orange-50/50 py-3 rounded-xl text-center border border-orange-100/50">
+                          <p className="text-[10px] font-black text-orange-800 uppercase tracking-widest leading-none">
+                            🙏 No extra cash tips required
+                          </p>
+                        </div>
                     </div>
                   </div>
                 </div>
@@ -640,38 +766,46 @@ const HomePujaPaymentDetails = () => {
         </div>
       </div>
 
-      {/* MOBILE STICKY BOTTOM BAR */}
-      <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-orange-200 shadow-2xl px-4 py-3 cursor-pointer active:bg-orange-50 transition-colors"
-        onClick={(e) => {
-          if (e.target.closest("#mobile-pay-btn")) return;
-          const el = document.getElementById("mobile-summary");
-          if (el)
-            window.scrollTo({ top: el.offsetTop - 100, behavior: "smooth" });
-        }}
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              Total Amount{" "}
-              <ChevronRight size={11} className="text-orange-400" />
-            </p>
-            <p className="text-xl font-black text-orange-600 leading-tight">
-              ₹{grandTotal.toLocaleString("en-IN")}
-            </p>
-            <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <ShieldCheck size={10} /> Incl. all taxes
-            </p>
-          </div>
-          <button
-            id="mobile-pay-btn"
-            onClick={handlePayment}
-            className="flex-1 max-w-[200px] bg-gradient-to-r from-orange-500 to-orange-700 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-orange-200 flex items-center justify-center gap-2 text-[14px] uppercase tracking-[0.08em] active:scale-[0.97] transition-all"
+          {/* MOBILE STICKY BOTTOM BAR */}
+          <div
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-orange-200 shadow-2xl px-4 py-3 cursor-pointer active:bg-orange-50 transition-colors"
+            onClick={(e) => {
+              if (e.target.closest("#mobile-pay-btn")) return;
+              const el = document.getElementById("mobile-summary");
+              if (el)
+                 window.scrollTo({ top: el.offsetTop - 100, behavior: "smooth" });
+            }}
           >
-            <ArrowRight size={16} /> Pay ₹{grandTotal}
-          </button>
-        </div>
-      </div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  Total Amount{" "}
+                  <ChevronRight size={11} className="text-orange-400" />
+                </p>
+                <div className="flex flex-col">
+                  {discountAmount > 0 && (
+                     <span className="text-[10px] text-green-600 font-bold line-through opacity-70">
+                       ₹{grandTotal + discountAmount}
+                     </span>
+                  )}
+                  <p className="text-xl font-black text-orange-600 leading-tight">
+                    ₹{grandTotal.toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                  <ShieldCheck size={10} /> Incl. all taxes
+                </p>
+              </div>
+              <button
+                id="mobile-pay-btn"
+                onClick={handlePayment}
+                className="flex-1 max-w-[200px] bg-gradient-to-r from-orange-500 to-orange-700 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-orange-200 flex items-center justify-center gap-2 text-[14px] uppercase tracking-[0.08em] active:scale-[0.97] transition-all"
+              >
+                <span>Pay Now</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
     </>
   );
 };
@@ -691,6 +825,14 @@ const MobileSummaryInline = ({
   dharmicRef,
   getPrice,
   contributionOptions2,
+  couponInput,
+  setCouponInput,
+  appliedCoupon,
+  handleApplyCoupon,
+  removeCoupon,
+  isApplying,
+  couponError,
+  discountAmount
 }) => (
   <div className="space-y-4">
     <div>
@@ -720,6 +862,8 @@ const MobileSummaryInline = ({
         <span className="text-gray-500">Base Price</span>
         <span className="text-gray-900">₹{basePrice}</span>
       </div>
+
+
       {/* <div className="flex justify-between items-center text-[13px] font-bold">
         <span className="text-gray-500">Samagri Kit</span>
         <span className="text-gray-900">+₹{samagriPrice}</span>
@@ -776,6 +920,44 @@ const MobileSummaryInline = ({
         </p>
       </div>
 
+      {/* 🎟️ Mobile Coupon Section */}
+      <div className="py-2 border-y border-dashed border-orange-100">
+        {!appliedCoupon ? (
+          <div className="space-y-2">
+            <div className="flex gap-2 w-full">
+              <input
+                type="text"
+                placeholder="PROMO CODE"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-[12px] font-bold uppercase focus:outline-none min-w-0"
+              />
+              <button
+                onClick={handleApplyCoupon}
+                disabled={isApplying || !couponInput}
+                className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-[12px] font-black uppercase disabled:opacity-50"
+              >
+                {isApplying ? "..." : "Apply"}
+              </button>
+            </div>
+            {couponError && <p className="text-[10px] text-red-500 font-bold ml-1">{couponError}</p>}
+          </div>
+        ) : (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle size={16} className="text-green-600" />
+              <div>
+                <p className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Coupon Applied</p>
+                <p className="text-sm font-black text-green-800">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
+              </div>
+            </div>
+            <button onClick={removeCoupon} className="text-gray-400 hover:text-red-500">
+              <X size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="border-t border-dashed border-gray-300 w-full" />
 
       <div className="flex justify-between items-center pt-1">
@@ -790,9 +972,16 @@ const MobileSummaryInline = ({
             </span>
           </div>
         </div>
-        <span className="text-xl font-black text-orange-600">
-          ₹{grandTotal.toLocaleString("en-IN")}
-        </span>
+        <div className="text-right">
+          {discountAmount > 0 && (
+            <p className="text-[11px] font-bold text-green-600 line-through opacity-70">
+              ₹{grandTotal + discountAmount}
+            </p>
+          )}
+          <span className="text-xl font-black text-orange-600">
+            ₹{grandTotal.toLocaleString("en-IN")}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -812,19 +1001,17 @@ const MobileSummaryInline = ({
 const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
-    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${
-      selected
+    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
         ? "border-orange-500 bg-orange-50/30 shadow-sm"
         : "border-orange-200 hover:border-orange-300 bg-white"
-    }`}
+      }`}
   >
     {/* ✅ CHECKBOX STYLE (Radio dot ki jagah) */}
     <div
-      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-        selected
+      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${selected
           ? "bg-orange-500 border-orange-500"
           : "border-orange-200 bg-white"
-      }`}
+        }`}
     >
       {selected && (
         <svg

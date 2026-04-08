@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { stripHtml } from "../../utils/stripHtml";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 
@@ -188,7 +189,7 @@ export default function HomePuja() {
 
                     {service.description && (
                       <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-3">
-                        {service.description}
+                        {stripHtml(service.description)}
                       </p>
                     )}
                   </div>

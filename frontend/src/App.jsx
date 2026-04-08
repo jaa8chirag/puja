@@ -55,9 +55,10 @@ import NotFound from "./user/Components/NotFound";
 import Blog from "./user/Pages/Blog";
 import BlogDetail from "./user/Pages/BlogDetails";
 
-import PrivacyPolicy from "./user/Pages/PrivacyPolice";
+import PrivacyPolicy from "./user/Pages/PrivacyPolicy";
 import AboutUs from "./user/Pages/AboutUs";
-import CancelationPolicy from "./user/Pages/CancelationPolice";
+import CancellationPolicy from "./user/Pages/CancellationPolicy";
+import TermsAndConditions from "./user/Pages/TermsAndConditions";
 
 import AIPanditBot from "./user/Pages/AIPanditBot";
 import OnlineRitual from "./user/Pages/OnlineRitual";
@@ -123,8 +124,9 @@ function App() {
           <Route path="/aarti" element={<AartiPage />} />
 
           <Route path="/aboutUs" element={<AboutUs />} />
-          <Route path="/pricaypolicy" element={<PrivacyPolicy />} />
-          <Route path="/cancellationpolicy" element={<CancelationPolicy />} />
+          <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+          <Route path="/cancellationpolicy" element={<CancellationPolicy />} />
+          <Route path="/termsandconditions" element={<TermsAndConditions />} />
 
           {/* Home Puja */}
           <Route path="/home-Puja">

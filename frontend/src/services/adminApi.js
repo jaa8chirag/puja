@@ -42,3 +42,20 @@ export const updateBenefit = (benefitId, data) =>
 
 export const deleteBenefit = (benefitId) =>
   API.delete(`/benefits/${benefitId}`);
+
+// ── Coupon routes (handled by /api/coupons, so we use axios directly or adjust base)
+// Actually, I registered /api/coupons globally, so I should adjust the baseURL or create a new instance.
+// Let's create a new instance for coupons since it’s not under /admin/ path.
+export const COUPON_API = axios.create({
+  baseURL: `${API_BASE_URL}/coupons`,
+});
+
+COUPON_API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("adminToken");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export const adminGetCoupons = () => COUPON_API.get("/all");
+export const adminCreateCoupon = (data) => COUPON_API.post("/create", data);
+export const adminDeleteCoupon = (id) => COUPON_API.delete(`/delete/${id}`);

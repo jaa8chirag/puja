@@ -577,8 +577,8 @@ export default function KundliPortal() {
     const buildImageUrl = (imageUrl) => {
       if (!imageUrl) return null;
       if (imageUrl.startsWith('http')) return imageUrl;
-      if (imageUrl.startsWith('/uploads/')) return `http://localhost:5000${imageUrl}`;
-      return `http://localhost:5000/api/uploads/${imageUrl}`;
+      if (imageUrl.startsWith('/uploads/')) return `${API_BASE_URL.replace('/api', '')}${imageUrl}`;
+      return `${API_BASE_URL}/uploads/${imageUrl}`;
     };
     (result.kundli.doshas || []).forEach(d => {
       const matched = matchPujaForDosha(d.name, allPujas);

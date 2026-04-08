@@ -23,6 +23,7 @@ import {
   updateBenefit,
   deleteBenefit,
 } from "../../services/adminApi";
+import RichTextEditor from "../../Components/RichTextEditor";
 
 const ServiceModal = ({ close, editData, refresh }) => {
   const [form, setForm] = useState({
@@ -178,7 +179,8 @@ const ServiceModal = ({ close, editData, refresh }) => {
       return;
     }
     if (!editData) {
-      alert(`${validBenefits.length} benefits added to preview!`);
+      // ✅ For new service: just close the form — benefits will be saved on form submit
+      setShowBenefitForm(false);
       return;
     }
     try {
@@ -188,9 +190,9 @@ const ServiceModal = ({ close, editData, refresh }) => {
       await loadBenefits(editData.id);
       setNewBenefits([{ name: "", description: "" }]);
       setShowBenefitForm(false);
-      alert("Benefits added successfully!");
+      alert("Benefits saved successfully!");
     } catch (error) {
-      alert("Error adding benefits");
+      alert("Error saving benefits");
     }
   };
 
@@ -371,20 +373,10 @@ const ServiceModal = ({ close, editData, refresh }) => {
             <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
               Description
             </label>
-            <div className="relative">
-              <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-slate-500" />
-              <textarea
+            <div className="relative pt-2">
+              <RichTextEditor
                 value={form.description}
-                onChange={(e) => {
-                  setForm({ ...form, description: e.target.value });
-                  e.target.style.height = "auto";
-                  e.target.style.height = e.target.scrollHeight + "px";
-                }}
-                onInput={(e) => {
-                  e.target.style.height = "auto";
-                  e.target.style.height = e.target.scrollHeight + "px";
-                }}
-                className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-500 overflow-hidden min-h-[100px]"
+                onChange={(val) => setForm({ ...form, description: val })}
                 placeholder="Enter service description..."
               />
             </div>
@@ -416,20 +408,13 @@ const ServiceModal = ({ close, editData, refresh }) => {
                   style={{ colorScheme: "dark" }}
                 />
               </div>
-              <textarea
-                value={form.about}
-                onChange={(e) => {
-                  setForm({ ...form, about: e.target.value });
-                  e.target.style.height = "auto";
-                  e.target.style.height = e.target.scrollHeight + "px";
-                }}
-                onInput={(e) => {
-                  e.target.style.height = "auto";
-                  e.target.style.height = e.target.scrollHeight + "px";
-                }}
-                className="w-full px-4 py-3 bg-[#0b1120] border border-slate-800 rounded-2xl text-sm text-white resize-none outline-none focus:border-orange-400 overflow-hidden min-h-[80px]"
-                placeholder="About significance..."
-              />
+              <div className="pt-2">
+                <RichTextEditor
+                  value={form.about}
+                  onChange={(val) => setForm({ ...form, about: val })}
+                  placeholder="About significance..."
+                />
+              </div>
             </div>
           )}
 
@@ -505,7 +490,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
                         handleBenefitChange(index, "name", e.target.value)
                       }
                       className="w-full px-4 py-2 bg-[#0b1120] border border-slate-700 rounded-xl text-sm text-white outline-none"
-                      placeholder="Benefit name"
+                      placeholder="Benefit name (e.g. Peace of Mind)"
                     />
                     <textarea
                       value={benefit.description}
@@ -529,11 +514,23 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 ))}
                 <button
                   type="button"
+                  onClick={handleAddBenefitRow}
+                  className="w-full py-2 border border-dashed border-purple-500/30 rounded-xl text-[11px] font-bold text-purple-400 hover:bg-purple-500/10 transition"
+                >
+                  + Add Another Benefit
+                </button>
+                <button
+                  type="button"
                   onClick={handleSaveAllBenefits}
                   className="w-full py-2.5 bg-purple-500 rounded-xl text-[11px] font-bold text-white uppercase"
                 >
-                  {editData ? "Save Benefits Now" : "Add to Preview"}
+                  {editData ? "Save Benefits Now" : "✓ Confirm Benefits (saved on Deploy)"}
                 </button>
+                {!editData && (
+                  <p className="text-[10px] text-center text-purple-300/60 italic">
+                    Benefits will be saved automatically when you click "Deploy Service"
+                  </p>
+                )}
               </div>
             )}
 

@@ -48,8 +48,8 @@ export default function Blog() {
   const buildImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) return `http://localhost:5000${url}`;
-    return `http://localhost:5000/api/uploads/${url}`;
+    if (url.startsWith('/uploads/')) return `${API_BASE_URL.replace('/api', '')}${url}`;
+    return `${API_BASE_URL}/uploads/${url}`;
   };
 
   const gridBlogs = featured ? blogs.filter(b => b.id !== featured.id) : blogs;

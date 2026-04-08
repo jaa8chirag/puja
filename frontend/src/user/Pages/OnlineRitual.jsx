@@ -14,6 +14,7 @@ import {
   Gem,
   Moon,
   Download,
+  CheckCircle,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -58,28 +59,7 @@ const FALLBACK_BENEFITS = [
 
 // ── Icon mapper for backend benefits ──
 const getBenefitIcon = (name = "", index = 0) => {
-  const n = name.toLowerCase();
-  if (n.includes("peace") || n.includes("shanti") || n.includes("tripti"))
-    return <Heart />;
-  if (n.includes("protect") || n.includes("dosh") || n.includes("shield"))
-    return <Shield />;
-  if (n.includes("prosper") || n.includes("wealth") || n.includes("arth"))
-    return <Zap />;
-  if (n.includes("family") || n.includes("parivaar") || n.includes("santan"))
-    return <Users />;
-  if (n.includes("energy") || n.includes("positive") || n.includes("spiritual"))
-    return <Sparkles />;
-  if (n.includes("mental") || n.includes("balance") || n.includes("mansik"))
-    return <Moon />;
-  const icons = [
-    <Heart />,
-    <Shield />,
-    <Zap />,
-    <Users />,
-    <Sparkles />,
-    <Moon />,
-  ];
-  return icons[index % icons.length];
+  return <CheckCircle className="text-green-600" />;
 };
 
 const STATIC_FAQS = [

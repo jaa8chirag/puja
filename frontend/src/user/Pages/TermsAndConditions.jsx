@@ -1,12 +1,11 @@
-// pages/AboutUs.jsx
 import React, { useEffect, useState } from "react";
 import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-export default function AboutUs() {
+export default function TermsAndConditions() {
   const [data, setData] = useState(null);
-  const [pageTitle, setPageTitle] = useState("About Us");
+  const [pageTitle, setPageTitle] = useState("Terms and Conditions");
   const [loading, setLoading] = useState(true);
 
   // Extract robust content from various formats (raw string, JSON object, array)
@@ -38,7 +37,7 @@ export default function AboutUs() {
     // 3. Legacy Key-Value Format { hero_text, mission_title, etc. }
     if (typeof parsed === "object") {
       let html = "";
-      const priorityKeys = ["hero_title", "hero_subtitle", "hero_text", "mission_title", "mission_text", "vision_title", "vision_text"];
+      const priorityKeys = ["hero_title", "hero_subtitle", "hero_text", "mission_title", "mission_text", "vision_title", "vision_text", "intro_text"];
       
       priorityKeys.forEach(k => {
         if (parsed[k]) {
@@ -48,8 +47,9 @@ export default function AboutUs() {
       });
 
       Object.keys(parsed).forEach(k => {
-        if (!priorityKeys.includes(k) && parsed[k] && typeof parsed[k] === "string" && parsed[k].trim() !== "" && !k.includes("image_url")) {
+        if (!priorityKeys.includes(k) && parsed[k] && typeof parsed[k] === "string" && parsed[k].trim() !== "" && !k.includes("image_url") && !k.includes("last_updated")) {
           if (k.endsWith("_title")) html += `<h3>${parsed[k]}</h3>`;
+          else if (k.endsWith("_text")) html += `<p>${parsed[k]}</p>`;
           else html += `<p>${parsed[k]}</p>`;
         }
       });
@@ -60,11 +60,11 @@ export default function AboutUs() {
   };
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/pages/about-us`)
+    fetch(`${API_BASE_URL}/pages/terms-and-conditions`)
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
-          setPageTitle(d.data.title || "About Us");
+          setPageTitle(d.data.title || "Terms and Conditions");
           setData(extractContent(d.data.sections));
         }
       })
@@ -91,7 +91,7 @@ export default function AboutUs() {
           </h1>
           <div className="h-1 w-16 bg-orange-600/20 mx-auto" />
         </header>
-        
+
         {/* Premium Content Area */}
         {data ? (
           <div className="prose prose-orange max-w-none">

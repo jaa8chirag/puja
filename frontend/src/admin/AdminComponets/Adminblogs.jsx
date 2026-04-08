@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { View, EyeOff, Code2 } from "lucide-react";
+import RichTextEditor from "../../Components/RichTextEditor";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const CATEGORIES = ["Jyotish", "Vastu", "Puja Vidhi", "Rashifal", "Upay"];
@@ -21,8 +22,8 @@ const authHeaders = () => ({
 const buildImageUrl = (url) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
-  if (url.startsWith("/uploads/")) return `http://localhost:5000${url}`;
-  return `http://localhost:5000/api/uploads/${url}`;
+  if (url.startsWith("/uploads/")) return `${API_BASE_URL.replace("/api", "")}${url}`;
+  return `${API_BASE_URL}/uploads/${url}`;
 };
 
 // ─── Stat Tile (same as GodTile) ─────────────────────────────
@@ -536,16 +537,12 @@ const Adminblogs = () => {
                     (## Heading · - Bullet · 1. Number)
                   </span>
                 </label>
-                <textarea
+                <RichTextEditor
                   value={form.content}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, content: e.target.value }))
+                  onChange={(val) =>
+                    setForm((f) => ({ ...f, content: val }))
                   }
-                  rows={10}
-                  placeholder={
-                    "## First Heading\n\nWrite your content here...\n\n- Point 1\n- Point 2"
-                  }
-                  className="w-full bg-[#161b27] border border-white/[0.08] rounded-xl px-4 py-2.5 text-gray-100 text-sm focus:outline-none focus:border-orange-500/50 resize-y font-mono"
+                  placeholder="Write your blog content here..."
                 />
               </div>
 

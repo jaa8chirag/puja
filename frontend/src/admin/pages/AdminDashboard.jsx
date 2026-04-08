@@ -11,9 +11,11 @@ import Services from "../AdminComponets/AdminServices";
 import Pandit from "../AdminComponets/Pandit";
 import FinancialDashboard from "../AdminComponets/financialDashboard";
 import Adminblogs from "../AdminComponets/Adminblogs";
+import AdminReviews from "../AdminComponets/AdminReviews";
 import AnalyticsDashboard from "../AdminComponets/Analyticsdashboard";
 import AdminContributions from "../AdminComponets/AdminContributions";
 import AdminPages from "../AdminComponets/AdminPages";
+import AdminCoupons from "../AdminComponets/AdminCoupons";
 import VerifyPanditModal from "../AdminComponets/VerifyPanditModal";
 import Gallery from "../AdminComponets/AdminEventsAartis";
 import NameCorrectionList from "../AdminComponets/NameCorrectionList";
@@ -254,6 +256,8 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Finance", icon: "financial" },
     { label: "Analytics", icon: "analytics" },
     { label: "Blogs", icon: "bookings" },
+    { label: "Reviews", icon: "gallery" },
+    { label: "Coupons", icon: "gallery" },
     { label: "Pages", icon: "services" },
     { label: "Gallery", icon: "gallery" },
     { label: "Name Correction", icon: "nameCorrection" },
@@ -555,6 +559,8 @@ const AdminDashboard = () => {
             {active === "Finance" && <FinancialDashboard />}
             {active === "Analytics" && <AnalyticsDashboard />}
             {active === "Blogs" && <Adminblogs />}
+            {active === "Reviews" && <AdminReviews />}
+            {active === "Coupons" && <AdminCoupons />}
             {active === "Pages" && <AdminPages />}
             {active === "Gallery" && <Gallery />}
             {active === "Name Correction" && <NameCorrectionList />}

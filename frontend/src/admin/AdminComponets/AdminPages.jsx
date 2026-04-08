@@ -7,181 +7,125 @@ import {
   X,
   ChevronDown,
   ChevronUp,
-  Plus,
-  Trash2,
-  GripVertical,
 } from "lucide-react";
 import { API } from "../../services/adminApi";
+import RichTextEditor from "../../Components/RichTextEditor";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const isTextarea = (key) =>
-  key.toLowerCase().includes("text") ||
-  key.toLowerCase().includes("content") ||
-  key.toLowerCase().includes("subtitle") ||
-  key.toLowerCase().includes("intro") ||
-  key.toLowerCase().includes("description");
+// Simple utility to strip HTML for preview
+const stripHtml = (html) => {
+  if (!html) return "";
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+};
 
-const formatKey = (key) =>
-  key
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-
-// Sections object → ordered array of { key, title, content }
-const sectionsToArray = (sections) => {
-  if (!sections) return [];
+const extractRobustContent = (sections) => {
+  if (!sections) return "";
+  
+  // If it's already an HTML string (new format starts with < or doesn't look like JSON)
+  if (typeof sections === "string" && !sections.trim().startsWith("{") && !sections.trim().startsWith("[")) {
+    return sections;
+  }
 
   let parsed;
   try {
     parsed = typeof sections === "string" ? JSON.parse(sections) : sections;
   } catch {
-    return [];
+    return String(sections);
   }
 
-  // Array format — normalize each item to ensure title & content exist
+  // 1. New Format { content: "..." }
+  if (parsed.content && typeof parsed.content === "string") {
+    return parsed.content;
+  }
+
+  // 2. Intermediate Array Format [{ content: "..." }, ...]
   if (Array.isArray(parsed)) {
-    return parsed.map((item, i) => ({
-      key: item.key || `section_${i}`,
-      title: item.title ?? item.label ?? formatKey(item.key || `section_${i}`),
-      content: item.content ?? item.text ?? item.value ?? "",
-      _paired: item._paired ?? true,
-    }));
+    return parsed.map(s => s.content || s.text || "").join("");
   }
 
-  // Flat object format — pair _title + _text keys
-  const keys = Object.keys(parsed);
-  const result = [];
-  const used = new Set();
-
-  keys.forEach((key) => {
-    if (used.has(key)) return;
-
-    if (key.endsWith("_title")) {
-      const base = key.replace(/_title$/, "");
-      const textKey = `${base}_text`;
-      if (keys.includes(textKey)) {
-        result.push({
-          key: base,
-          title: parsed[key] || "",
-          content: parsed[textKey] || "",
-          _paired: true,
-        });
-        used.add(key);
-        used.add(textKey);
-        return;
+  // 3. Legacy Key-Value Format { hero_text, mission_title, etc. }
+  if (typeof parsed === "object") {
+    let html = "";
+    // Special handling for some common keys to maintain order if possible
+    const priorityKeys = ["hero_title", "hero_subtitle", "hero_text", "mission_title", "mission_text", "vision_title", "vision_text"];
+    
+    priorityKeys.forEach(k => {
+      if (parsed[k]) {
+        if (k.includes("title")) html += `<h2>${parsed[k]}</h2>`;
+        else html += `<p>${parsed[k]}</p>`;
       }
-    }
+    });
 
-    if (!used.has(key)) {
-      result.push({
-        key,
-        title: formatKey(key),
-        content: String(parsed[key] ?? ""),
-        _paired: false,
-      });
-      used.add(key);
-    }
-  });
+    // Add remaining keys
+    Object.keys(parsed).forEach(k => {
+      if (!priorityKeys.includes(k) && parsed[k] && typeof parsed[k] === "string" && parsed[k].trim() !== "" && !k.includes("image_url")) {
+        if (k.endsWith("_title")) html += `<h3>${parsed[k]}</h3>`;
+        else html += `<p>${parsed[k]}</p>`;
+      }
+    });
+    return html;
+  }
 
-  return result;
+  return String(sections);
 };
 
-// Array back to flat object for API
-const arrayToSections = (arr) => {
-  const obj = {};
-  arr.forEach((item) => {
-    // If this item was originally a paired title+text
-    if (item._paired) {
-      obj[`${item.key}_title`] = item.title;
-      obj[`${item.key}_text`] = item.content;
-    } else {
-      obj[item.key] = item.content;
-    }
-  });
-  return obj;
+const extractContentSnippet = (sections) => {
+  const content = extractRobustContent(sections);
+  return stripHtml(content);
 };
 
 // ─── Page Card ────────────────────────────────────────────────────────────────
 const PageCard = ({ page, onEdit }) => {
   const [expanded, setExpanded] = useState(false);
-  const sections = sectionsToArray(page.sections);
-  const previewSections = sections.slice(0, 3);
+  const snippet = extractContentSnippet(page.sections);
 
   return (
-    <div className="bg-[#131e32] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl mb-4">
+    <div className="bg-[#131e32] rounded-3xl overflow-hidden border border-slate-800 shadow-2xl mb-6 flex flex-col transition-all hover:border-slate-700">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/60">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center">
-            <FileText size={18} className="text-orange-400" />
+      <div className="flex items-center justify-between px-8 py-6 border-b border-slate-800/40 bg-slate-900/20">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center">
+            <FileText size={20} className="text-orange-400" />
           </div>
           <div>
-            <h2 className="text-white font-black text-sm tracking-tight">{page.title}</h2>
-            <p className="text-slate-500 text-[11px] font-medium mt-0.5">/{page.slug}</p>
+            <h2 className="text-white font-black text-base tracking-tight">{page.title}</h2>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1 opacity-60">
+              slug: {page.slug}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="p-2 rounded-xl bg-slate-800/60 text-slate-400 hover:bg-slate-700 hover:text-white transition-all"
-          >
-            {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-          </button>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => onEdit(page)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-xs font-bold"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white transition-all text-xs font-black shadow-lg shadow-orange-500/5 group"
           >
-            <Pencil size={13} /> Edit
+            <Pencil size={14} className="group-hover:scale-110 transition-transform" /> 
+            Modify Page
           </button>
         </div>
       </div>
 
-      {/* Preview */}
-      <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {previewSections.map((sec, i) => (
-          <div key={i} className="bg-[#0f172a] rounded-xl px-4 py-3 border border-slate-800/50">
-            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
-              {sec.title || sec.key || `Section ${i + 1}`}
-            </p>
-            {sec.content ? (
-              <p className="text-slate-300 text-xs font-medium truncate">{sec.content}</p>
-            ) : (
-              <p className="text-slate-600 text-xs italic">Empty</p>
-            )}
-          </div>
-        ))}
+      {/* Preview Snippet */}
+      <div className="px-8 py-6">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-1 h-3 bg-orange-500/50 rounded-full" />
+          <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Preview</span>
+        </div>
+        <p className="text-slate-400 text-sm leading-relaxed line-clamp-2 italic font-medium">
+          "{snippet || "No content yet..."}"
+        </p>
       </div>
 
-      {/* Expanded */}
-      {expanded && sections.length > 3 && (
-        <div className="px-6 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-800/40 pt-4">
-          {sections.slice(3).map((sec, i) => (
-            <div key={i} className="bg-[#0f172a] rounded-xl px-4 py-3 border border-slate-800/50">
-              <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
-                {sec.title || sec.key || `Section ${i + 4}`}
-              </p>
-              {sec.content ? (
-                <p className="text-slate-300 text-xs font-medium line-clamp-2">{sec.content}</p>
-              ) : (
-                <p className="text-slate-600 text-xs italic">Empty</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Footer */}
+      {/* Metadata Footer */}
       {page.updated_at && (
-        <div className="px-6 py-3 border-t border-slate-800/40 flex items-center justify-between">
-          <p className="text-slate-600 text-[11px]">
-            Last updated:{" "}
-            <span className="text-slate-500">
-              {new Date(page.updated_at).toLocaleString("en-IN")}
-            </span>
-          </p>
+        <div className="px-8 py-4 border-t border-slate-800/20 flex items-center justify-between text-[10px] font-bold text-slate-600">
+          <span>
+            Refined on {new Date(page.updated_at).toLocaleDateString("en-IN")}
+          </span>
           {page.updated_by && (
-            <p className="text-slate-600 text-[11px]">
-              by <span className="text-slate-500">{page.updated_by}</span>
-            </p>
+            <span className="bg-slate-800/50 px-2 py-1 rounded-md">
+              by {page.updated_by}
+            </span>
           )}
         </div>
       )}
@@ -189,105 +133,21 @@ const PageCard = ({ page, onEdit }) => {
   );
 };
 
-// ─── Section Row in Modal ─────────────────────────────────────────────────────
-const SectionRow = ({ section, index, onChange, onDelete, isLast }) => {
-  return (
-    <div className="bg-[#0a1120] border border-slate-800 rounded-2xl overflow-hidden">
-      {/* Section Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800/30 border-b border-slate-800/60">
-        <div className="flex items-center gap-2">
-          <GripVertical size={14} className="text-slate-600" />
-          <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-            Section {index + 1}
-          </span>
-        </div>
-        <button
-          onClick={() => onDelete(index)}
-          className="p-1.5 rounded-lg text-slate-600 hover:bg-red-500/10 hover:text-red-400 transition-all"
-          title="Delete section"
-        >
-          <Trash2 size={13} />
-        </button>
-      </div>
-
-      {/* Fields */}
-      <div className="px-4 py-4 space-y-3">
-        {/* Title */}
-        <div>
-          <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
-            Title / Label
-          </label>
-          <input
-            type="text"
-            value={section.title}
-            placeholder="Section ka title likho..."
-            onChange={(e) => onChange(index, "title", e.target.value)}
-            className="w-full bg-[#131e32] border border-slate-700/60 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-500 transition-all placeholder:text-slate-700"
-          />
-        </div>
-
-        {/* Content */}
-        <div>
-          <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
-            Content
-          </label>
-          <textarea
-            rows={3}
-            value={section.content}
-            placeholder="Content likho..."
-            onChange={(e) => onChange(index, "content", e.target.value)}
-            className="w-full bg-[#131e32] border border-slate-700/60 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-500 transition-all resize-none placeholder:text-slate-700"
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ─── Edit Modal ───────────────────────────────────────────────────────────────
 const EditModal = ({ page, onClose, onSaved }) => {
   const [pageTitle, setPageTitle] = useState(page.title);
-  const [sections, setSections] = useState(() => {
-    const arr = sectionsToArray(page.sections);
-    // Mark paired items so we can reconstruct correctly
-    return arr.map((s) => ({ ...s, _paired: s._paired ?? !!s.key }));
-  });
+  const [content, setContent] = useState(() => extractRobustContent(page.sections));
   const [submitting, setSubmitting] = useState(false);
-
-  const handleChange = (index, field, value) => {
-    setSections((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
-    );
-  };
-
-  const handleAdd = () => {
-    setSections((prev) => [
-      ...prev,
-      {
-        key: `section_${Date.now()}`,
-        title: "",
-        content: "",
-        _paired: true,
-      },
-    ]);
-  };
-
-  const handleDelete = (index) => {
-    setSections((prev) => prev.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      // Save as clean array — simple, no key mangling, frontend reads directly
-      const sectionsArr = sections.map((sec) => ({
-        title: sec.title || "",
-        content: sec.content || "",
-      }));
+      // Send content as a PLAIN STRING (no JSON object)
+      const contentString = content;
 
       await API.put(`/pages/${page.slug}`, {
         title: pageTitle,
-        sections: sectionsArr,
+        sections: contentString,
       });
       onSaved();
       onClose();
@@ -301,7 +161,7 @@ const EditModal = ({ page, onClose, onSaved }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#0f172a] border border-slate-800 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-[#0f172a] border border-slate-800 rounded-3xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800 shrink-0">
           <div>
@@ -319,75 +179,54 @@ const EditModal = ({ page, onClose, onSaved }) => {
         </div>
 
         {/* Scrollable Body */}
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+        <div className="overflow-y-auto flex-1 px-8 py-6 space-y-8">
           {/* Page Title */}
-          <div>
-            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
-              Page Title
+          <div className="group">
+            <label className="text-[11px] uppercase font-black text-slate-500 tracking-[0.2em] block mb-2 transition-colors group-focus-within:text-orange-500">
+              Page Heading
             </label>
             <input
               type="text"
               value={pageTitle}
+              placeholder="Enter page title..."
               onChange={(e) => setPageTitle(e.target.value)}
-              className="w-full bg-[#131e32] border border-slate-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-500 transition-all"
+              className="w-full bg-[#131e32]/50 border-b-2 border-slate-800 text-white rounded-none px-0 py-3 text-2xl font-black outline-none focus:border-orange-500 transition-all placeholder:text-slate-700"
             />
           </div>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-slate-800" />
-            <p className="text-slate-600 text-[10px] uppercase tracking-widest font-bold">
-              Sections ({sections.length})
-            </p>
-            <div className="flex-1 h-px bg-slate-800" />
-          </div>
-
-          {/* Section Rows */}
-          {sections.length === 0 && (
-            <div className="text-center py-8 text-slate-600 text-sm italic">
-              Koi section nahi hai. Neeche "+ Add Section" click karo.
+          {/* Single Content Editor */}
+          <div>
+            <label className="text-[11px] uppercase font-black text-slate-500 tracking-[0.2em] block mb-4">
+              Page Content (Rich Text)
+            </label>
+            <div className="bg-[#131e32] rounded-3xl border border-slate-800 overflow-hidden text-white w-full transition-all focus-within:border-orange-500/50 shadow-inner">
+              <RichTextEditor
+                value={content}
+                onChange={setContent}
+                placeholder="Write your page content here..."
+              />
             </div>
-          )}
-
-          {sections.map((sec, i) => (
-            <SectionRow
-              key={sec.key + i}
-              section={sec}
-              index={i}
-              onChange={handleChange}
-              onDelete={handleDelete}
-              isLast={i === sections.length - 1}
-            />
-          ))}
-
-          {/* Add Section Button */}
-          <button
-            onClick={handleAdd}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-slate-700 text-slate-500 hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/5 transition-all text-sm font-bold"
-          >
-            <Plus size={16} />
-            Add Section
-          </button>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-6 py-5 border-t border-slate-800 shrink-0">
+        <div className="flex gap-4 px-8 py-6 border-t border-slate-800 shrink-0 bg-slate-900/50">
           <button
             onClick={onClose}
-            className="flex-1 py-3 text-sm font-bold text-slate-400 hover:text-white transition-colors"
+            className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-white transition-colors"
           >
-            Cancel
+            Discard
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-60"
+            className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-xl shadow-orange-500/10 active:scale-95 transition-all disabled:opacity-60"
           >
             {submitting ? (
-              <Loader2 className="animate-spin" size={18} />
+              <Loader2 className="animate-spin" size={20} />
             ) : (
               <>
-                <Save size={15} /> Save Changes
+                <Save size={18} /> Publish Changes
               </>
             )}
           </button>

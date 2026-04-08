@@ -17,6 +17,7 @@ import {
   Navigation,
   Edit,
 } from "lucide-react";
+import RichTextEditor from "../../Components/RichTextEditor";
 
 const ModalField = ({
   icon: Icon,
@@ -490,15 +491,20 @@ const AdminEventsAartis = () => {
                 </>
               )}
 
-              <ModalField
-                icon={FileText}
-                placeholder="Full Description"
-                isTextArea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-              />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">
+                  Full Description
+                </label>
+                <div className="bg-[#0f172a] rounded-2xl border border-slate-800 overflow-hidden text-white mb-2">
+                  <RichTextEditor
+                    value={formData.description}
+                    onChange={(val) =>
+                      setFormData({ ...formData, description: val })
+                    }
+                    placeholder="Enter detailed description here..."
+                  />
+                </div>
+              </div>
 
               <div className="p-3 border border-slate-800 rounded-2xl bg-[#0f172a]">
                 <input

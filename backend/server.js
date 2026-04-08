@@ -28,6 +28,8 @@ import { getPageBySlug } from "./controllers/adminController.js";
 import paymentRouter from "./routes/payment.routes.js";
 import dataRouter from "./routes/aartiAndEventRoutes.js";
 import faqRouter from "./routes/faqRoutes.js";
+import couponRouter from "./routes/couponRouter.js";
+import reviewsRouter from "./routes/reviewsRouter.js";
 
 dotenv.config();
 
@@ -553,6 +555,8 @@ app.use("/api/content", dataRouter);
 
 // faqs routes
 app.use("/api/admin/faq", faqRouter);
+app.use("/api/coupons", couponRouter);
+app.use("/api/reviews", reviewsRouter);
 
 const startServer = async () => {
   try {

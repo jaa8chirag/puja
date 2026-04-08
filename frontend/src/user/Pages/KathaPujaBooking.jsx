@@ -16,6 +16,7 @@ import {
   Gem,
 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
@@ -24,43 +25,7 @@ const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
 // HELPER: Icon Mapper - Benefit names ke basis pe icons assign
 // ═══════════════════════════════════════════════════════════
 const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
-  const name = benefitName?.toLowerCase() || "";
-  const iconMap = {
-    peace: <Heart />,
-    spiritual: <Heart />,
-    calm: <Heart />,
-    protection: <Shield />,
-    divine: <Shield />,
-    safety: <Shield />,
-    prosperity: <Zap />,
-    wealth: <Zap />,
-    success: <Zap />,
-    family: <Users />,
-    bond: <Users />,
-    unity: <Users />,
-    harmony: <Users />,
-    energy: <Sparkles />,
-    positive: <Sparkles />,
-    purify: <Sparkles />,
-    vastu: <MapPin />,
-    balance: <MapPin />,
-  };
-
-  // Check if any keyword matches
-  for (const [keyword, icon] of Object.entries(iconMap)) {
-    if (name.includes(keyword)) return icon;
-  }
-
-  // Fallback: Cycle through default icons
-  const defaultIcons = [
-    <Heart />,
-    <Shield />,
-    <Zap />,
-    <Users />,
-    <Sparkles />,
-    <MapPin />,
-  ];
-  return defaultIcons[fallbackIndex % defaultIcons.length];
+  return <CheckCircle />;
 };
 
 const KathaPujaBooking = () => {
@@ -320,11 +285,10 @@ const KathaPujaBooking = () => {
                     <Info size={20} /> About The Ritual
                   </div>
                   <div>
-                    <p
-                      className={`text-[15px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""}`}
-                    >
-                      {service?.description}
-                    </p>
+                    <HTMLContent
+                      content={service?.description}
+                      className={`text-[15px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none overflow-hidden" : ""}`}
+                    />
                     <button
                       onClick={() => setAboutExpanded(!aboutExpanded)}
                       className="mt-2 text-orange-600 font-bold text-[13px] uppercase tracking-wider flex items-center gap-1 md:hidden"

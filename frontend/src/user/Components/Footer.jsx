@@ -50,8 +50,9 @@ const Footer = () => {
       { label: "About Us", to: "/aboutUs" },
       { label: "Contact Us", to: "/help" },
       { label: "FAQs", to: "/help" },
-      { label: "Privacy Policy", to: "/pricaypolicy" },
+      { label: "Privacy Policy", to: "/privacypolicy" },
       { label: "Cancellation policy", to: "/cancellationpolicy" },
+      { label: "Terms and Conditions", to: "/termsandconditions" },
     ],
     community: [
       { label: "Temple Gallery", to: "/temples" },
@@ -85,15 +86,33 @@ const Footer = () => {
             </p>
 
             <div className="flex gap-2 lg:mt-4">
-              {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="p-1.5 bg-white/60 rounded-full text-orange-600"
-                >
-                  <Icon size={16} />
-                </a>
-              ))}
+              <a
+                href="https://www.facebook.com/people/Sri-Vedic-Puja/61586142146173/?mibextid=wwXIfr&rdid=6Kgef2miIOxPDI49&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1CToPuZ42o%2F%3Fmibextid%3DwwXIfr%26ref%3D1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 bg-white/60 rounded-full text-orange-600 hover:bg-orange-500 hover:text-white transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook size={16} />
+              </a>
+              <a
+                href="https://www.instagram.com/srivedicpuja"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 bg-white/60 rounded-full text-orange-600 hover:bg-orange-500 hover:text-white transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram size={16} />
+              </a>
+              <a
+                href="https://youtube.com/@srivedicpuja"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 bg-white/60 rounded-full text-orange-600 hover:bg-orange-500 hover:text-white transition-colors"
+                aria-label="YouTube"
+              >
+                <Youtube size={16} />
+              </a>
             </div>
           </div>
 
@@ -159,21 +178,16 @@ const Footer = () => {
                 <MapPin size={14} className="text-orange-500 shrink-0" />
                 <span className="truncate">Haridwar, Uttarakhand, India</span>
               </div>
-              <div className="flex justify-between md:flex-col md:gap-2">
+              <div className="flex flex-col gap-2">
                 {/* Phone - from backend */}
                 <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <Phone size={14} className="text-orange-500" />
+                  <Phone size={14} className="text-orange-500 shrink-0" />
                   <span>{contactInfo.phone ?? "Loading..."}</span>
                 </div>
                 {/* Email - from backend */}
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <Mail size={14} className="text-orange-500" />
-                  <span className="hidden sm:inline">
-                    {contactInfo.email ?? "Loading..."}
-                  </span>
-                  <span className="sm:hidden text-[10px]">
-                    {contactInfo.email ? "Email Support" : "Loading..."}
-                  </span>
+                <div className="flex items-center gap-2 text-xs text-gray-600 truncate">
+                  <Mail size={14} className="text-orange-500 shrink-0" />
+                  <span className="truncate">{contactInfo.email ?? "Loading..."}</span>
                 </div>
               </div>
             </div>

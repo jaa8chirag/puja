@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { CalendarDays, MapPin, Loader2 } from "lucide-react";
+import { stripHtml } from "../../utils/stripHtml";
 
 const EventsPage = () => {
   const [eventsData, setEventsData] = useState([]);
@@ -81,7 +82,7 @@ const EventsPage = () => {
                 </div>
 
                 <p className="text-gray-600 text-sm leading-6 line-clamp-6">
-                  {event.description}
+                  {stripHtml(event.description)}
                 </p>
               </div>
             </div>

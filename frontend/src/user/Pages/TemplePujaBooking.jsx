@@ -32,9 +32,16 @@ import {
   X,
   UserPlus,
   Check,
+  BookOpen,
+  Activity,
+  Droplets,
+  Leaf,
+  Home,
+  Bird,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import HowItProcess from "../Components/HowItProcess";
+import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -42,41 +49,7 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 // HELPER: Icon Mapper - Benefit names ke basis pe icons assign
 // ═══════════════════════════════════════════════════════════
 const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
-  const name = benefitName?.toLowerCase() || "";
-  const iconMap = {
-    peace: <Heart />,
-    spiritual: <Heart />,
-    calm: <Heart />,
-    protection: <Shield />,
-    divine: <Shield />,
-    safety: <Shield />,
-    prosperity: <Zap />,
-    wealth: <Zap />,
-    success: <Zap />,
-    family: <Users />,
-    bond: <Users />,
-    unity: <Users />,
-    harmony: <Users />,
-    energy: <Sparkles />,
-    positive: <Sparkles />,
-    purify: <Sparkles />,
-    karma: <Star />,
-    balance: <Star />,
-  };
-
-  for (const [keyword, icon] of Object.entries(iconMap)) {
-    if (name.includes(keyword)) return icon;
-  }
-
-  const defaultIcons = [
-    <Heart />,
-    <Shield />,
-    <Zap />,
-    <Users />,
-    <Sparkles />,
-    <Star />,
-  ];
-  return defaultIcons[fallbackIndex % defaultIcons.length];
+  return <CheckCircle />;
 };
 // ─── Member Selection Modal ───────────────────────────────────────────────────
 
@@ -555,6 +528,12 @@ const TemplePujaBooking = () => {
     "Anna Dan": false,
     "Deep Dan": false,
     "Brahmin Dan": false,
+    "Vidya Dan": false,
+    "Aushadhi Dan": false,
+    "Jal Dan": false,
+    "Vriksh Dan": false,
+    "Aashray Dan": false,
+    "Jeev Daya": false,
     "Gau Seva": false,
     "Temple Donation": false,
   });
@@ -566,6 +545,12 @@ const TemplePujaBooking = () => {
   const [selectedMemberIds, setSelectedMemberIds] = useState([]);
   // pendingTicket = ticket user clicked but not confirmed yet
   const [pendingTicket, setPendingTicket] = useState(null);
+
+  // 🎟️ Coupon State
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
 
   const sections = {
     about: useRef(null),
@@ -668,6 +653,40 @@ const TemplePujaBooking = () => {
     setSelectedMemberIds([]);
   };
 
+  // 🎟️ Coupon Logic
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setIsApplying(true);
+    setCouponError("");
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`${API_BASE_URL}/coupons/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: couponInput }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAppliedCoupon(data.data);
+        setCouponInput("");
+      } else {
+        setCouponError(data.message);
+      }
+    } catch (error) {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError("");
+  };
+
   // ── Navigate to add member page — no longer needed, handled inline in modal ──
 
   const handleTemplePayment = async () => {
@@ -734,6 +753,8 @@ const TemplePujaBooking = () => {
       member_ids: selectedMemberIds, // ← selected members pass karo
       donations: selectedDonationObjects,
       total_price: calculateTotal(),
+      coupon_code: appliedCoupon ? appliedCoupon.code : null,
+      discount_amount: discountAmount,
     };
 
     try {
@@ -842,6 +863,48 @@ const TemplePujaBooking = () => {
       sub: getDescription("Brahmin Dan") || "Feed Brahmins after ceremony",
     },
     {
+      id: "Vidya Dan",
+      title: "Vidya Dan",
+      price: getPrice("Vidya Dan"),
+      icon: <BookOpen size={16} />,
+      sub: getDescription("Vidya Dan") || "Support education for children",
+    },
+    {
+      id: "Aushadhi Dan",
+      title: "Aushadhi Dan",
+      price: getPrice("Aushadhi Dan"),
+      icon: <Activity size={16} />,
+      sub: getDescription("Aushadhi Dan") || "Donate medicines to the sick",
+    },
+    {
+      id: "Jal Dan",
+      title: "Jal Dan",
+      price: getPrice("Jal Dan"),
+      icon: <Droplets size={16} />,
+      sub: getDescription("Jal Dan") || "Provide clean water to those in need",
+    },
+    {
+      id: "Vriksh Dan",
+      title: "Vriksh Dan",
+      price: getPrice("Vriksh Dan"),
+      icon: <Leaf size={16} />,
+      sub: getDescription("Vriksh Dan") || "Plant trees for a greener future",
+    },
+    {
+      id: "Aashray Dan",
+      title: "Aashray Dan",
+      price: getPrice("Aashray Dan"),
+      icon: <Home size={16} />,
+      sub: getDescription("Aashray Dan") || "Support shelter for the homeless",
+    },
+    {
+      id: "Jeev Daya",
+      title: "Jeev Daya",
+      price: getPrice("Jeev Daya"),
+      icon: <Bird size={16} />,
+      sub: getDescription("Jeev Daya") || "Feed and care for animals",
+    },
+    {
       id: "Gau Seva",
       title: "Gau Seva",
       price: getPrice("Gau Seva"),
@@ -877,18 +940,22 @@ const TemplePujaBooking = () => {
       (acc, item) => (donations[item.id] ? acc + item.price : acc),
       0,
     );
-    return (
-      base +
-      extra +
-      (donations["Temple Donation"]
-        ? Number(
-            Array.from(contributionOptions).filter(
-              (c) => c.name == "Temple Donation",
-            )[0].price,
-          )
-        : 0)
-    );
+    const templeDonation = donations["Temple Donation"]
+      ? Number(
+          Array.from(contributionOptions).filter(
+            (c) => c.name == "Temple Donation",
+          )[0]?.price || 0,
+        )
+      : 0;
+      
+    return base + extra + templeDonation;
   };
+
+  const grandTotalBeforeDiscount = calculateTotal();
+  const discountAmount = appliedCoupon 
+    ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
+    : 0;
+  const finalTotal = grandTotalBeforeDiscount - discountAmount;
 
   const selectedContributionsTotal =
     contributionList.reduce(
@@ -918,7 +985,6 @@ const TemplePujaBooking = () => {
 
   return (
     <>
-      {/* ── Member Selection Modal ── */}
       <MemberSelectModal
         isOpen={modalOpen}
         onClose={handleCloseModal}
@@ -1022,11 +1088,10 @@ const TemplePujaBooking = () => {
                       <Info size={20} /> About The Ritual
                     </div>
                     <div>
-                      <p
-                        className={`text-[16px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""}`}
-                      >
-                        {service?.description}
-                      </p>
+                      <HTMLContent
+                        content={service?.description}
+                        className={`text-[16px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none overflow-hidden" : ""}`}
+                      />
                       <button
                         onClick={() => setAboutExpanded(!aboutExpanded)}
                         className="mt-2 text-orange-600 font-bold text-[13px] uppercase tracking-wider flex items-center gap-1 md:hidden"
@@ -1178,6 +1243,15 @@ const TemplePujaBooking = () => {
                   getPrice={getPrice}
                   selectedMemberNames={selectedMemberNames}
                   contributionOptions={contributionOptions}
+                  couponInput={couponInput}
+                  setCouponInput={setCouponInput}
+                  appliedCoupon={appliedCoupon}
+                  handleApplyCoupon={handleApplyCoupon}
+                  removeCoupon={removeCoupon}
+                  isApplying={isApplying}
+                  couponError={couponError}
+                  discountAmount={discountAmount}
+                  finalTotal={finalTotal}
                 />
               </div>
 
@@ -1344,6 +1418,57 @@ const TemplePujaBooking = () => {
                         "Helps in temple upkeep, rituals, and serving the community."}
                     </p>
                   </div>
+
+                  {/* 🎟️ Premium Coupon Section */}
+                  <div className="py-2 border-y border-dashed border-orange-100 my-2">
+                    {!appliedCoupon ? (
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block ml-1 mb-1">Have a Coupon?</label>
+                        <div className="flex gap-2 w-full">
+                          <input 
+                            type="text" 
+                            placeholder="PROMO CODE"
+                            value={couponInput}
+                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                            className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-xs md:text-sm font-bold uppercase focus:outline-none focus:border-orange-500 transition-all min-w-0"
+                          />
+                          <button 
+                            onClick={handleApplyCoupon}
+                            disabled={isApplying || !couponInput}
+                            className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-black uppercase disabled:opacity-50 hover:bg-orange-700 transition-all shadow-md active:scale-95"
+                          >
+                            {isApplying ? "..." : "Apply"}
+                          </button>
+                        </div>
+                        {couponError && <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-wider">{couponError}</p>}
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between group animate-in fade-in zoom-in duration-300">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-green-500 p-2 rounded-lg text-white shadow-sm ring-4 ring-green-100">
+                            <CheckCircle size={18} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-green-700 uppercase tracking-[0.1em]">Coupon Applied</p>
+                            <p className="text-[15px] font-black text-green-800 leading-none mt-1">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={removeCoupon} 
+                          className="text-slate-400 hover:text-red-500 hover:bg-white p-2 rounded-full transition-all hover:shadow-sm"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between items-center text-[12px] font-bold text-green-600 px-1">
+                      <span className="uppercase tracking-widest">Coupon Discount</span>
+                      <span className="font-black">-₹{discountAmount}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Trust + Pay */}
@@ -1366,7 +1491,7 @@ const TemplePujaBooking = () => {
                       ) : (
                         <>
                           <Ticket size={20} fill="white" />
-                          Pay ₹{calculateTotal().toLocaleString()}
+                          Pay ₹{finalTotal.toLocaleString()}
                         </>
                       )}
                     </span>
@@ -1400,7 +1525,7 @@ const TemplePujaBooking = () => {
                 <ChevronRight size={11} className="text-orange-400" />
               </p>
               <p className="text-xl font-black text-orange-600 leading-tight">
-                ₹{calculateTotal().toLocaleString("en-IN")}
+                ₹{finalTotal.toLocaleString("en-IN")}
               </p>
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-gray-500 font-medium">
@@ -1418,7 +1543,7 @@ const TemplePujaBooking = () => {
                 <Loader2 className="animate-spin" size={18} />
               ) : (
                 <>
-                  <span>Proceed to Pay</span>
+                  <span>Pay ₹{finalTotal.toLocaleString("en-IN")}</span>
                   <ChevronRight size={16} strokeWidth={3} />
                 </>
               )}
@@ -1447,6 +1572,15 @@ const MobileSummarySection = ({
   getPrice,
   selectedMemberNames,
   contributionOptions,
+  couponInput,
+  setCouponInput,
+  appliedCoupon,
+  handleApplyCoupon,
+  removeCoupon,
+  isApplying,
+  couponError,
+  discountAmount,
+  finalTotal
 }) => (
   <div className="space-y-5">
     <div>
@@ -1571,6 +1705,53 @@ const MobileSummarySection = ({
         </p>
       </div>
 
+      {/* 🎟️ Mobile Coupon Section */}
+      <div className="py-2 border-y border-dashed border-orange-100">
+        {!appliedCoupon ? (
+          <div className="space-y-2">
+            <div className="flex gap-2 w-full">
+              <input 
+                type="text" 
+                placeholder="PROMO CODE"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-[12px] font-bold uppercase focus:outline-none min-w-0"
+              />
+              <button 
+                onClick={handleApplyCoupon}
+                disabled={isApplying || !couponInput}
+                className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-[12px] font-black uppercase disabled:opacity-50"
+              >
+                {isApplying ? "..." : "Apply"}
+              </button>
+            </div>
+            {couponError && <p className="text-[10px] text-red-500 font-bold ml-1">{couponError}</p>}
+          </div>
+        ) : (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle size={16} className="text-green-600" />
+              <div>
+                <p className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Coupon Applied</p>
+                <p className="text-sm font-black text-green-800">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
+              </div>
+            </div>
+            <button onClick={removeCoupon} className="text-gray-400 hover:text-red-500">
+              <X size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+
+
+
+      {discountAmount > 0 && (
+        <div className="flex justify-between items-center text-[13px] font-bold text-green-600 px-1 pt-1">
+          <span className="uppercase tracking-widest">Discount</span>
+          <span className="font-extrabold">-₹{discountAmount}</span>
+        </div>
+      )}
+
       <div className="border-t border-dashed border-gray-300 w-full" />
 
       <div className="flex justify-between items-center pt-1 px-1">
@@ -1586,7 +1767,7 @@ const MobileSummarySection = ({
           </div>
         </div>
         <span className="text-xl font-black text-orange-600">
-          ₹{calculateTotal().toLocaleString("en-IN")}
+          ₹{finalTotal.toLocaleString("en-IN")}
         </span>
       </div>
     </div>
