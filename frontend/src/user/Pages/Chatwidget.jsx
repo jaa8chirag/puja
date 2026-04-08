@@ -57,7 +57,7 @@ export default function ChatWidget() {
         const socket = io(SOCKET_URL, {
             auth: { token },
             autoConnect: true,
-            transports: ["polling", "websocket"],
+            transports: ["polling"],
         });
         socketRef.current = socket;
 

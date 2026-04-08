@@ -32,7 +32,7 @@ export default function AgentPanel() {
 
     const socket = io(SOCKET_URL, { 
       auth: { token },
-      transports: ["polling", "websocket"]
+      transports: ["polling"]
     });
     socketRef.current = socket;
 
