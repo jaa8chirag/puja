@@ -45,7 +45,21 @@ const MandirDetailsPage = () => {
                 </button>
 
                 <div className="relative h-[400px] rounded-[2.5rem] overflow-hidden shadow-xl mb-10">
-                    <img src={`${API_BASE_URL}/uploads/${mandir.image_url_1}`} alt={mandir.name} className="w-full h-full object-cover" />
+                    {mandir.image_url_1 ? (
+                        <img 
+                            src={`${API_BASE_URL}/uploads/${mandir.image_url_1}`} 
+                            alt={mandir.name} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "https://placehold.co/1200x800?text=Sacred+Temple";
+                            }}
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-orange-100 flex items-center justify-center">
+                            <Landmark className="text-orange-200" size={80} />
+                        </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute bottom-10 left-10 text-white">
                         <h1 className="text-5xl font-black">{mandir.name}</h1>

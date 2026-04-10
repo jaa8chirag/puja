@@ -127,13 +127,22 @@ const FullTemplePage = () => {
                 <Link to={`/temples/${temple.id}`} key={temple.id} className="group">
                   <div className="bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full flex flex-col">
                     <div className="relative aspect-[4/3] m-2 overflow-hidden rounded-[1rem] bg-gray-100">
-                      <img 
-                        src={`${API_BASE_URL}/uploads/${temple.image_url_1}`}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        alt={temple.name}
-                        onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Temple"; }}
-                      />
+                      {temple.image_url_1 ? (
+                        <img 
+                          src={`${API_BASE_URL}/uploads/${temple.image_url_1}`}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          alt={temple.name}
+                          onError={(e) => { 
+                            e.target.onerror = null; 
+                            e.target.src = "https://placehold.co/400x300?text=Temple"; 
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-orange-50 flex items-center justify-center">
+                          <Sparkles className="text-orange-200" size={48} />
+                        </div>
+                      )}
                     </div>
                     <div className="p-6 pt-2 flex flex-col flex-1">
                       <div className="flex items-center gap-1.5 text-gray-400 mb-2">
