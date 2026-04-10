@@ -15,10 +15,7 @@ export default function AIPanditBot() {
 
   const connectSocket = () => {
     socketRef.current = io(`${import.meta.env.VITE_SOCKET_URL}/pandit`, {
-      transports: ["polling", "websocket"],
-      withCredentials: true,
-      reconnectionAttempts: 5,
-      timeout: 10000,
+      transports: ["polling"],
     });
 
     socketRef.current.on("connect", () => {

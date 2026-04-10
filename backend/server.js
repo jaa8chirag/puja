@@ -74,11 +74,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const server = createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: ["https://srivedicpuja.com", "http://localhost:5173"],
-    methods: ["GET", "POST"],
-    credentials: true
-  },
+  cors: { origin: "*", methods: ["GET", "POST"] },
   transports: ['polling', 'websocket'],
   allowEIO3: true,
   pingTimeout: 60000,
