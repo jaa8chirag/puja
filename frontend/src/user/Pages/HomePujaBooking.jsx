@@ -142,11 +142,17 @@ const HomePujaBooking = () => {
             {/* HERO SECTION */}
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
               <div className="relative h-64 md:h-80">
-                <img
-                  src={`${API_BASE_URL}/uploads/${service?.image_url}`}
-                  className="w-full h-full object-cover"
-                  alt="Puja"
-                />
+                {service?.image_url ? (
+                  <img
+                    src={`${API_BASE_URL}/uploads/${service?.image_url}`}
+                    className="w-full h-full object-cover"
+                    alt="Puja"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-orange-50 flex items-center justify-center">
+                    <Sparkles className="text-orange-200" size={60} />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 <div className="absolute bottom-6 left-6">
                   <h1 className="text-3xl md:text-4xl font-serif font-bold text-white leading-tight">

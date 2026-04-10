@@ -191,16 +191,17 @@ const OnlineRitual = () => {
             {/* HERO */}
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
               <div className="relative h-64 md:h-80">
-                <img
-                  src={`${API_BASE_URL}/uploads/${service?.image_url}`}
-                  className="w-full h-full object-cover"
-                  alt="Pind Dan Puja"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.parentElement.style.background =
-                      "linear-gradient(135deg, #f97316 0%, #dc2626 100%)";
-                  }}
-                />
+                {service?.image_url ? (
+                  <img
+                    src={`${API_BASE_URL}/uploads/${service?.image_url}`}
+                    className="w-full h-full object-cover"
+                    alt="Pind Dan Puja"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-orange-50 flex items-center justify-center">
+                    <Sparkles className="text-orange-200" size={60} />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                 <div className="absolute bottom-6 left-6">
                   <div className="flex items-center gap-2 mb-2">
