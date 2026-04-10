@@ -267,8 +267,7 @@ export const getOnlinePindDanServices = async (req, res) => {
     const query = `
       SELECT * 
       FROM services 
-      WHERE puja_type = 'online_pind_dan' 
-      AND status = 'active'
+      WHERE puja_type = 'online_pind_dan'
       ORDER BY priority DESC
     `;
 

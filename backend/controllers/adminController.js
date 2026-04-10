@@ -984,7 +984,7 @@ export const createService = async (req, res) => {
         puja_type,
         description,
         image_url,
-        status !== undefined && status !== null ? status : "",
+        status !== undefined && status !== null && status !== "" ? status : "active",
         priority || 0,
         is_featured || 0,
       ],
