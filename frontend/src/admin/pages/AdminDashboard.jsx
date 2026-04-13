@@ -20,6 +20,7 @@ import VerifyPanditModal from "../AdminComponets/VerifyPanditModal";
 import Gallery from "../AdminComponets/AdminEventsAartis";
 import NameCorrectionList from "../AdminComponets/NameCorrectionList";
 import PersonalInfo from "../AdminComponets/PersonalInfo";
+import AdminNewsletter from "../AdminComponets/AdminNewsletter";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Icon = ({ name }) => {
@@ -262,6 +263,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Gallery", icon: "gallery" },
     { label: "Name Correction", icon: "nameCorrection" },
     { label: "Personal Info", icon: "users" },
+    { label: "Newsletter", icon: "dashboard" },
   ];
   return (
     <>
@@ -565,6 +567,7 @@ const AdminDashboard = () => {
             {active === "Gallery" && <Gallery />}
             {active === "Name Correction" && <NameCorrectionList />}
             {active === "Personal Info" && <PersonalInfo />}
+            {active === "Newsletter" && <AdminNewsletter />}
           </div>
         </div>
       </div>

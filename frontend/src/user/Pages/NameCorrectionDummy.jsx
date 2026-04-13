@@ -140,7 +140,7 @@ export default function NameCorrectionDummy() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Ramesh Kumar Sharma"
-                  className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 placeholder-amber-300 focus:outline-none focus:border-amber-400 transition-colors text-base"
+                  className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 placeholder:text-gray-500 focus:outline-none focus:border-amber-400 transition-colors text-base"
                 />
               </div>
               <div className="md:w-1/2">

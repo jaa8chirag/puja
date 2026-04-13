@@ -2306,6 +2306,35 @@ export const getPageBySlug = async (req, res) => {
   }
 };
 
+// Create New Page
+export const createPage = async (req, res) => {
+  try {
+    const { title, slug, sections } = req.body;
+
+    if (!title || !slug) {
+      return res.status(400).json({ success: false, message: "Title and Slug are required" });
+    }
+
+    const [existing] = await db.query(`SELECT id FROM pages WHERE slug = ?`, [slug]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, message: "Slug already exists" });
+    }
+
+    await db.query(
+      `INSERT INTO pages (title, slug, sections, updated_by) VALUES (?, ?, ?, ?)`,
+      [title, slug, sections || "[]", req.admin?.name || "admin"],
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Page create ho gaya",
+    });
+  } catch (error) {
+    console.error("Create Page Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // Update Page by Slug
 export const updatePage = async (req, res) => {
   try {

@@ -3,9 +3,9 @@ import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-export default function PrivacyPolicy() {
+export default function Disclaimer() {
   const [data, setData] = useState([]);
-  const [pageTitle, setPageTitle] = useState("Privacy Policy");
+  const [pageTitle, setPageTitle] = useState("Disclaimer");
   const [loading, setLoading] = useState(true);
 
   const extractSections = (sections) => {
@@ -65,13 +65,29 @@ export default function PrivacyPolicy() {
   };
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/pages/privacy-policy`)
+    fetch(`${API_BASE_URL}/pages/disclaimer`)
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
-          setPageTitle(d.data.title || "Privacy Policy");
+          setPageTitle(d.data.title || "Disclaimer");
           setData(extractSections(d.data.sections));
         }
+      })
+      .catch(() => {
+        setData([
+          { 
+            title: "Information Accuracy", 
+            content: "The content on Sri Vedic Puja is for general spiritual information only. While we strive for accuracy, we cannot guarantee the complete reliability of all content." 
+          },
+          { 
+            title: "Professional Advice", 
+            content: "Rituals and spiritual guidance should not replace professional medical, financial, or legal advice. Consult experts for specific life challenges." 
+          },
+          { 
+            title: "Service Delivery", 
+            content: "We facilitate connections between devotees and verified Pandits. Final service delivery depends on individual Pandit expertise and ritual availability." 
+          }
+        ]);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -137,5 +153,3 @@ export default function PrivacyPolicy() {
     </div>
   );
 }
-
-

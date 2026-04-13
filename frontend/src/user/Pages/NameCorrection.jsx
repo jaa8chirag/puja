@@ -184,11 +184,10 @@ function SuggestionCard({ s, onCopy }) {
   return (
     <div
       className={`rounded-xl border p-4 transition-all hover:scale-[1.01]
-      ${
-        s.isPowerful
+      ${s.isPowerful
           ? "bg-amber-50 border-amber-300"
           : "bg-white border-amber-200"
-      }`}
+        }`}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -310,11 +309,10 @@ function AIInsights({ ai }) {
         {ai.correctionNeeded !== undefined && (
           <div
             className={`mt-3 rounded-xl p-3 border text-sm
-            ${
-              ai.correctionNeeded
+            ${ai.correctionNeeded
                 ? "bg-red-50 border-red-200 text-red-700"
                 : "bg-emerald-50 border-emerald-200 text-emerald-700"
-            }`}
+              }`}
           >
             {ai.correctionNeeded ? "⚠️ " : "✅ "}
             {ai.correctionReason}
@@ -530,7 +528,7 @@ export default function NameCorrection() {
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && analyze()}
                 placeholder="e.g. Ramesh Kumar Sharma"
-                className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 placeholder-amber-300 focus:outline-none focus:border-amber-400 transition-colors text-base"
+                className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-900 placeholder:text-gray-500 focus:outline-none focus:border-amber-400 transition-colors text-base"
               />
             </div>
             <div className="md:w-1/2">
@@ -601,13 +599,12 @@ export default function NameCorrection() {
                     </span>
                     <span
                       className={`text-xs px-2 py-1 rounded-full font-bold
-                      ${
-                        result.compat.overall >= 80
+                      ${result.compat.overall >= 80
                           ? "bg-emerald-100 text-emerald-700"
                           : result.compat.overall >= 65
                             ? "bg-amber-100 text-amber-700"
                             : "bg-red-100 text-red-600"
-                      }`}
+                        }`}
                     >
                       {result.compat.overall}% Match
                     </span>

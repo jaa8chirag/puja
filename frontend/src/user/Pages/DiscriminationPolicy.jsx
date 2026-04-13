@@ -3,11 +3,12 @@ import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-export default function PrivacyPolicy() {
+export default function DiscriminationPolicy() {
   const [data, setData] = useState([]);
-  const [pageTitle, setPageTitle] = useState("Privacy Policy");
+  const [pageTitle, setPageTitle] = useState("Discrimination Policy");
   const [loading, setLoading] = useState(true);
 
+  // Extract robust content as sections
   const extractSections = (sections) => {
     if (!sections) return [];
     
@@ -65,13 +66,30 @@ export default function PrivacyPolicy() {
   };
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/pages/privacy-policy`)
+    fetch(`${API_BASE_URL}/pages/discrimination-policy`)
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
-          setPageTitle(d.data.title || "Privacy Policy");
+          setPageTitle(d.data.title || "Discrimination Policy");
           setData(extractSections(d.data.sections));
         }
+      })
+      .catch(() => {
+        // Fallback
+        setData([
+          { 
+            title: "Our Commitment", 
+            content: "Sri Vedic Puja is committed to providing a respectful environment for todos devotees and Pandits. We do not tolerate discrimination based on caste, gender, religion, or background." 
+          },
+          { 
+            title: "Pandit Guidelines", 
+            content: "All Pandits on our platform must treat every devotee with equal respect and follow the sacred principles of Vedic equality." 
+          },
+          { 
+            title: "Reporting Issues", 
+            content: "If you experience any form of discrimination, please contact our support team immediately. We take such matters with the utmost seriousness." 
+          }
+        ]);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -137,5 +155,3 @@ export default function PrivacyPolicy() {
     </div>
   );
 }
-
-

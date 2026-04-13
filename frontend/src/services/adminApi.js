@@ -59,3 +59,6 @@ COUPON_API.interceptors.request.use((config) => {
 export const adminGetCoupons = () => COUPON_API.get("/all");
 export const adminCreateCoupon = (data) => COUPON_API.post("/create", data);
 export const adminDeleteCoupon = (id) => COUPON_API.delete(`/delete/${id}`);
+export const getNewsletterSubscribers = () => axios.get(`${API_BASE_URL}/newsletter/all`, {
+  headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
+});

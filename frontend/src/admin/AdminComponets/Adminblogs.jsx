@@ -274,7 +274,7 @@ const Adminblogs = () => {
           }}
           className="bg-[#161b27] border border-white/[0.08] rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500/50"
         >
-          <option value="">Sab Status</option>
+          <option value="">All Status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
         </select>
@@ -380,10 +380,9 @@ const Adminblogs = () => {
                       <button
                         onClick={() => handleToggleStatus(blog)}
                         className={`text-[11px] font-semibold px-3 py-1 rounded-full border cursor-pointer transition-all hover:opacity-80
-                          ${
-                            blog.status === "published"
-                              ? "bg-green-500/10 text-green-400 border-green-500/20"
-                              : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                          ${blog.status === "published"
+                            ? "bg-green-500/10 text-green-400 border-green-500/20"
+                            : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
                           }`}
                       >
                         {blog.status === "published"
@@ -451,8 +450,8 @@ const Adminblogs = () => {
                   style={
                     page === i + 1
                       ? {
-                          background: "linear-gradient(135deg,#f97316,#ea580c)",
-                        }
+                        background: "linear-gradient(135deg,#f97316,#ea580c)",
+                      }
                       : {}
                   }
                 >
@@ -624,12 +623,11 @@ const Adminblogs = () => {
                       type="button"
                       onClick={() => setForm((f) => ({ ...f, status: s }))}
                       className={`px-4 py-2 rounded-lg text-xs font-semibold border cursor-pointer transition-all
-                        ${
-                          form.status === s
-                            ? s === "published"
-                              ? "bg-green-500/20 border-green-500/40 text-green-400"
-                              : "bg-yellow-500/20 border-yellow-500/40 text-yellow-400"
-                            : "bg-white/[0.04] border-white/[0.08] text-gray-500 hover:border-white/20"
+                        ${form.status === s
+                          ? s === "published"
+                            ? "bg-green-500/20 border-green-500/40 text-green-400"
+                            : "bg-yellow-500/20 border-yellow-500/40 text-yellow-400"
+                          : "bg-white/[0.04] border-white/[0.08] text-gray-500 hover:border-white/20"
                         }`}
                     >
                       {s === "published" ? "✅ Published" : "📝 Draft"}

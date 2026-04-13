@@ -24,6 +24,7 @@ import {
   CheckCircle,
   X,
 } from "lucide-react";
+import CouponSelector from "../Components/CouponSelector";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -47,6 +48,7 @@ const KathaPujaPaymentDetails = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [isApplying, setIsApplying] = useState(false);
+  const [publicCoupons, setPublicCoupons] = useState([]);
   const generateBookingId = () =>
     `BK-${Math.random().toString(36).substring(2, 8)}`;
   const token = localStorage.getItem("token");
@@ -198,6 +200,15 @@ const KathaPujaPaymentDetails = () => {
             state: addressData.state || "",
             pincode: addressData.pincode || "",
           }));
+        }
+
+        // Fetch public coupons
+        const publicCouponsRes = await fetch(`${API_BASE_URL}/coupons/public-coupons`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const publicCouponsData = await publicCouponsRes.json();
+        if (publicCouponsData.success) {
+          setPublicCoupons(publicCouponsData.data);
         }
       } catch (error) {
         console.error("Error booking puja:", error);
@@ -614,6 +625,7 @@ const KathaPujaPaymentDetails = () => {
                     isApplying={isApplying}
                     couponError={couponError}
                     discountAmount={discountAmount}
+                    publicCoupons={publicCoupons}
                   />
               </div>
             </div>
@@ -704,46 +716,16 @@ const KathaPujaPaymentDetails = () => {
 
                     {/* 🎟️ Premium Coupon Section */}
                     <div className="py-2 border-y border-dashed border-orange-100 my-2">
-                      {!appliedCoupon ? (
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block ml-1 mb-1">Have a Coupon?</label>
-                      <div className="flex gap-2 w-full">
-                        <input 
-                          type="text" 
-                          placeholder="PROMO CODE"
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-xs md:text-sm font-bold uppercase focus:outline-none focus:border-orange-500 transition-all min-w-0"
-                        />
-                        <button 
-                          onClick={handleApplyCoupon}
-                          disabled={isApplying || !couponInput}
-                          className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-black uppercase disabled:opacity-50 hover:bg-orange-700 transition-all shadow-md active:scale-95"
-                        >
-                          {isApplying ? "..." : "Apply"}
-                        </button>
-                      </div>
-                      {couponError && <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-wider">{couponError}</p>}
-                    </div>
-                      ) : (
-                        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between group animate-in fade-in zoom-in duration-300">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-green-500 p-2 rounded-lg text-white shadow-sm ring-4 ring-green-100">
-                              <CheckCircle size={18} />
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-bold text-green-700 uppercase tracking-[0.1em]">Coupon Applied</p>
-                              <p className="text-[15px] font-black text-green-800 leading-none mt-1">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
-                            </div>
-                          </div>
-                          <button 
-                            onClick={removeCoupon} 
-                            className="text-slate-400 hover:text-red-500 hover:bg-white p-2 rounded-full transition-all hover:shadow-sm"
-                          >
-                            <X size={20} />
-                          </button>
-                        </div>
-                      )}
+                       <CouponSelector 
+                         couponInput={couponInput}
+                         setCouponInput={setCouponInput}
+                         appliedCoupon={appliedCoupon}
+                         handleApplyCoupon={handleApplyCoupon}
+                         removeCoupon={removeCoupon}
+                         isApplying={isApplying}
+                         couponError={couponError}
+                         publicCoupons={publicCoupons}
+                       />
                     </div>
 
                     {discountAmount > 0 && (
@@ -847,10 +829,8 @@ const MobileSummaryInline = ({
   setCouponInput,
   appliedCoupon,
   handleApplyCoupon,
-  removeCoupon,
-  isApplying,
-  couponError,
-  discountAmount
+  discountAmount,
+  publicCoupons
 }) => (
   <div className="space-y-4">
     <div>
@@ -937,40 +917,17 @@ const MobileSummaryInline = ({
 
       {/* 🎟️ Mobile Coupon Section */}
       <div className="py-2 border-y border-dashed border-orange-100">
-        {!appliedCoupon ? (
-          <div className="space-y-2">
-            <div className="flex gap-2 w-full">
-              <input 
-                type="text" 
-                placeholder="PROMO CODE"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-[12px] font-bold uppercase focus:outline-none min-w-0"
-              />
-              <button 
-                onClick={handleApplyCoupon}
-                disabled={isApplying || !couponInput}
-                className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-[12px] font-black uppercase disabled:opacity-50"
-              >
-                {isApplying ? "..." : "Apply"}
-              </button>
-            </div>
-            {couponError && <p className="text-[10px] text-red-500 font-bold ml-1">{couponError}</p>}
-          </div>
-        ) : (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckCircle size={16} className="text-green-600" />
-              <div>
-                <p className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Coupon Applied</p>
-                <p className="text-sm font-black text-green-800">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
-              </div>
-            </div>
-            <button onClick={removeCoupon} className="text-gray-400 hover:text-red-500">
-              <X size={20} />
-            </button>
-          </div>
-        )}
+        <CouponSelector 
+          isMobile={true}
+          couponInput={couponInput}
+          setCouponInput={setCouponInput}
+          appliedCoupon={appliedCoupon}
+          handleApplyCoupon={handleApplyCoupon}
+          removeCoupon={removeCoupon}
+          isApplying={isApplying}
+          couponError={couponError}
+          publicCoupons={publicCoupons}
+        />
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />

@@ -87,9 +87,8 @@ const Navbar = () => {
     <>
       {/* Navbar */}
       <nav
-        className={`fixed top-0 inset-x-0 z-[100] transition-all duration-500 backdrop-blur-xl border-b border-white/20 ${
-          scrolled ? "bg-white/30 shadow-lg" : "bg-white/20"
-        }`}
+        className={`fixed top-0 inset-x-0 z-[100] transition-all duration-500 backdrop-blur-xl border-b border-white/20 ${scrolled ? "bg-white/30 shadow-lg" : "bg-white/20"
+          }`}
       >
         <div className="max-w-[1360px] mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-[72px]">
           {/* LOGO */}
@@ -119,10 +118,9 @@ const Navbar = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `font-semibold text-[15px] transition-colors ${
-                    isActive
-                      ? "text-orange-600"
-                      : "text-black hover:text-orange-600"
+                  `font-semibold text-[15px] transition-colors ${isActive
+                    ? "text-orange-600"
+                    : "text-black hover:text-orange-600"
                   }`
                 }
               >
@@ -140,9 +138,8 @@ const Navbar = () => {
                 Pind-Dan/Pitra-Dosh
                 <ChevronDown
                   size={14}
-                  className={`transition-transform duration-300 ${
-                    pindDanOpen ? "rotate-180 text-orange-600" : "text-black"
-                  }`}
+                  className={`transition-transform duration-300 ${pindDanOpen ? "rotate-180 text-orange-600" : "text-black"
+                    }`}
                 />
               </div>
 
@@ -183,10 +180,9 @@ const Navbar = () => {
               <NavLink
                 to="/my-booking"
                 className={({ isActive }) =>
-                  `font-semibold text-[15px] transition-colors ${
-                    isActive
-                      ? "text-orange-600"
-                      : "text-black hover:text-orange-600"
+                  `font-semibold text-[15px] transition-colors ${isActive
+                    ? "text-orange-600"
+                    : "text-black hover:text-orange-600"
                   }`
                 }
               >
@@ -204,9 +200,8 @@ const Navbar = () => {
                 Gallery
                 <ChevronDown
                   size={14}
-                  className={`transition-transform duration-300 ${
-                    dropdownOpen ? "rotate-180 text-orange-600" : "text-black"
-                  }`}
+                  className={`transition-transform duration-300 ${dropdownOpen ? "rotate-180 text-orange-600" : "text-black"
+                    }`}
                 />
               </div>
 
@@ -338,17 +333,15 @@ const Navbar = () => {
       >
         {/* Backdrop */}
         <div
-          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${
-            menuOpen ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${menuOpen ? "opacity-100" : "opacity-0"
+            }`}
           onClick={() => setMenuOpen(false)}
         />
 
         {/* Drawer Panel */}
         <div
-          className={`absolute right-0 h-full w-[80%] bg-white/90 backdrop-blur-md shadow-2xl transition-transform duration-500 flex flex-col ${
-            menuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`absolute right-0 h-full w-[80%] bg-white/90 backdrop-blur-md shadow-2xl transition-transform duration-500 flex flex-col ${menuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           {/* Drawer Header */}
           <div className="p-6 flex justify-between items-center border-b">
@@ -396,9 +389,8 @@ const Navbar = () => {
                 </div>
                 <ChevronDown
                   size={16}
-                  className={`text-gray-400 transition-transform duration-300 ${
-                    mobilePindDanOpen ? "rotate-180 text-orange-500" : ""
-                  }`}
+                  className={`text-gray-400 transition-transform duration-300 ${mobilePindDanOpen ? "rotate-180 text-orange-500" : ""
+                    }`}
                 />
               </button>
 
@@ -446,9 +438,8 @@ const Navbar = () => {
                 </div>
                 <ChevronDown
                   size={16}
-                  className={`text-gray-400 transition-transform duration-300 ${
-                    mobileGalleryOpen ? "rotate-180 text-orange-500" : ""
-                  }`}
+                  className={`text-gray-400 transition-transform duration-300 ${mobileGalleryOpen ? "rotate-180 text-orange-500" : ""
+                    }`}
                 />
               </button>
 

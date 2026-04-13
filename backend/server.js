@@ -30,6 +30,7 @@ import dataRouter from "./routes/aartiAndEventRoutes.js";
 import faqRouter from "./routes/faqRoutes.js";
 import couponRouter from "./routes/couponRouter.js";
 import reviewsRouter from "./routes/reviewsRouter.js";
+import newsletterRouter from "./routes/newsletterRouter.js";
 
 dotenv.config();
 
@@ -84,10 +85,10 @@ const io = new Server(server, {
 const userStates = new Map();
 
 // ── CHANGE 1: English prompt ──────────────────────────────
-const PANDIT_PROMPT = `You are the chief Pandit of 'Sri Vedic Puja Kendra'.
+const PANDIT_PROMPT = `You are 'Smart Pandit Ji', the knowledgeable Vedic Pandit of 'Sri Vedic Puja Kendra'.
 1. Always start every reply with "🙏 Om Namah Shivay".
-2. If user asks general spiritual questions, answer directly in English.
-3. If user mentions any problem (Job, Health, Marriage, Money, Family), write 'TRIGGER_KUNDLI' in your reply.
+2. Reply concisely in HINDI (with Devnagari script). Use point-to-point format where possible.
+3. If user mentions any problem (Job, Health, Marriage, Money, Family, career, etc.), write 'TRIGGER_KUNDLI' in your reply.
 DO NOT ask for details yourself, just say 'TRIGGER_KUNDLI'.`;
 
 // ── CHANGE 2: Puja fetch + dosha matching helpers ─────────
@@ -298,7 +299,7 @@ const setupAIPandit = (io) => {
           userStates.set(socket.id, state);
           return socket.emit("ai_response", {
             // ── CHANGE 3: English trigger message ──
-            text: "🙏 Om Namah Shivay! To analyze this matter, I need to examine your planetary positions. Please share your **Full Name**.",
+            text: "🙏 Om Namah Shivay! Is vishay ka gehra vishleshan karne ke liye mujhe aapki grah-stithi dekhni hogi. Kripya apna **Pura Naam** pradan karein.",
             sender: "bot",
             timestamp: new Date(),
           });
@@ -332,20 +333,20 @@ async function handleCollection(socket, text, state) {
   const steps = {
     name: {
       next: "dob",
-      msg: "Thank you! Please share your **Date of Birth** (DD-MM-YYYY).",
+      msg: "Dhanyawad! Ab kripya apni **Janm Tithi** batayein (DD-MM-YYYY).",
     },
     dob: {
       next: "tob",
-      msg: "Got it. What is your **Time of Birth**? (HH:MM AM/PM)",
+      msg: "Uttam. Aapka **Janm Samay** kya hai? (HH:MM AM/PM)",
     },
-    tob: { next: "city", msg: "What is your **Place of Birth** (City)?" },
+    tob: { next: "city", msg: "Aapka **Janm Sthan** (City) kaunsa hai?" },
     city: {
       next: "gender",
-      msg: "Please share your **Gender** (Male/Female).",
+      msg: "Kripya apna **Gender** (Male/Female) batayein.",
     },
     gender: {
       next: "complete",
-      msg: "🙏 Please wait, calculating your planetary positions...",
+      msg: "🙏 Prateeksha karein, aapki kundli ki ganana ho rahi hai...",
     },
   };
 
@@ -472,7 +473,15 @@ async function handleCollection(socket, text, state) {
       const pujaCards = buildPujaCards(rawData.doshas, allServices);
 
       // ── AI Analysis — English ──────────────────────────
-      const analysisPrompt = `You are an expert Vedic Astrologer. Analyze this Kundli data and give a clear, detailed reading in English: ${JSON.stringify(rawData)}`;
+      const analysisPrompt = `Aap 'Smart Pandit Ji' hain, ek anubhavi Vedic Jyotishi. 
+Is Kundli data ka nikarsh nikaalein: ${JSON.stringify(rawData)}.
+Report bilkul POINT-TO-POINT aur HINDI mein honi chahiye. 
+Sirf mukhya baatein batayein:
+1. Vyaktitv aur Lagna (Sirf 1-2 points)
+2. Sabse Shubh Grah (Sirf 1 point)
+3. Mukhya Dosh ya Chunauti (Sirf 1-2 points)
+4. Upay (Remedies) (Point-to-point)
+Faltu vistar aur lambe paragraphs na likhein. Seedha aur sateek javab dein.`;
 
       let finalReport = "";
       try {
@@ -495,7 +504,7 @@ async function handleCollection(socket, text, state) {
       // ── Emit puja cards (har dosha ke liye) ───────────
       if (pujaCards && pujaCards.length > 0) {
         socket.emit("ai_response", {
-          text: "🙏 Based on your Kundli, the following Pujas are recommended to remedy your Doshas:",
+          text: "🙏 Aapki Kundli ke anusar, in Dosho ke nivaran ke liye ye Puja karwana labhdayak rahega:",
           sender: "bot",
           timestamp: new Date(),
           pujaCards: pujaCards,
@@ -560,6 +569,7 @@ app.use("/api/content", dataRouter);
 app.use("/api/admin/faq", faqRouter);
 app.use("/api/coupons", couponRouter);
 app.use("/api/reviews", reviewsRouter);
+app.use("/api/newsletter", newsletterRouter);
 
 const startServer = async () => {
   try {

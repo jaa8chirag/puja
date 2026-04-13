@@ -59,6 +59,8 @@ import PrivacyPolicy from "./user/Pages/PrivacyPolicy";
 import AboutUs from "./user/Pages/AboutUs";
 import CancellationPolicy from "./user/Pages/CancellationPolicy";
 import TermsAndConditions from "./user/Pages/TermsAndConditions";
+import Disclaimer from "./user/Pages/Disclaimer";
+import DiscriminationPolicy from "./user/Pages/DiscriminationPolicy";
 
 import AIPanditBot from "./user/Pages/AIPanditBot";
 import OnlineRitual from "./user/Pages/OnlineRitual";
@@ -127,6 +129,8 @@ function App() {
           <Route path="/privacypolicy" element={<PrivacyPolicy />} />
           <Route path="/cancellationpolicy" element={<CancellationPolicy />} />
           <Route path="/termsandconditions" element={<TermsAndConditions />} />
+          <Route path="/disclaimer" element={<Disclaimer />} />
+          <Route path="/discrimination" element={<DiscriminationPolicy />} />
 
           {/* Home Puja */}
           <Route path="/home-Puja">

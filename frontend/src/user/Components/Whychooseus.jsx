@@ -17,7 +17,7 @@ const reasons = [
   {
     icon: <IndianRupee size={28} />,
     title: "Fixed & Transparent Pricing",
-    desc: "No hidden charges. What you see is what you pay — complete packages including Samagri and Dakshina.",
+    desc: "No hidden charges. What you see is what you pay complete packages including Samagri and Dakshina.",
     highlight: "No Hidden Fees",
   },
   {
@@ -29,13 +29,13 @@ const reasons = [
   {
     icon: <BookOpen size={28} />,
     title: "Complete Aashirwad Included",
-    desc: "Receive divine blessings along with sacred items — thoughtfully preparedand delivered to your doorstep as part of your Puja experience.",
+    desc: "Receive divine blessings along with sacred items thoughtfully preparedand delivered to your doorstep as part of your Puja experience.",
     highlight: "All Inclusive",
   },
   {
     icon: <Star size={28} fill="currentColor" />,
     title: "4.9★ Rated Service",
-    desc: "Over 5,000 happy families trust us for their most sacred moments — their satisfaction speaks for itself.",
+    desc: "Over 5,000 happy families trust us for their most sacred moments their satisfaction speaks for itself.",
     highlight: "Top Rated",
   },
   {

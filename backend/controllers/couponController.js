@@ -3,15 +3,15 @@ import db from "../config/db.js";
 // ── Admin: Create Coupon ──────────────────────────────────────────────────────
 export const adminCreateCoupon = async (req, res) => {
   try {
-    const { code, discount_percentage, usage_limit, expiry_date } = req.body;
+    const { code, discount_percentage, usage_limit, expiry_date, is_public } = req.body;
 
     if (!code || !discount_percentage) {
       return res.status(400).json({ success: false, message: "Code and Percentage are required" });
     }
 
     const [result] = await db.query(
-      `INSERT INTO coupons (code, discount_percentage, usage_limit, expiry_date) VALUES (?, ?, ?, ?)`,
-      [code.toUpperCase(), discount_percentage, usage_limit || 100, expiry_date || null]
+      `INSERT INTO coupons (code, discount_percentage, usage_limit, expiry_date, is_public) VALUES (?, ?, ?, ?, ?)`,
+      [code.toUpperCase(), discount_percentage, usage_limit || 100, expiry_date || null, is_public ? 1 : 0]
     );
 
     res.status(201).json({ success: true, message: "Coupon created successfully", id: result.insertId });
@@ -100,5 +100,17 @@ export const validateCoupon = async (req, res) => {
   } catch (error) {
     console.error("Validate Coupon Error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+// ── User: Get Public Coupons ──────────────────────────────────────────────────
+export const getPublicCoupons = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT code, discount_percentage FROM coupons WHERE is_active = 1 AND is_public = 1 AND (expiry_date IS NULL OR expiry_date > NOW()) AND used_count < usage_limit"
+    );
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error("Get Public Coupons Error:", error);
+    res.status(500).json({ success: false, message: "Error fetching coupons" });
   }
 };

@@ -53,6 +53,7 @@ import {
   updateContribution,
   getPages,
   getPageBySlug,
+  createPage,
   updatePage,
   deleteContribution,
   getAllNameCorrections,
@@ -108,6 +109,7 @@ router.delete("/services/:id", verifyToken, adminOnly, deleteService);
 // ── Pages Routes (About Us & Privacy Policy)
 router.get("/pages", verifyToken, adminOnly, getPages);
 router.get("/pages/:slug", verifyToken, adminOnly, getPageBySlug);
+router.post("/pages", verifyToken, adminOnly, createPage);
 router.put("/pages/:slug", verifyToken, adminOnly, updatePage);
 
 //contributionn

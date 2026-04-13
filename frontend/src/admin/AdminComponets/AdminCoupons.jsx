@@ -24,7 +24,8 @@ const AdminCoupons = () => {
     code: "",
     discount_percentage: "",
     usage_limit: "",
-    expiry_date: ""
+    expiry_date: "",
+    is_public: false
   });
 
   const fetchData = async () => {
@@ -52,7 +53,7 @@ const AdminCoupons = () => {
       const res = await adminCreateCoupon(formData);
       if (res.data.success) {
         setShowModal(false);
-        setFormData({ code: "", discount_percentage: "", usage_limit: "", expiry_date: "" });
+        setFormData({ code: "", discount_percentage: "", usage_limit: "", expiry_date: "", is_public: false });
         fetchData();
       }
     } catch (err) {
@@ -148,6 +149,7 @@ const AdminCoupons = () => {
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Usage</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Expiry</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Public</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
@@ -193,6 +195,17 @@ const AdminCoupons = () => {
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
                         Paused
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-5">
+                    {coupon.is_public ? (
+                      <span className="text-emerald-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                        <CheckCircle2 size={12} /> Yes
+                      </span>
+                    ) : (
+                      <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                        <X size={12} /> No
                       </span>
                     )}
                   </td>
@@ -293,6 +306,22 @@ const AdminCoupons = () => {
                       onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
                     />
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/10 rounded-2xl">
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Public Visibility</h4>
+                    <p className="text-[10px] text-gray-500 font-medium">Show this coupon in the checkout dropdown for all users.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={formData.is_public}
+                      onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                  </label>
                 </div>
               </div>
 

@@ -33,6 +33,7 @@ import {
   BookOpen,
   X,
 } from "lucide-react";
+import CouponSelector from "../Components/CouponSelector";
 import { useNavigate, useParams } from "react-router-dom";
 import HTMLContent from "../../Components/HTMLContent";
 
@@ -68,6 +69,7 @@ const PindDanBooking = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [isApplying, setIsApplying] = useState(false);
+  const [publicCoupons, setPublicCoupons] = useState([]);
 
   const sections = {
     about: useRef(null),
@@ -85,6 +87,15 @@ const PindDanBooking = () => {
         });
         const data = await response.json();
         if (data.success) setService(data.data);
+
+        // Fetch public coupons
+        const publicCouponsRes = await fetch(`${API_BASE_URL}/coupons/public-coupons`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const publicCouponsData = await publicCouponsRes.json();
+        if (publicCouponsData.success) {
+          setPublicCoupons(publicCouponsData.data);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -563,6 +574,7 @@ const PindDanBooking = () => {
                 discountAmount={discountAmount}
                 grandTotalBeforeDiscount={grandTotalBeforeDiscount}
                 finalTotal={finalTotal}
+                publicCoupons={publicCoupons}
               />
             </div>
 
@@ -679,46 +691,16 @@ const PindDanBooking = () => {
 
                 {/* 🎟️ Promo Code Section */}
                 <div className="py-2 border-y border-dashed border-orange-100 my-2">
-                  {!appliedCoupon ? (
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block ml-1 mb-1">Have a Coupon?</label>
-                      <div className="flex gap-2 w-full">
-                        <input 
-                          type="text" 
-                          placeholder="PROMO CODE"
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-xs md:text-sm font-bold uppercase focus:outline-none focus:border-orange-500 transition-all min-w-0"
-                        />
-                        <button 
-                          onClick={handleApplyCoupon}
-                          disabled={isApplying || !couponInput}
-                          className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-black uppercase disabled:opacity-50 hover:bg-orange-700 transition-all shadow-md active:scale-95"
-                        >
-                          {isApplying ? "..." : "Apply"}
-                        </button>
-                      </div>
-                      {couponError && <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-wider">{couponError}</p>}
-                    </div>
-                  ) : (
-                    <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between group animate-in fade-in zoom-in duration-300">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-green-500 p-2 rounded-lg text-white shadow-sm ring-4 ring-green-100">
-                          <CheckCircle size={18} />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-green-700 uppercase tracking-[0.1em]">Coupon Applied</p>
-                          <p className="text-[15px] font-black text-green-800">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={removeCoupon} 
-                        className="text-slate-400 hover:text-red-500 hover:bg-white p-2 rounded-full transition-all hover:shadow-sm"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-                  )}
+                  <CouponSelector 
+                    couponInput={couponInput}
+                    setCouponInput={setCouponInput}
+                    appliedCoupon={appliedCoupon}
+                    handleApplyCoupon={handleApplyCoupon}
+                    removeCoupon={removeCoupon}
+                    isApplying={isApplying}
+                    couponError={couponError}
+                    publicCoupons={publicCoupons}
+                  />
                 </div>
 
                 <div className="flex justify-between items-start pt-2 px-1">
@@ -832,7 +814,7 @@ const MobileSummarySection = ({
   calculateTotal, selectedContributionsTotal, scrollToSection, getPrice,
   contributionOptions, couponInput, setCouponInput, appliedCoupon,
   handleApplyCoupon, removeCoupon, isApplying, couponError,
-  discountAmount, grandTotalBeforeDiscount, finalTotal
+  discountAmount, grandTotalBeforeDiscount, finalTotal, publicCoupons
 }) => (
   <div>
     <div className="mb-5">
@@ -910,40 +892,17 @@ const MobileSummarySection = ({
       </div>
 
       <div className="py-2 border-y border-dashed border-orange-100 my-2">
-        {!appliedCoupon ? (
-          <div className="space-y-2">
-            <div className="flex gap-2 w-full">
-              <input 
-                type="text" 
-                placeholder="PROMO CODE"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                className="w-0 flex-1 bg-gray-50 border border-orange-100 rounded-xl px-3 py-2 text-[12px] font-bold uppercase focus:outline-none min-w-0"
-              />
-              <button 
-                onClick={handleApplyCoupon}
-                disabled={isApplying || !couponInput}
-                className="shrink-0 bg-orange-600 text-white px-4 py-2 rounded-xl text-[12px] font-black uppercase disabled:opacity-50"
-              >
-                {isApplying ? "..." : "Apply"}
-              </button>
-            </div>
-            {couponError && <p className="text-[10px] text-red-500 font-bold ml-1">{couponError}</p>}
-          </div>
-        ) : (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckCircle size={16} className="text-green-600" />
-              <div>
-                <p className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Coupon Applied</p>
-                <p className="text-[13px] font-black text-green-800">{appliedCoupon.code} (-{appliedCoupon.discount_percentage}%)</p>
-              </div>
-            </div>
-            <button onClick={removeCoupon} className="text-gray-400">
-              <X size={20} />
-            </button>
-          </div>
-        )}
+        <CouponSelector 
+          isMobile={true}
+          couponInput={couponInput}
+          setCouponInput={setCouponInput}
+          appliedCoupon={appliedCoupon}
+          handleApplyCoupon={handleApplyCoupon}
+          removeCoupon={removeCoupon}
+          isApplying={isApplying}
+          couponError={couponError}
+          publicCoupons={publicCoupons}
+        />
       </div>
 
       <div className="flex justify-between items-center pt-1 px-1">

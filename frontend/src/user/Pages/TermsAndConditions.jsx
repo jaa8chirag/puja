@@ -4,59 +4,64 @@ import HTMLContent from "../../Components/HTMLContent";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function TermsAndConditions() {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
   const [pageTitle, setPageTitle] = useState("Terms and Conditions");
   const [loading, setLoading] = useState(true);
 
-  // Extract robust content from various formats (raw string, JSON object, array)
-  const extractContent = (sections) => {
-    if (!sections) return "";
+  const extractSections = (sections) => {
+    if (!sections) return [];
     
-    // If it's already an HTML string (new format)
-    if (typeof sections === "string" && !sections.trim().startsWith("{") && !sections.trim().startsWith("[")) {
-      return sections;
-    }
-
     let parsed;
     try {
       parsed = typeof sections === "string" ? JSON.parse(sections) : sections;
     } catch {
-      return String(sections);
+      return [{ title: "", content: String(sections) }];
     }
 
-    // 1. New Format { content: "..." }
-    if (parsed.content && typeof parsed.content === "string") {
-      return parsed.content;
-    }
-
-    // 2. Intermediate Array Format [{ content: "..." }, ...]
     if (Array.isArray(parsed)) {
-      return parsed.map(s => s.content || s.text || "").join("");
+      return parsed.map(s => ({
+        title: s.title || s.heading || "",
+        content: s.content || s.text || ""
+      }));
     }
 
-    // 3. Legacy Key-Value Format { hero_text, mission_title, etc. }
+    if (parsed.content && typeof parsed.content === "string") {
+      return [{ title: "", content: parsed.content }];
+    }
+
     if (typeof parsed === "object") {
-      let html = "";
+      const sectionsArray = [];
       const priorityKeys = ["hero_title", "hero_subtitle", "hero_text", "mission_title", "mission_text", "vision_title", "vision_text", "intro_text"];
       
+      let currentSection = { title: "", content: "" };
+
       priorityKeys.forEach(k => {
         if (parsed[k]) {
-          if (k.includes("title")) html += `<h2>${parsed[k]}</h2>`;
-          else html += `<p>${parsed[k]}</p>`;
+          if (k.includes("title")) {
+            if (currentSection.content) sectionsArray.push(currentSection);
+            currentSection = { title: parsed[k], content: "" };
+          } else {
+            currentSection.content += parsed[k];
+          }
         }
       });
 
       Object.keys(parsed).forEach(k => {
         if (!priorityKeys.includes(k) && parsed[k] && typeof parsed[k] === "string" && parsed[k].trim() !== "" && !k.includes("image_url") && !k.includes("last_updated")) {
-          if (k.endsWith("_title")) html += `<h3>${parsed[k]}</h3>`;
-          else if (k.endsWith("_text")) html += `<p>${parsed[k]}</p>`;
-          else html += `<p>${parsed[k]}</p>`;
+          if (k.endsWith("_title")) {
+            if (currentSection.content) sectionsArray.push(currentSection);
+            currentSection = { title: parsed[k], content: "" };
+          } else {
+            currentSection.content += ` ${parsed[k]}`;
+          }
         }
       });
-      return html;
+      
+      if (currentSection.content || currentSection.title) sectionsArray.push(currentSection);
+      return sectionsArray;
     }
 
-    return String(sections);
+    return [{ title: "", content: String(sections) }];
   };
 
   useEffect(() => {
@@ -65,7 +70,7 @@ export default function TermsAndConditions() {
       .then((d) => {
         if (d.success) {
           setPageTitle(d.data.title || "Terms and Conditions");
-          setData(extractContent(d.data.sections));
+          setData(extractSections(d.data.sections));
         }
       })
       .finally(() => setLoading(false));
@@ -79,34 +84,55 @@ export default function TermsAndConditions() {
     );
 
   return (
-    <div className="min-h-screen bg-[#FFF4E1] text-[#2D1A00]">
-      <div className="max-w-3xl mx-auto px-6 pt-20 pb-24">
-        {/* Minimalist Header */}
-        <header className="mb-16 text-center">
-          <h1
-            className="text-3xl md:text-5xl font-black mb-6 text-[#3d1500] leading-tight"
-            style={{ fontFamily: "'Georgia', serif" }}
-          >
-            {pageTitle}
-          </h1>
-          <div className="h-1 w-16 bg-orange-600/20 mx-auto" />
-        </header>
+    <div className="min-h-screen bg-[#FFF4E1] text-[#2D1A00] py-12 px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto flex flex-col items-center">
+        
+        {/* Top Icon */}
+        <div className="mb-2">
+          <span className="text-orange-500 text-2xl">ॐ</span>
+        </div>
 
-        {/* Premium Content Area */}
-        {data ? (
-          <div className="prose prose-orange max-w-none">
-            <HTMLContent 
-              content={data} 
-              className="text-[#3d1500]/80 text-lg md:text-xl leading-relaxed space-y-8 font-serif" 
-            />
-          </div>
-        ) : (
-          <div className="py-20 text-center border-t border-orange-200/30">
-            <p className="text-orange-900/30 text-sm tracking-widest uppercase font-bold">
-              Fetching Sacred Content...
-            </p>
-          </div>
-        )}
+        {/* Heading */}
+        <h1 className="text-4xl md:text-5xl font-serif font-bold text-[#3d1500] text-center mb-4">
+          {pageTitle}
+        </h1>
+
+        {/* Divider icon */}
+        <div className="flex items-center gap-4 mb-12 w-full max-w-md justify-center">
+           <div className="h-[1px] bg-orange-200 flex-grow"></div>
+           <div className="w-2 h-2 bg-orange-800 rotate-45"></div>
+           <div className="h-[1px] bg-orange-200 flex-grow"></div>
+        </div>
+
+        {/* Small Boxes (Cards) */}
+        <div className="flex flex-col gap-8 w-full max-w-2xl">
+          {data && data.length > 0 ? (
+            data.map((section, idx) => (
+              <div 
+                key={idx}
+                className="bg-white p-6 md:p-8 rounded-[1.5rem] border border-orange-100 shadow-[0_4px_15px_-5px_rgba(251,146,60,0.1)] transition-all"
+              >
+                {section.title && (
+                  <h3 className="text-xl font-serif font-bold text-[#3d1500] mb-3">
+                    {section.title}
+                  </h3>
+                )}
+                <div className="prose prose-orange prose-sm max-w-none">
+                  <HTMLContent 
+                    content={section.content} 
+                    className="text-[#3d1500]/80 text-[15px] leading-relaxed font-sans" 
+                  />
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-20 text-center opacity-30">
+              <p className="text-sm tracking-widest uppercase font-bold">
+                Fetching Sacred Content...
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -13,28 +13,35 @@ const verifySocketToken = async (socket, next) => {
       socket.handshake.auth?.token ||
       socket.handshake.headers?.authorization?.replace("Bearer ", "");
 
-    if (!token) return next(new Error("Token nahi mila"));
+    if (!token) return next(); // Allow connection without token (for public namespaces like /pandit)
 
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const [rows] = await pool.query(
       "SELECT id, name, email, role FROM users WHERE id = ?",
-      [decoded.id || decoded.userId]
+      [decoded.id || decoded.userId],
     );
 
-    if (!rows.length) return next(new Error("User nahi mila"));
-
-    socket.user = rows[0];
+    if (rows.length) {
+      socket.user = rows[0];
+    }
     next();
   } catch (err) {
-    next(new Error("Invalid token: " + err.message));
+    next(); // Don't block the handshake even on error
   }
 };
 
 const initChatSocket = (io) => {
-  io.use(verifySocketToken);
+  // ✅ IMPORTANT: Apply authentication ONLY to the root namespace
+  // This allows public namespaces like /pandit to connect without a token
+  const chatNS = io.of("/"); 
+  
+  chatNS.use(verifySocketToken);
 
-  io.on("connection", (socket) => {
+  chatNS.on("connection", (socket) => {
+    // If no user was found in middleware (unauthorized), we ignore the events
+    if (!socket.user) return;
+
     const { id: userId, name, email, role } = socket.user;
 
     // ── AGENT JOIN ──────────────────────────────

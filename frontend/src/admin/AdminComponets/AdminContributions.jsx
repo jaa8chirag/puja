@@ -92,16 +92,6 @@ const AdminContributions = () => {
             Manage donation types, pricing & descriptions
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditData(null);
-            setFormData({ name: "", price: "", is_active: 1, description: "" });
-            setOpenModal(true);
-          }}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg shadow-orange-900/20"
-        >
-          <Plus size={16} /> Add New
-        </button>
       </div>
 
       {/* Table */}
@@ -181,15 +171,6 @@ const AdminContributions = () => {
                       >
                         <Pencil size={15} />
                       </button>
-                      <button
-                        onClick={() => {
-                          setDeleteTarget(item);
-                          setDeleteModal(true);
-                        }}
-                        className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all"
-                      >
-                        <Trash2 size={15} />
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -221,13 +202,10 @@ const AdminContributions = () => {
                   Name
                 </label>
                 <input
-                  required
+                  readOnly
                   type="text"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full bg-[#131e32] border border-slate-800 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-orange-500 transition-all mt-1"
+                  className="w-full bg-[#0f172a] border border-slate-800 text-slate-400 rounded-xl px-4 py-3 text-sm outline-none cursor-not-allowed mt-1 font-semibold"
                 />
               </div>
 
@@ -261,26 +239,6 @@ const AdminContributions = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-3 bg-[#131e32] p-4 rounded-xl border border-slate-800">
-                <input
-                  type="checkbox"
-                  checked={Boolean(formData.is_active)}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      is_active: e.target.checked ? 1 : 0,
-                    })
-                  }
-                  className="w-4 h-4 accent-orange-500 cursor-pointer"
-                  id="is_active"
-                />
-                <label
-                  htmlFor="is_active"
-                  className="text-sm text-slate-300 font-bold cursor-pointer"
-                >
-                  Show as Active
-                </label>
-              </div>
 
               <div className="flex gap-3 pt-4">
                 <button

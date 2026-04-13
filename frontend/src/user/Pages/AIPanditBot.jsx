@@ -14,7 +14,13 @@ export default function AIPanditBot() {
   const socketRef = useRef(null);
 
   const connectSocket = () => {
-    socketRef.current = io(`${import.meta.env.VITE_SOCKET_URL}/pandit`, {
+    // ✅ Smart URL: Local pe VITE_SOCKET_URL use karega, Server pe relative path
+    const socketUrl = window.location.hostname === "localhost" 
+      ? import.meta.env.VITE_SOCKET_URL.replace(/\/$/, "") 
+      : "";
+
+    socketRef.current = io(`${socketUrl}/pandit`, {
+      path: "/socket.io/",
       transports: ["polling"],
     });
 
@@ -267,7 +273,7 @@ export default function AIPanditBot() {
             </div>
 
             {/* 6. Shubh Tilak Dot (Status Indicator) */}
-            <div className="absolute top-1 right-2 w-4 h-4 bg-orange-600 border-2 border-white rounded-full shadow-lg"></div>
+            <div className="absolute top-1 right-2 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full shadow-lg"></div>
           </div>
 
           {/* Glossy Overlay */}

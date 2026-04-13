@@ -15,6 +15,36 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Footer = () => {
   const [contactInfo, setContactInfo] = useState({ phone: null, email: null });
+  const [email, setEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
+  const [status, setStatus] = useState(null);
+
+  const handleSubscribe = async () => {
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setStatus({ type: "error", message: "Invalid email" });
+      return;
+    }
+    setSubscribing(true);
+    setStatus(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/newsletter/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus({ type: "success", message: data.message });
+        setEmail("");
+      } else {
+        setStatus({ type: "error", message: data.message });
+      }
+    } catch (err) {
+      setStatus({ type: "error", message: "Failed to subscribe" });
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchContactInfo = async () => {
@@ -53,6 +83,8 @@ const Footer = () => {
       { label: "Privacy Policy", to: "/privacypolicy" },
       { label: "Cancellation policy", to: "/cancellationpolicy" },
       { label: "Terms and Conditions", to: "/termsandconditions" },
+      { label: "Disclaimer", to: "/disclaimer" },
+      { label: "Discrimination Policy", to: "/discrimination" },
     ],
     community: [
       { label: "Temple Gallery", to: "/temples" },
@@ -176,7 +208,7 @@ const Footer = () => {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <MapPin size={14} className="text-orange-500 shrink-0" />
-                <span className="truncate">Haridwar, Uttarakhand, India</span>
+                <span className="truncate">Delhi NCR, India</span>
               </div>
               <div className="flex flex-col gap-2">
                 {/* Phone - from backend */}
@@ -192,15 +224,49 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className="relative flex items-center">
-              <input
-                type="email"
-                placeholder="Subscribe"
-                className="w-full bg-white/80 border border-orange-100 rounded-lg px-3 py-2 pr-10 text-xs focus:outline-none focus:ring-1 focus:ring-orange-400"
-              />
-              <button className="absolute right-1 top-1/2 -translate-y-1/2 p-1 bg-orange-500 text-white rounded-md flex items-center justify-center transition-colors hover:bg-orange-600">
-                <ArrowUpRight size={14} />
-              </button>
+            {/* Newsletter Section - Redesigned for "Real Application" feel */}
+            <div className="mt-2 pt-4 border-t border-orange-300/20 lg:border-t-0 lg:pt-0">
+              <h4 className="text-[11px] font-bold uppercase tracking-widest text-orange-800 mb-2">
+                Divine Updates
+              </h4>
+              <p className="text-[10px] text-gray-500 mb-3 leading-relaxed">
+                Join our spiritual community for sacred insights, ritual dates, and exclusive Vedic updates.
+              </p>
+              
+              <div className="flex flex-col gap-2">
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <Mail size={12} className="text-orange-400 group-focus-within:text-orange-600 transition-colors" />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full bg-white border-2 border-orange-100 rounded-xl pl-9 pr-12 py-2.5 text-xs focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-500/10 transition-all font-medium placeholder:text-gray-400"
+                  />
+                  <button
+                    onClick={handleSubscribe}
+                    disabled={subscribing}
+                    className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-sm"
+                    aria-label="Subscribe"
+                  >
+                    {subscribing ? (
+                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <span className="text-[10px] font-bold">JOIN</span>
+                    )}
+                  </button>
+                </div>
+                {status && (
+                  <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg animate-in slide-in-from-top-1 duration-300 ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <div className={`w-1 h-1 rounded-full ${status.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <p className="text-[9px] font-bold uppercase tracking-tight">
+                      {status.message}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
