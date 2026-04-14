@@ -1,5 +1,9 @@
 import db from "../config/db.js";
 import pool from "../config/db.js";
+import crypto from "crypto";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const getServicesByType = async (req, res) => {
   try {
@@ -133,21 +137,37 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
     await connection.beginTransaction();
 
     const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       puja_id,
       date,
       time,
       location,
-      city,
-      state,
       devoteeName,
-      ticket_type,
+      total_price,
+      paid_amount,
+      payment_type,
+      samagriKit,
       donations,
       bookingId,
-      total_price,
-      samagriKit,
       coupon_code,
-      discount_amount
+      city,
+      state,
+      ticket_type,
     } = req.body;
+
+    // Verify Razorpay Payment
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest("hex");
+
+    if (razorpay_signature !== expectedSign) {
+      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+    }
+
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const userId = req.user.id;
     const formattedDate = date
@@ -162,12 +182,14 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       ? donations.split(",").map((d) => d.trim())
       : [];
 
+    const paymentStatus = Number(paid_amount) >= Number(total_price) ? "fully_paid" : "partially_paid";
+
     // 1️⃣ Insert puja request
     const [result] = await connection.query(
       `
       INSERT INTO puja_requests 
-      (user_id, service_id, preferred_date, preferred_time, address, city, state, status, otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
+      (user_id, service_id, preferred_date, preferred_time, address, city, state, status, otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit, razorpay_order_id, razorpay_payment_id, razorpay_signature, paid_amount, payment_status, payment_type) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -180,14 +202,27 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
         otp,
         bookingId,
         ticket_type || null,
-        0,
+        donationNames.join(","),
         devoteeName || "User",
         total_price,
         samagriKit ? 1 : 0,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        paid_amount,
+        paymentStatus,
+        payment_type,
       ],
     );
 
     const pujaRequestId = result.insertId;
+
+    // Record in payments table
+    await connection.query(
+      `INSERT INTO payments (booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type, status) 
+       VALUES (?, ?, ?, ?, ?, ?, 'success')`,
+      [pujaRequestId, paid_amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type]
+    );
 
     // 2️⃣ Record Coupon Usage (If provided)
     if (coupon_code) {
@@ -365,24 +400,39 @@ export const onlinePinddanBookingDetails = async (req, res) => {
     await connection.beginTransaction();
 
     const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       puja_id,
       date,
       time,
       location,
-      city,
-      state,
       devoteeName,
-      ticket_type,
+      total_price,
+      paid_amount,
+      payment_type,
       donations,
       bookingId,
-      total_price,
-      samagriKit,
       coupon_code,
-      discount_amount,
+      city,
+      state,
+      ticket_type,
     } = req.body;
+
+    // Verify Razorpay Payment
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest("hex");
+
+    if (razorpay_signature !== expectedSign) {
+      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+    }
+
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     console.log("home or katha booking details--", req.body);
-    const userId = req.body.userId;
+    const userId = req.user.id;
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0];
@@ -397,12 +447,14 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       ? donations.split(",").map((d) => d.trim())
       : [];
 
+    const paymentStatus = Number(paid_amount) >= Number(total_price) ? "fully_paid" : "partially_paid";
+
     // 1️⃣ Insert puja request first
     const [result] = await connection.query(
       `
       INSERT INTO puja_requests 
-      (user_id, service_id, preferred_date, preferred_time, address, city, state, status,otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending',?, ?, ?, ?, ?, ?, ?)
+      (user_id, service_id, preferred_date, preferred_time, address, city, state, status, otp, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit, razorpay_order_id, razorpay_payment_id, razorpay_signature, paid_amount, payment_status, payment_type) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -415,14 +467,27 @@ export const onlinePinddanBookingDetails = async (req, res) => {
         otp,
         bookingId,
         ticket_type || null,
-        0, // 👈 temporarily 0 (later update karenge)
+        donationNames.join(","),
         devoteeName || "User",
         total_price,
-        samagriKit ? 1 : 0,
+        0,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        paid_amount,
+        paymentStatus,
+        payment_type,
       ],
     );
 
     const pujaRequestId = result.insertId;
+
+    // Record in payments table
+    await connection.query(
+      `INSERT INTO payments (booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type, status) 
+       VALUES (?, ?, ?, ?, ?, ?, 'success')`,
+      [pujaRequestId, paid_amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type]
+    );
 
     // 2️⃣ Fetch price from DB & insert contributions
     for (let name of donationNames) {
@@ -500,20 +565,35 @@ export const bookingDetails = async (req, res) => {
     await connection.beginTransaction();
 
     const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       puja_id,
       date,
       time,
       address,
       city,
       state,
-      devoteeName,
-      ticket_type,
-      donations,
       bookingId,
+      ticket_type,
+      devoteeName,
       total_price,
+      paid_amount,
+      payment_type,
+      donations,
       coupon_code,
-      discount_amount,
     } = req.body;
+
+    // Verify Razorpay Payment
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest("hex");
+
+    if (razorpay_signature !== expectedSign) {
+      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+    }
     console.log("booking details", req.body);
     const userId = req.user.id;
 
@@ -526,12 +606,14 @@ export const bookingDetails = async (req, res) => {
       0,
     );
 
-    // ✅ Insert temple booking (samagrikit = 0 always)
+    const paymentStatus = Number(paid_amount) >= Number(total_price) ? "fully_paid" : "partially_paid";
+
+    // ✅ Insert temple/other booking (samagrikit = 0 always)
     const [result] = await connection.query(
       `
       INSERT INTO puja_requests 
-      (user_id, service_id, preferred_date, preferred_time, address, city, state, status, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, 0)
+      (user_id, service_id, preferred_date, preferred_time, address, city, state, status, bookingId, ticket_type, donations, devotee_name, total_price, samagrikit, razorpay_order_id, razorpay_payment_id, razorpay_signature, paid_amount, payment_status, payment_type) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -541,16 +623,28 @@ export const bookingDetails = async (req, res) => {
         address,
         city || "N/A",
         state || "N/A",
-
         bookingId,
         ticket_type,
         totalDonationAmount,
         devoteeName || "User",
         total_price,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        paid_amount,
+        paymentStatus,
+        payment_type,
       ],
     );
 
     const pujaRequestId = result.insertId;
+
+    // Record in payments table
+    await connection.query(
+      `INSERT INTO payments (booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type, status) 
+       VALUES (?, ?, ?, ?, ?, ?, 'success')`,
+      [pujaRequestId, paid_amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type]
+    );
 
     // ✅ Save donations
     for (let donation of donations) {
@@ -653,6 +747,53 @@ export const getUserBookings = async (req, res) => {
     });
   }
 };
+
+export const payRemainingAmount = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    const { booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    // Verify signature
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest("hex");
+
+    if (razorpay_signature !== expectedSign) {
+      return res.status(400).json({ success: false, message: "Invalid signature" });
+    }
+
+    await connection.beginTransaction();
+
+    // 1. Update puja_requests paid_amount and status
+    await connection.query(
+      `UPDATE puja_requests 
+       SET paid_amount = paid_amount + ?, 
+           payment_status = CASE WHEN (paid_amount + ?) >= total_price THEN 'fully_paid' ELSE 'partially_paid' END
+       WHERE id = ?`,
+      [amount, amount, booking_id]
+    );
+
+    // 2. Record in payments table
+    await connection.query(
+      `INSERT INTO payments (booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type, status) 
+       VALUES (?, ?, ?, ?, ?, 'balance', 'success')`,
+      [booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature]
+    );
+
+    await connection.commit();
+    res.json({ success: true, message: "Balance payment successful" });
+
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error("Pay Remaining Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
 export const templePuja = async (req, res) => {
   try {
     const [rows] = await db.query(`

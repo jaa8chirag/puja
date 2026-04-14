@@ -548,11 +548,11 @@ const ServiceModal = ({ close, editData, refresh }) => {
                     </div>
                     {editData && (
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <Edit
+                        {/* <Edit
                           size={14}
                           className="text-purple-400 cursor-pointer"
                           onClick={() => setEditingBenefit(b)}
-                        />
+                        /> */}
                         <Trash2
                           size={14}
                           className="text-red-400 cursor-pointer"

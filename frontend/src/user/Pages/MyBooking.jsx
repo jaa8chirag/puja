@@ -8,7 +8,9 @@ import {
   ShoppingBag,
   Search,
   X,
+  CreditCard,
 } from "lucide-react";
+import { loadRazorpay } from "../utils/razorpay";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -22,8 +24,8 @@ const MyBookings = () => {
     data: null,
   });
 
-  // ── New States for Tabs & Search ──
-  const [activeTab, setActiveTab] = useState("upcoming"); // "upcoming" | "completed"
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [activeSubTab, setActiveSubTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const get24HourTime = (timeStr) => {
@@ -57,6 +59,86 @@ const MyBookings = () => {
     fetchMyBookings();
   }, []);
 
+  const handlePayRemaining = async (booking) => {
+    const res = await loadRazorpay();
+    if (!res) {
+      setErrorMsg("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const balance = booking.total_price - booking.paid_amount;
+    
+    if (balance <= 0) return;
+
+    try {
+      // 1. Create Razorpay Order
+      const orderRes = await fetch(`${API_BASE_URL}/razorpay/create-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ amount: balance }),
+      });
+      const orderData = await orderRes.json();
+      
+      if (!orderData.success) {
+        throw new Error("Could not create order");
+      }
+
+      // 2. Open Razorpay
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.order.amount,
+        currency: "INR",
+        name: "Sri Vedic Puja",
+        description: `Remaining Balance for ${booking.puja_name}`,
+        order_id: orderData.order.id,
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch(`${API_BASE_URL}/puja/pay-balance`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                booking_id: booking.id,
+                amount: balance,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              setBookings(prev => prev.map(b => 
+                b.id === booking.id ? { ...b, paid_amount: b.total_price, payment_status: 'fully_paid' } : b
+              ));
+              setErrorMsg("Payment successful! Full payment received.");
+              setTimeout(() => setErrorMsg(""), 3000);
+            }
+          } catch (err) {
+            console.error(err);
+            setErrorMsg("Payment verification failed.");
+          }
+        },
+        prefill: {
+          name: localStorage.getItem("userName") || "",
+          contact: localStorage.getItem("userPhone") || "",
+        },
+        theme: { color: "#F97316" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Failed to initiate payment.");
+    }
+  };
+
   const handleCancelBooking = async (bookingId) => {
     const token = localStorage.getItem("token");
     try {
@@ -65,7 +147,7 @@ const MyBookings = () => {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       );
       const data = await response.json();
       if (data.success) {
@@ -78,8 +160,8 @@ const MyBookings = () => {
                   assignment_status: "cancelled",
                   otp: null,
                 }
-              : b,
-          ),
+              : b
+          )
         );
         setErrorMsg("Booking cancelled successfully!");
         setTimeout(() => setErrorMsg(""), 3000);
@@ -96,20 +178,19 @@ const MyBookings = () => {
     }
   };
 
-  // ── Reusable Cancel Button with Tooltip ──
   const CancelButton = ({ booking, isExpired, isCompleted, size = "md" }) => {
     const isCancelled =
       booking.assignment_status === "declined" ||
       booking.status === "declined" ||
       booking.assignment_status === "cancelled" ||
       booking.status === "cancelled";
-    const isDisabled = isExpired || isCompleted || isCancelled;
 
+    const isDisabled = isExpired || isCompleted || isCancelled;
     const tooltipText = isCancelled
       ? "Booking already cancelled"
       : isCompleted
-        ? "Puja completed, cannot cancel"
-        : "Puja date & time expired, cannot cancel";
+      ? "Puja completed, cannot cancel"
+      : "Puja date & time expired, cannot cancel";
 
     const baseClass =
       size === "sm"
@@ -133,7 +214,6 @@ const MyBookings = () => {
           <Trash2 size={size === "sm" ? 11 : 12} />
           {size === "sm" ? "Cancel" : "Cancel Booking"}
         </button>
-
         {isDisabled && (
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <div className="bg-gray-800 text-white text-[11px] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg">
@@ -146,24 +226,27 @@ const MyBookings = () => {
     );
   };
 
-  // ── Filter logic Fix ──
   const filteredBookings = bookings.filter((b) => {
     const isCompleted = b.assignment_status === "completed";
 
-    // Tab filter:
-    // Agar 'completed' tab hai toh sirf completed dikhao.
-    // Agar 'upcoming' tab hai toh pending, accepted, ya cancelled dikhao.
     const tabMatch = activeTab === "completed" ? isCompleted : !isCompleted;
 
-    // Search filter
+    let subTabMatch = true;
+    if (activeSubTab === "home_puja") {
+      subTabMatch = ["home_puja", "katha", "pinddanOnline"].includes(b.puja_type);
+    } else if (activeSubTab === "temple_puja") {
+      subTabMatch = !["home_puja", "katha", "pinddanOnline"].includes(b.puja_type);
+    }
+
     const searchMatch =
       searchQuery === "" ||
       b.puja_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.bookingId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.final_address?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return tabMatch && searchMatch;
+    return tabMatch && subTabMatch && searchMatch;
   });
+
   if (loading)
     return (
       <div className="text-center py-20 text-orange-600 font-bold">
@@ -172,8 +255,8 @@ const MyBookings = () => {
     );
 
   return (
-    <div className="min-h-screen bg-[#FFF4E1] p-4 sm:p-6">
-      {/* ── CONFIRMATION MODAL ── */}
+    <div className="min-h-screen bg-[#FFF4E1] p-4 sm:p-6 overflow-x-hidden">
+      {/* Confirmation Modal & Alert (same as before) */}
       {showConfirm.show &&
         (() => {
           const b = showConfirm.data;
@@ -181,7 +264,6 @@ const MyBookings = () => {
           const time24 = get24HourTime(b?.preferred_time);
           const mergedDateTime = new Date(`${bookingDate}T${time24}:00`);
           const isExpired = mergedDateTime < new Date();
-
           return (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
               <div className="bg-[#FFFCEF] rounded-3xl p-8 max-w-md w-full shadow-2xl border border-orange-100">
@@ -196,7 +278,6 @@ const MyBookings = () => {
                     </span>
                     ?
                   </p>
-
                   {isExpired && (
                     <div className="w-full bg-red-50 border border-red-100 p-3 rounded-xl mb-4">
                       <p className="text-red-600 font-bold text-[13px] flex items-center gap-2">
@@ -204,7 +285,6 @@ const MyBookings = () => {
                       </p>
                     </div>
                   )}
-
                   <div className="w-full border-t border-gray-200 pt-4 mb-6">
                     <p className="text-[#8b5e34] font-bold text-xs uppercase mb-3 tracking-widest">
                       Refund Policy:
@@ -222,7 +302,6 @@ const MyBookings = () => {
                       ))}
                     </ul>
                   </div>
-
                   <div className="flex gap-3 w-full">
                     <button
                       onClick={() =>
@@ -245,7 +324,6 @@ const MyBookings = () => {
           );
         })()}
 
-      {/* ── ALERT MESSAGE ── */}
       {errorMsg && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] animate-bounce text-center min-w-[300px]">
           <div
@@ -264,7 +342,6 @@ const MyBookings = () => {
       )}
 
       <div className="max-w-6xl mx-auto">
-        {/* ── Header ── */}
         <h2 className="text-4xl font-serif text-[#3b2a1a] mb-2">
           My Sacred <span className="text-orange-500 italic">Bookings</span>
         </h2>
@@ -272,38 +349,29 @@ const MyBookings = () => {
           Track and manage your puja bookings.
         </p>
 
-        {/* ── Tabs & Search Row ── */}
+        {/* Main Tabs + Search */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          {/* Tabs */}
           <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm border border-orange-100 w-fit">
             <button
-              onClick={() => setActiveTab("upcoming")}
-              className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${
-                activeTab === "upcoming"
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "text-gray-600 hover:text-orange-500"
+              onClick={() => { setActiveTab("upcoming"); setActiveSubTab("all"); }}
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === "upcoming" ? "bg-orange-500 text-white shadow-md" : "text-gray-600 hover:text-orange-500"
               }`}
             >
               Pending
             </button>
             <button
-              onClick={() => setActiveTab("completed")}
-              className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${
-                activeTab === "completed"
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "text-gray-600 hover:text-orange-500"
+              onClick={() => { setActiveTab("completed"); setActiveSubTab("all"); }}
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === "completed" ? "bg-orange-500 text-white shadow-md" : "text-gray-600 hover:text-orange-500"
               }`}
             >
               Completed
             </button>
           </div>
 
-          {/* Search Box */}
           <div className="relative w-full sm:w-80">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-            />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchQuery}
@@ -322,69 +390,60 @@ const MyBookings = () => {
           </div>
         </div>
 
-        {/* ── Bookings List ── */}
+        {/* Sub Tabs */}
+        <div className="mb-6 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm border border-orange-100 w-fit min-w-max">
+            <button onClick={() => setActiveSubTab("all")} className={`px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeSubTab === "all" ? "bg-orange-500 text-white shadow-md" : "text-gray-600 hover:text-orange-500"}`}>All</button>
+            <button onClick={() => setActiveSubTab("home_puja")} className={`px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeSubTab === "home_puja" ? "bg-orange-500 text-white shadow-md" : "text-gray-600 hover:text-orange-500"}`}>Home Puja</button>
+            <button onClick={() => setActiveSubTab("temple_puja")} className={`px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeSubTab === "temple_puja" ? "bg-orange-500 text-white shadow-md" : "text-gray-600 hover:text-orange-500"}`}>Temple Puja</button>
+          </div>
+        </div>
+
+        {/* Bookings List */}
         {filteredBookings.length === 0 ? (
           <div className="bg-white p-8 sm:p-10 rounded-3xl text-center shadow-sm">
             <p className="text-gray-500 font-medium">
-              {searchQuery
-                ? "No bookings found matching your search."
-                : activeTab === "completed"
-                  ? "No completed bookings yet."
-                  : "No upcoming bookings."}
+              {searchQuery ? "No bookings found matching your search." : activeTab === "completed" ? "No completed bookings yet." : "No upcoming/pending bookings."}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {filteredBookings.map((b) => {
-              const isTemplePuja = ["temple_puja", "pind_dan"].includes(
-                b.puja_type,
-              );
+              const isTemplePuja = ["temple_puja", "pind_dan"].includes(b.puja_type);
               const bookingDate = b.preferred_date.split("T")[0];
               const time24 = get24HourTime(b.preferred_time);
               const mergedDateTime = new Date(`${bookingDate}T${time24}:00`);
-
               const isEventExpired = mergedDateTime < new Date();
               const isCompleted = b.assignment_status === "completed";
 
               return (
                 <div
                   key={b.id}
-                  className="relative overflow-visible bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-orange-300 transition-all hover:shadow-md flex flex-col md:flex-row md:items-stretch gap-4 sm:gap-6"
+                  className="relative bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-orange-300 hover:shadow-md overflow-hidden flex flex-col md:flex-row gap-5 md:gap-6"
                 >
-                  {/* Puja type badge */}
-                  <div
-                    className={`absolute top-0 right-0 px-3 py-1 rounded-bl-2xl rounded-tr-2xl text-[10px] font-black uppercase tracking-widest text-white z-10 ${
-                      isTemplePuja ? "bg-orange-500" : "bg-blue-500"
-                    }`}
-                  >
+                  {/* Badge */}
+                  <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-2xl rounded-tr-2xl text-[10px] font-black uppercase tracking-widest text-white z-10 ${isTemplePuja ? "bg-orange-500" : "bg-blue-500"}`}>
                     {isTemplePuja ? "Temple Ceremony" : "Home Ritual"}
                   </div>
 
                   {/* Image */}
-                  <div
-                    className={`w-full h-48 md:w-40 shrink-0 overflow-hidden rounded-2xl ${
-                      isTemplePuja ? "md:h-40" : "md:h-32"
-                    }`}
-                  >
+                  <div className={`w-full md:w-56 shrink-0 overflow-hidden rounded-2xl ${isTemplePuja ? "md:h-56 h-48" : "md:h-56 h-48"}`}>
                     <img
                       src={`${API_BASE_URL}/uploads/${b.image_url}`}
-                      className="w-full h-full object-cover rounded-2xl shadow-sm"
+                      className="w-full h-full object-cover rounded-2xl"
                       alt={b.puja_name}
                     />
                   </div>
 
-                  {/* Main content */}
+                  {/* Main Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2 pr-24">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 pr-8 md:pr-0">
                       {b.puja_name}
                     </h3>
 
                     <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-3 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
-                        <Calendar
-                          size={13}
-                          className="text-orange-500 shrink-0"
-                        />
+                        <Calendar size={13} className="text-orange-500 shrink-0" />
                         {new Date(b.preferred_date).toLocaleDateString("en-IN")}
                       </div>
                       <div className="flex items-center gap-2">
@@ -392,17 +451,13 @@ const MyBookings = () => {
                         {b.preferred_time}
                       </div>
                       <div className="flex items-start gap-2 col-span-2">
-                        <MapPin
-                          size={13}
-                          className="text-orange-500 shrink-0 mt-0.5"
-                        />
+                        <MapPin size={13} className="text-orange-500 shrink-0 mt-0.5" />
                         <span className="italic text-gray-500 leading-tight text-[12px] sm:text-sm">
                           {b.final_address}
                         </span>
                       </div>
                     </div>
 
-                    {/* Samagri Kit Badge */}
                     {b.samagrikit === 1 && (
                       <div className="mt-3">
                         <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-2xl px-3.5 py-2 shadow-sm">
@@ -410,129 +465,120 @@ const MyBookings = () => {
                             <ShoppingBag size={12} className="text-white" />
                           </div>
                           <div className="flex flex-col leading-tight">
-                            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
-                              ✔ Added On
-                            </span>
-                            <span className="text-[13px] font-black text-emerald-800 tracking-tight">
-                              Samagri Kit
-                            </span>
+                            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">✔ Added On</span>
+                            <span className="text-[13px] font-black text-emerald-800 tracking-tight">Samagri Kit</span>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    {/* Temple booking details */}
                     {isTemplePuja && (
                       <div className="mt-3 p-3 bg-white/60 rounded-xl border border-orange-100 text-xs sm:text-sm">
                         <div className="flex items-center gap-2 mb-1">
                           <Info size={12} className="text-orange-500" />
-                          <span className="font-bold text-orange-600 uppercase tracking-wider">
-                            Booking Details
-                          </span>
+                          <span className="font-bold text-orange-600 uppercase tracking-wider">Booking Details</span>
                         </div>
-                        <div className="text-gray-700 font-medium leading-relaxed">
-                          {b.final_address}
-                        </div>
+                        <div className="text-gray-700 font-medium leading-relaxed">{b.final_address}</div>
                       </div>
                     )}
 
-                    {/* OTP / Pandit status */}
-                    {b.otp &&
-                      b.assignment_status !== "completed" &&
-                      (b.assignment_status === "accepted" ? (
+                    <div className="mt-4 flex flex-wrap items-center gap-6">
+                      {b.payment_status === "partially_paid" ? (
+                        <>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1.5">Payment Status</span>
+                            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-full text-[11px] font-black uppercase">
+                              <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                              Partially Paid
+                            </div>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1.5">Balance Due</span>
+                            <div className="text-base font-black text-amber-800">
+                              ₹{(b.total_price - b.paid_amount).toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1.5">Payment Status</span>
+                          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-3 py-1.5 rounded-full text-[11px] font-black uppercase">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                            Fully Paid
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* OTP Section same as before */}
+                    {b.otp && b.assignment_status !== "completed" && (
+                      b.assignment_status === "accepted" ? (
                         <div className="mt-3 inline-flex items-center gap-2.5 bg-green-50 border border-green-300 rounded-2xl px-3.5 py-2 shadow-sm">
                           <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-br from-green-400 to-green-600 rounded-full shrink-0 shadow-sm">
-                            <span className="text-white text-[10px] font-black">
-                              ✓
-                            </span>
+                            <span className="text-white text-[10px] font-black">✓</span>
                           </div>
                           <div className="flex flex-col leading-tight">
-                            <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest">
-                              Booking Accepted
-                            </span>
+                            <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest">Booking Accepted</span>
                             <span className="text-[13px] font-black text-green-700 tracking-tight">
-                              {b.pandit_name
-                                ? `Pandit: ${b.pandit_name}`
-                                : "Pandit assigned"}
+                              {b.pandit_name ? `Pandit: ${b.pandit_name}` : "Pandit assigned"}
                             </span>
                           </div>
                         </div>
                       ) : (
                         <div className="mt-3 inline-flex items-center gap-2.5 bg-orange-50 border border-orange-300 rounded-2xl px-3.5 py-2 shadow-sm">
                           <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full shrink-0 shadow-sm">
-                            <span className="text-white text-[10px] font-black">
-                              🔐
-                            </span>
+                            <span className="text-white text-[10px] font-black">🔐</span>
                           </div>
                           <div className="flex flex-col leading-tight">
-                            <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest">
-                              Entry OTP
-                            </span>
-                            <span className="text-[15px] font-black text-orange-700 tracking-[0.2em]">
-                              {b.otp}
-                            </span>
+                            <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest">Entry OTP</span>
+                            <span className="text-[15px] font-black text-orange-700 tracking-[0.2em]">{b.otp}</span>
                           </div>
                         </div>
-                      ))}
+                      )
+                    )}
 
-                    {/* ── MOBILE bottom row ── */}
+                    {/* Mobile Status + Cancel */}
                     <div className="mt-4 flex items-center justify-between gap-2 md:hidden">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter shrink-0">
-                        ID:{" "}
-                        <span className="text-orange-600">{b.bookingId}</span>
+                        ID: <span className="text-orange-600">{b.bookingId}</span>
                       </p>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                            b.assignment_status === "pending"
-                              ? "bg-orange-100 text-orange-600 border border-orange-200"
-                              : b.assignment_status === "declined"
-                                ? "text-red-500 bg-red-100 border border-red-200"
-                                : b.assignment_status === "completed"
-                                  ? "bg-green-100 text-green-600 border border-green-200"
-                                  : "bg-blue-100 text-blue-600 border border-blue-200"
-                          }`}
-                        >
+                      <div className="flex flex-col items-end gap-2 shrink-0 mt-1">
+                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" : b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" : b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" : "bg-blue-100 text-blue-600 border border-blue-200"}`}>
                           {b.assignment_status}
                         </div>
-                        <CancelButton
-                          booking={b}
-                          isExpired={isEventExpired}
-                          isCompleted={isCompleted}
-                          size="sm"
-                        />
+                        <CancelButton booking={b} isExpired={isEventExpired} isCompleted={isCompleted} size="sm" />
+                        {b.payment_status === "partially_paid" && (
+                          <button
+                            onClick={() => handlePayRemaining(b)}
+                            className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                          >
+                            <CreditCard size={12} />
+                            Pay Balance
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* ── DESKTOP right panel ── */}
-                  <div className="hidden md:flex flex-col justify-center items-end border-l border-gray-100 pl-6 min-w-[155px]">
+                  {/* Desktop Right Panel */}
+                  <div className="hidden md:flex flex-col justify-center items-end border-l border-gray-100 pl-6 min-w-[160px] flex-shrink-0">
                     <p className="mb-3 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                      ID:{" "}
-                      <span className="ml-1 text-orange-600">
-                        {b.bookingId}
-                      </span>
+                      ID: <span className="ml-1 text-orange-600">{b.bookingId}</span>
                     </p>
-                    <div
-                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                        b.assignment_status === "pending"
-                          ? "bg-orange-100 text-orange-600 border border-orange-200"
-                          : b.assignment_status === "declined"
-                            ? "text-red-500 bg-red-100 border border-red-200"
-                            : b.assignment_status === "completed"
-                              ? "bg-green-100 text-green-600 border border-green-200"
-                              : "bg-blue-100 text-blue-600 border border-blue-200"
-                      }`}
-                    >
+                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" : b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" : b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" : "bg-blue-100 text-blue-600 border border-blue-200"}`}>
                       {b.assignment_status}
                     </div>
-                    <div className="mt-3">
-                      <CancelButton
-                        booking={b}
-                        isExpired={isEventExpired}
-                        isCompleted={isCompleted}
-                        size="md"
-                      />
+                    <div className="space-y-3 flex flex-col items-end mt-5">
+                      <CancelButton booking={b} isExpired={isEventExpired} isCompleted={isCompleted} size="md" />
+                      {b.payment_status === "partially_paid" && (
+                        <button
+                          onClick={() => handlePayRemaining(b)}
+                          className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <CreditCard size={16} />
+                          Pay Balance
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

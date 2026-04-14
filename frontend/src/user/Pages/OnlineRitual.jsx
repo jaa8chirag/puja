@@ -19,6 +19,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { LotusIcon } from "../Components/Icons";
 // const SERVICE_ID = 48; // Online Pind Dan service ID
 
 const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
@@ -26,32 +27,32 @@ const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
 // ── Fallback benefits agar backend se nahi aaye ──
 const FALLBACK_BENEFITS = [
   {
-    icon: <Heart />,
+    icon: <LotusIcon />,
     title: "Ancestral Peace",
     desc: "Brings peace and liberation to the souls of ancestors",
   },
   {
-    icon: <Shield />,
+    icon: <LotusIcon />,
     title: "Pitru Dosh Relief",
     desc: "Resolves generational curses and ancestral doshas",
   },
   {
-    icon: <Zap />,
+    icon: <LotusIcon />,
     title: "Financial Growth",
     desc: "Removes obstacles blocking prosperity and success",
   },
   {
-    icon: <Users />,
+    icon: <LotusIcon />,
     title: "Family Harmony",
     desc: "Restores peace, love, and unity within the family",
   },
   {
-    icon: <Sparkles />,
+    icon: <LotusIcon />,
     title: "Blessing of Children",
     desc: "Removes hurdles in conception and child welfare",
   },
   {
-    icon: <Moon />,
+    icon: <LotusIcon />,
     title: "Mental Balance",
     desc: "Eliminates fear, anxiety, and emotional distress",
   },
@@ -59,7 +60,7 @@ const FALLBACK_BENEFITS = [
 
 // ── Icon mapper for backend benefits ──
 const getBenefitIcon = (name = "", index = 0) => {
-  return <CheckCircle className="text-green-600" />;
+  return <LotusIcon />;
 };
 
 const STATIC_FAQS = [
@@ -456,9 +457,9 @@ const OnlineRitual = () => {
 
 // ── HELPER COMPONENTS ──
 const BenefitCard = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-2 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 shadow-sm">
-    <div className="hidden md:flex p-3 bg-white text-orange-500 rounded-xl shadow-sm shrink-0">
-      {React.cloneElement(icon, { size: 20 })}
+  <div className="flex items-center gap-2 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm">
+    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 32 })}
     </div>
     <div className="flex flex-col min-w-0">
       <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-tight truncate md:whitespace-normal">

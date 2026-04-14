@@ -729,6 +729,7 @@ const CustomerCareDashboard = () => {
   const [queryActionLoading, setQueryActionLoading] = useState(null);
   const [expandedQuery, setExpandedQuery] = useState(null);
   const [selectedPanditPrice, setSelectedPanditPrice] = useState({});
+  const [pujaStatusFilter, setPujaStatusFilter] = useState("all");
 
   // ── Global notification + socket state ──
   const [toasts, setToasts] = useState([]);
@@ -957,9 +958,12 @@ const CustomerCareDashboard = () => {
   };
 
   /* ── Filtered lists ── */
-  const filteredBookings = bookings.filter((b) =>
-    b.puja_name?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredBookings = bookings.filter((b) => {
+    const matchesSearch = b.puja_name?.toLowerCase().includes(search.toLowerCase()) || 
+                          b.bookingId?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = pujaStatusFilter === "all" || b.status?.toLowerCase() === pujaStatusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
   const filteredPandits = pandits.filter(
     (p) =>
       p.phone.includes(panditSearch) ||
@@ -1133,24 +1137,43 @@ const CustomerCareDashboard = () => {
             </div>
           </div>
           {(activeTab === "pujas" || activeTab === "querys") && (
-            <div className="relative">
-              <Search
-                size={13}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-              />
-              <input
-                type="text"
-                placeholder={
-                  activeTab === "pujas" ? "Search puja..." : "Search queries..."
-                }
-                value={activeTab === "pujas" ? search : querySearch}
-                onChange={(e) =>
-                  activeTab === "pujas"
-                    ? setSearch(e.target.value)
-                    : setQuerySearch(e.target.value)
-                }
-                className="bg-[#0f172a]/80 border border-blue-500/10 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-300 placeholder:text-slate-600 w-36 sm:w-52 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30"
-              />
+            <div className="flex items-center gap-3">
+              {activeTab === "pujas" && (
+                <div className="relative group">
+                  <select
+                    value={pujaStatusFilter}
+                    onChange={(e) => setPujaStatusFilter(e.target.value)}
+                    className="appearance-none bg-[#0f172a]/80 border border-blue-500/10 rounded-xl py-2 pl-4 pr-10 text-[11px] font-bold text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all cursor-pointer hover:border-blue-500/30"
+                  >
+                    <option value="all">ALL STATUS</option>
+                    <option value="pending">PENDING</option>
+                    <option value="accepted">ACCEPTED</option>
+                    <option value="completed">COMPLETED</option>
+                    <option value="declined">DECLINED</option>
+                  </select>
+                  <ChevronRight size={12} className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-slate-500 pointer-events-none group-hover:text-blue-400 transition-colors" />
+                </div>
+              )}
+
+              <div className="relative">
+                <Search
+                  size={13}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                />
+                <input
+                  type="text"
+                  placeholder={
+                    activeTab === "pujas" ? "Search name/ID..." : "Search queries..."
+                  }
+                  value={activeTab === "pujas" ? search : querySearch}
+                  onChange={(e) =>
+                    activeTab === "pujas"
+                      ? setSearch(e.target.value)
+                      : setQuerySearch(e.target.value)
+                  }
+                  className="bg-[#0f172a]/80 border border-blue-500/10 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-300 placeholder:text-slate-600 w-36 sm:w-52 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30"
+                />
+              </div>
             </div>
           )}
         </header>

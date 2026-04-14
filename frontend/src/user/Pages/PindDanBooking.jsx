@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { handleRazorpayPayment } from "../utils/razorpay";
 import {
   MapPin,
   Calendar,
@@ -35,15 +36,69 @@ import {
 } from "lucide-react";
 import CouponSelector from "../Components/CouponSelector";
 import { useNavigate, useParams } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { LotusIcon } from "../Components/Icons";
 
 // ═══════════════════════════════════════════════════════════
 // HELPER: Icon Mapper - Benefit names ke basis pe icons assign
 // ═══════════════════════════════════════════════════════════
 const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
-  return <CheckCircle />;
+  return <LotusIcon />;
+};
+
+
+const PaymentOptionSelector = ({ paymentOption, setPaymentOption, grandTotal, advancePercentage }) => {
+  return (
+    <div className="space-y-3 pt-4 border-t border-orange-200 mt-4 px-2">
+      <h4 className="text-[11px] font-black uppercase text-orange-600 tracking-[0.2em] mb-3">Choose Payment Mode</h4>
+      <div className="grid grid-cols-1 gap-3">
+        {/* Full Payment */}
+        <div 
+          onClick={() => setPaymentOption("full")}
+          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${
+            paymentOption === "full" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              paymentOption === "full" ? "border-orange-500 bg-orange-500" : "border-orange-200"
+            }`}>
+              {paymentOption === "full" && <div className="w-2 h-2 rounded-full bg-white" />}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 leading-none">Full Payment</p>
+              <p className="text-[10px] text-gray-500 mt-1">Pay 100% amount now</p>
+            </div>
+          </div>
+          <span className="font-black text-orange-600">₹{grandTotal}</span>
+        </div>
+
+        {/* Advance Payment */}
+        <div 
+          onClick={() => setPaymentOption("advance")}
+          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${
+            paymentOption === "advance" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              paymentOption === "advance" ? "border-orange-500 bg-orange-500" : "border-orange-200"
+            }`}>
+              {paymentOption === "advance" && <div className="w-2 h-2 rounded-full bg-white" />}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 leading-none">Advance Payment</p>
+              <p className="text-[10px] text-gray-500 mt-1">Pay {advancePercentage}% now</p>
+            </div>
+          </div>
+          <span className="font-black text-orange-600">₹{Math.round(grandTotal * advancePercentage / 100)}</span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const PindDanBooking = () => {
@@ -70,6 +125,8 @@ const PindDanBooking = () => {
   const [couponError, setCouponError] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [publicCoupons, setPublicCoupons] = useState([]);
+  const [paymentOption, setPaymentOption] = useState("full");
+  const [advancePercentage, setAdvancePercentage] = useState(25);
 
   const sections = {
     about: useRef(null),
@@ -95,6 +152,12 @@ const PindDanBooking = () => {
         const publicCouponsData = await publicCouponsRes.json();
         if (publicCouponsData.success) {
           setPublicCoupons(publicCouponsData.data);
+        }
+
+        const settingsRes = await fetch(`${API_BASE_URL}/settings/advance_payment_percentage`);
+        const settingsData = await settingsRes.json();
+        if (settingsData.success) {
+          setAdvancePercentage(Number(settingsData.value));
         }
       } catch (err) {
         console.error(err);
@@ -123,92 +186,108 @@ const PindDanBooking = () => {
   const handlePindDanPayment = async () => {
     const token = localStorage.getItem("token");
     const currentBookingId = `BK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    // const generateOTP = () => {
-    //   return Math.floor(100000 + Math.random() * 900000).toString();
-    // };
-    // const otp = generateOTP();
+
     if (!token) {
       navigate("/signin");
       return;
     }
-    setIsBooking(true);
 
-    const selectedDonationObjects = contributionList
-      .filter((item) => donations[item.id])
-      .map((item) => {
-        // id DB se find karo
-        const dbContribution = contributionOptions.find(
-          (c) => c.name === item.title,
-        );
+    const amountToPay = paymentOption === "full" ? finalTotal : Math.round((finalTotal * advancePercentage) / 100);
 
-        return {
-          contribution_type_id: dbContribution?.id,
-          amount: Number(item.price),
-        };
-      });
-    // 🔥 Temple Donation manually add karo
-    if (donations["Temple Donation"]) {
-      const temple = contributionOptions.find(
-        (c) => c.name === "Temple Donation",
-      );
-
-      if (temple) {
-        selectedDonationObjects.push({
-          contribution_type_id: temple.id,
-          amount: Number(temple.price),
-        });
-      }
-    }
-    const bookingData = {
-      bookingId: currentBookingId,
-      // otp,
-      puja_id: id,
-      date: service?.dateOfStart
-        ? new Date(service.dateOfStart).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-
-      time: service?.dateOfStart
-        ? new Date(service.dateOfStart).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-        : "10:00 AM",
-      address: service?.address || "N/A",
-      city: "Default City",
-      state: service.address.split(",")[service.address.split(",").length - 1],
-      devoteeName: token
-        ? JSON.parse(atob(token.split(".")[1])).name
-        : "Guest User",
-      ticket_type: selectedTicket,
-      donations: selectedDonationObjects,
-      total_price: finalTotal,
-      coupon_code: appliedCoupon ? appliedCoupon.code : null,
-      discount_amount: discountAmount,
-    };
     try {
-      const response = await fetch(`${API_BASE_URL}/puja/bookingDetails`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      // 1. Start Razorpay Payment
+      await handleRazorpayPayment({
+        amount: amountToPay,
+        userName: token ? jwtDecode(token).name : "Guest User",
+        userEmail: "",
+        userPhone: "",
+        onSuccess: async (razorpayResponse) => {
+          setIsBooking(true);
+
+          const selectedDonationObjects = contributionList
+            .filter((item) => donations[item.id])
+            .map((item) => {
+              const dbContribution = contributionOptions.find(
+                (c) => c.name === item.title,
+              );
+              return {
+                contribution_type_id: dbContribution?.id,
+                amount: Number(item.price),
+              };
+            });
+
+          if (donations["Temple Donation"]) {
+            const temple = contributionOptions.find(
+              (c) => c.name === "Temple Donation",
+            );
+            if (temple) {
+              selectedDonationObjects.push({
+                contribution_type_id: temple.id,
+                amount: Number(temple.price),
+              });
+            }
+          }
+
+          const bookingData = {
+            bookingId: currentBookingId,
+            puja_id: id,
+            date: formattedDateForBooking,
+            time: service?.dateOfStart
+              ? new Date(service.dateOfStart).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                })
+              : "10:00 AM",
+            address: service?.address || "N/A",
+            city: "Default City",
+            state: service.address.split(",")[service.address.split(",").length - 1],
+            devoteeName: token
+              ? jwtDecode(token).name
+              : "Guest User",
+            ticket_type: selectedTicket,
+            donations: selectedDonationObjects,
+            total_price: finalTotal,
+            coupon_code: appliedCoupon ? appliedCoupon.code : null,
+            discount_amount: discountAmount,
+            // Payment details
+            paid_amount: amountToPay,
+            payment_type: paymentOption,
+            razorpay_order_id: razorpayResponse.razorpay_order_id,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature,
+          };
+
+          const response = await fetch(`${API_BASE_URL}/puja/bookingDetails`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(bookingData),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Server crashed");
+          }
+
+          const result = await response.json();
+          if (result.success) {
+            navigate("/my-booking");
+          } else {
+            alert("Error: " + result.message);
+          }
+          setIsBooking(false);
         },
-        body: JSON.stringify(bookingData),
+        onError: (error) => {
+          alert("Payment failed: " + error);
+          setIsBooking(false);
+        },
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Server crashed");
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        navigate("/my-booking");
-      }
-    } catch (error) {
-      console.error("Booking Error:", error);
-      alert("Booking failed: " + error.message);
-    } finally {
+    } catch (err) {
+      console.error("Payment initiation failed:", err);
+      alert("Could not initiate payment. Please try again.");
       setIsBooking(false);
     }
   };
@@ -276,8 +355,6 @@ const PindDanBooking = () => {
     return item ? Number(item.price) : 0;
   };
 
-  // console.log("services", service);
-
   const getDescription = (name) => {
     const item = Array.from(contributionOptions).find((c) => c.name === name);
     return item?.description || "";
@@ -293,7 +370,7 @@ const PindDanBooking = () => {
     { id: "Jal Dan", title: "Jal Dan", price: getPrice("Jal Dan"), icon: <Droplets size={16} />, sub: getDescription("Jal Dan") || "Provide clean water" },
     { id: "Vriksh Dan", title: "Vriksh Dan", price: getPrice("Vriksh Dan"), icon: <Leaf size={16} />, sub: getDescription("Vriksh Dan") || "Plant trees for nature" },
     { id: "Aashray Dan", title: "Aashray Dan", price: getPrice("Aashray Dan"), icon: <Home size={16} />, sub: getDescription("Aashray Dan") || "Shelter for the homeless" },
-    { id: "Jeev Daya", title: "Jeev Daya", price: getPrice("Jeev Daya"), icon: <Bird size={16} />, sub: getDescription("Jeev Daya") || "Compassion for all beings" },
+    { id: "Jeev Daya", title: "Jeev Daya", price: getPrice("Jeev Daya"), icon: <span className="text-xl">🐄</span>, sub: getDescription("Jeev Daya") || "Compassion for all beings" },
     { id: "Gau Seva", title: "Gau Seva", price: getPrice("Gau Seva"), icon: <span className="text-xl">🐄</span>, sub: getDescription("Gau Seva") || "Feed the Gau Mata" },
   ];
 
@@ -465,32 +542,32 @@ const PindDanBooking = () => {
                       // Fallback: Default benefits agar backend se nahi aaye
                       <>
                         <BenefitSmall
-                          icon={<Heart />}
+                          icon={<LotusIcon />}
                           title="Spiritual Peace"
                           desc="Inner calm through sacred rituals"
                         />
                         <BenefitSmall
-                          icon={<Shield />}
+                          icon={<LotusIcon />}
                           title="Protection"
                           desc="Divine protection for family"
                         />
                         <BenefitSmall
-                          icon={<Zap />}
+                          icon={<LotusIcon />}
                           title="Prosperity"
                           desc="Remove obstacles from path"
                         />
                         <BenefitSmall
-                          icon={<Users />}
+                          icon={<LotusIcon />}
                           title="Harmony"
                           desc="Strengthen family bonds"
                         />
                         <BenefitSmall
-                          icon={<Sparkles />}
+                          icon={<LotusIcon />}
                           title="Positive Energy"
                           desc="Purify soul with mantras"
                         />
                         <BenefitSmall
-                          icon={<Star />}
+                          icon={<LotusIcon />}
                           title="Karma"
                           desc="Balance spiritual energies"
                         />
@@ -508,24 +585,43 @@ const PindDanBooking = () => {
                   ref={sections.contributions}
                   className="scroll-mt-44 space-y-4"
                 >
-                  <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
-                    <Sparkles size={20} /> Sacred Contributions
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {contributionList.map((item) => (
-                      <ContributionCard
-                        key={item.id}
-                        item={item}
-                        selected={donations[item.id]}
-                        onToggle={() =>
-                          setDonations((p) => ({
-                            ...p,
-                            [item.id]: !p[item.id],
-                          }))
-                        }
-                      />
-                    ))}
-                  </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
+                        <Sparkles size={20} /> Sacred Contributions
+                      </div>
+                      <button
+                        onClick={() => {
+                          const allSelected = contributionList.every(
+                            (option) => donations[option.id],
+                          );
+                          const newDonations = { ...donations };
+                          contributionList.forEach((option) => {
+                            newDonations[option.id] = !allSelected;
+                          });
+                          setDonations(newDonations);
+                        }}
+                        className="px-3 py-2 text-xs font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition"
+                      >
+                        {contributionList.every((option) => donations[option.id])
+                          ? "Deselect All"
+                          : "Select All"}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {contributionList.map((item) => (
+                        <ContributionCard
+                          key={item.id}
+                          item={item}
+                          selected={donations[item.id]}
+                          onToggle={() =>
+                            setDonations((p) => ({
+                              ...p,
+                              [item.id]: !p[item.id],
+                            }))
+                          }
+                        />
+                      ))}
+                    </div>
                 </section>
               </div>
 
@@ -575,6 +671,12 @@ const PindDanBooking = () => {
                 grandTotalBeforeDiscount={grandTotalBeforeDiscount}
                 finalTotal={finalTotal}
                 publicCoupons={publicCoupons}
+                paymentOption={paymentOption}
+                setPaymentOption={setPaymentOption}
+                grandTotal={finalTotal}
+                advancePercentage={advancePercentage}
+                handleBooking={handlePindDanPayment}
+                isBooking={isBooking}
               />
             </div>
 
@@ -685,12 +787,12 @@ const PindDanBooking = () => {
                   </div>
 
                   <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
-  {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
-</p>
+                    {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
+                  </p>
                 </div>
 
-                {/* 🎟️ Promo Code Section */}
-                <div className="py-2 border-y border-dashed border-orange-100 my-2">
+                {/* 🎫 Coupon Section */}
+                <div className="py-2 border-y border-dashed border-orange-100 my-4 px-1">
                   <CouponSelector 
                     couponInput={couponInput}
                     setCouponInput={setCouponInput}
@@ -703,10 +805,17 @@ const PindDanBooking = () => {
                   />
                 </div>
 
+                <PaymentOptionSelector 
+                  paymentOption={paymentOption}
+                  setPaymentOption={setPaymentOption}
+                  grandTotal={finalTotal}
+                  advancePercentage={advancePercentage}
+                />
+
                 <div className="flex justify-between items-start pt-2 px-1">
                   <div className="flex flex-col gap-1">
                     <span className="text-[13px] font-bold text-slate-400 uppercase tracking-wider">
-                      Total Amount
+                      {paymentOption === "full" ? "Total Amount" : "Advance Amount"}
                     </span>
                     <div className="flex items-center gap-1.5 text-emerald-600">
                       <ShieldCheck
@@ -715,7 +824,7 @@ const PindDanBooking = () => {
                         className="opacity-20"
                       />
                       <span className="text-[11px] font-bold">
-                        Inclusive of all taxes
+                        {paymentOption === "full" ? "Inclusive of all taxes" : "Balance to be paid later"}
                       </span>
                     </div>
                   </div>
@@ -726,7 +835,7 @@ const PindDanBooking = () => {
                       </p>
                     )}
                     <span className="text-2xl font-black text-orange-600 tracking-tighter">
-                      ₹{finalTotal.toLocaleString("en-IN")}
+                      ₹{(paymentOption === "full" ? finalTotal : Math.round(finalTotal * advancePercentage / 100)).toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
@@ -743,7 +852,7 @@ const PindDanBooking = () => {
                       <Loader2 className="animate-spin" size={20} />
                     ) : (
                       <>
-                        <span>Proceed to Pay</span>
+                        <span>{paymentOption === "full" ? "Proceed to Pay" : "Pay Advance"}</span>
                         <ChevronRight
                           size={18}
                           strokeWidth={3}
@@ -779,10 +888,10 @@ const PindDanBooking = () => {
               <ChevronRight size={11} className="text-orange-400" />
             </p>
             <p className="text-xl font-black text-orange-600 leading-tight">
-              ₹{finalTotal.toLocaleString("en-IN")}
+              ₹{(paymentOption === "full" ? finalTotal : Math.round(finalTotal * advancePercentage / 100)).toLocaleString("en-IN")}
             </p>
             <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <ShieldCheck size={10} /> Incl. all taxes
+              <ShieldCheck size={10} /> {paymentOption === "full" ? "Total Payable" : "Advance Payable"}
             </p>
           </div>
           <button
@@ -795,7 +904,7 @@ const PindDanBooking = () => {
               <Loader2 className="animate-spin" size={18} />
             ) : (
               <>
-                <span>Proceed to Pay</span>
+                <span>{paymentOption === "full" ? "Proceed to Pay" : "Pay Advance"}</span>
                 <ChevronRight size={16} strokeWidth={3} />
               </>
             )}
@@ -814,7 +923,9 @@ const MobileSummarySection = ({
   calculateTotal, selectedContributionsTotal, scrollToSection, getPrice,
   contributionOptions, couponInput, setCouponInput, appliedCoupon,
   handleApplyCoupon, removeCoupon, isApplying, couponError,
-  discountAmount, grandTotalBeforeDiscount, finalTotal, publicCoupons
+  discountAmount, grandTotalBeforeDiscount, finalTotal, publicCoupons,
+  paymentOption, setPaymentOption, grandTotal, advancePercentage,
+  handleBooking, isBooking
 }) => (
   <div>
     <div className="mb-5">
@@ -905,6 +1016,13 @@ const MobileSummarySection = ({
         />
       </div>
 
+      <PaymentOptionSelector 
+        paymentOption={paymentOption}
+        setPaymentOption={setPaymentOption}
+        grandTotal={finalTotal}
+        advancePercentage={advancePercentage}
+      />
+
       <div className="flex justify-between items-center pt-1 px-1">
         <div>
           <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">
@@ -973,15 +1091,15 @@ const ContributionCard = ({ item, selected, onToggle }) => (
    Mobile:  text only — no icon
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-3 bg-white p-3 md:p-5 rounded-xl border border-orange-200 transition-all shadow-sm hover:border-orange-400">
-    <div className="hidden md:flex p-2.5 bg-orange-50 text-orange-500 rounded-xl shadow-sm shrink-0">
-      {React.cloneElement(icon, { size: 18 })}
+  <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
+    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 32 })}
     </div>
-    <div>
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none">
+    <div className="flex flex-col">
+      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 leading-tight font-medium">
+      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium">
         {desc}
       </p>
     </div>
@@ -1018,5 +1136,6 @@ const FAQItem = ({ q, a }) => {
     </div>
   );
 };
+
 
 export default PindDanBooking;

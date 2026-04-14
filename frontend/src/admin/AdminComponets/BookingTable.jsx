@@ -344,7 +344,7 @@ const Bookings = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("pending");
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -393,7 +393,7 @@ const Bookings = () => {
     }
   };
 
-  const filters = ["all", "pending", "accepted", "declined", "completed"];
+  const filters = ["pending", "completed", "accepted"];
 
   return (
     <>
@@ -473,20 +473,19 @@ const Bookings = () => {
         </div>
       </div>
 
-      {/* ── Filter Pills ── */}
-      <div className="flex items-center gap-1.5 mb-4 flex-wrap">
-        <Filter size={12} className="text-slate-500 mr-1" />
+      {/* ── Filter Tabs ── */}
+      <div className="flex items-center gap-0 mb-4 border-b border-slate-700">
         {filters.map((f) => (
           <button
             key={f}
             onClick={() => {
-              setStatusFilter(f === "all" ? "" : f);
+              setStatusFilter(f);
               setPage(1);
             }}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border capitalize transition-all ${
-              (f === "all" && statusFilter === "") || f === statusFilter
-                ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-900/20"
-                : "bg-[#131e32] text-slate-400 border-slate-700 hover:bg-[#1a2744]"
+            className={`px-4 py-2 text-sm font-bold border-b-2 capitalize transition-all ${
+              f === statusFilter
+                ? "text-orange-500 border-orange-500 bg-orange-500/10"
+                : "text-slate-400 border-transparent hover:text-slate-300 hover:bg-slate-700/50"
             }`}
           >
             {f}
@@ -518,6 +517,7 @@ const Bookings = () => {
                     Customer
                   </th>
                   <th className="px-5 py-3 text-left font-semibold">Service</th>
+                  <th className="px-5 py-3 text-left font-semibold">Category</th>
                   <th className="px-5 py-3 text-center font-semibold">
                     Pandit
                   </th>
@@ -573,6 +573,11 @@ const Bookings = () => {
                             </p>
                           )}
                         </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-[11px] text-slate-400 capitalize">
+                          {b.puja_type?.replace("_", " ")}
+                        </span>
                       </td>
                       <td className="px-5 py-4 text-center">
                         {b.pandit_name === "Not Assigned" ? (
@@ -752,7 +757,7 @@ const Bookings = () => {
                       {b.user_name}
                     </p>
                     <p className="text-[10px] text-slate-500 font-semibold mt-0.5 uppercase">
-                      {b.puja_name}
+                      {b.puja_name} ({b.puja_type?.replace("_", " ")})
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-0.5 font-black text-emerald-400 text-xs ml-auto">

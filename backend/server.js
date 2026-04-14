@@ -31,6 +31,8 @@ import faqRouter from "./routes/faqRoutes.js";
 import couponRouter from "./routes/couponRouter.js";
 import reviewsRouter from "./routes/reviewsRouter.js";
 import newsletterRouter from "./routes/newsletterRouter.js";
+import razorpayRouter from "./routes/razorpayRouter.js";
+import settingsRouter from "./routes/settingsRouter.js";
 
 dotenv.config();
 
@@ -570,6 +572,8 @@ app.use("/api/admin/faq", faqRouter);
 app.use("/api/coupons", couponRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/newsletter", newsletterRouter);
+app.use("/api/razorpay", razorpayRouter);
+app.use("/api/settings", settingsRouter);
 
 const startServer = async () => {
   try {

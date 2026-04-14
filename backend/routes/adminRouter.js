@@ -1,5 +1,5 @@
 import express from "express";
-
+import { upload, pdfUpload } from "../middleware/multerMiddleware.js";
 import { adminOnly } from "../middleware/admin.js";
 import {
   AdminLoginRequest,
@@ -65,10 +65,20 @@ import {
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
-import { upload } from "../middleware/multerMiddleware.js";
 
 const router = express.Router();
 
+
+router.post(
+  "/replace-checklist",
+  verifyToken,
+  adminOnly,
+  pdfUpload.single("pdf"),
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "File nahi mili" });
+    res.json({ success: true, message: "Checklist successfully update ho gayi ✅" });
+  }
+);
 // Admin Authentication Routes can be added here (e.g., login, logout)
 router.post("/login", AdminLoginRequest);
 router.post("/verify-otp", AdminVerifyOtp);

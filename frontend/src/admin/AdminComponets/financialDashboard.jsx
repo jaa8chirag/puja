@@ -214,72 +214,69 @@ const OverviewTab = () => {
             <KpiCard
               loading={summary.loading}
               icon="💰"
-              label="Total Revenue"
+              label="Money Received"
               value={fmt(s.total_revenue)}
-              sub="Completed bookings"
-              accent="orange"
+              sub="Actual cash collected"
+              accent="green"
             />
             <KpiCard
               loading={summary.loading}
-              icon="📅"
-              label="This Month"
-              value={fmt(s.month_revenue)}
-              sub={new Date().toLocaleString("default", {
-                month: "long",
-                year: "numeric",
-              })}
-              accent="amber"
+              icon="📈"
+              label="Total Value"
+              value={fmt(s.total_receivable)}
+              sub="Total booking value"
+              accent="blue"
             />
             <KpiCard
               loading={summary.loading}
-              icon="⚡"
-              label="Today's Revenue"
-              value={fmt(s.today_revenue)}
-              sub="Live"
-              accent="yellow"
+              icon="⏳"
+              label="Remaining Balance"
+              value={fmt(s.total_balance)}
+              sub="To be collected"
+              accent="rose"
             />
-            <KpiCard
+             <KpiCard
               loading={summary.loading}
               icon="🙏"
               label="Total Donations"
               value={fmt(s.total_donations)}
               sub="All contributions"
-              accent="green"
+              accent="amber"
             />
           </div>
           {/* KPI Row 2 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <KpiCard
               loading={summary.loading}
+              icon="📅"
+              label="This Month"
+              value={fmt(s.month_revenue)}
+              sub="Money received"
+              accent="orange"
+            />
+            <KpiCard
+              loading={summary.loading}
+              icon="⚡"
+              label="Today's Cash"
+              value={fmt(s.today_revenue)}
+              sub="Live from today"
+              accent="yellow"
+            />
+             <KpiCard
+              loading={summary.loading}
               icon="📦"
               label="Total Bookings"
               value={s.total_bookings}
               sub={`${completed} completed`}
-              accent="blue"
-            />
-            <KpiCard
-              loading={summary.loading}
-              icon="✅"
-              label="Completed"
-              value={completed}
-              sub="Pujas done"
-              accent="green"
-            />
-            <KpiCard
-              loading={summary.loading}
-              icon="⏳"
-              label="Pending"
-              value={pending}
-              sub="Awaiting action"
-              accent="amber"
+              accent="purple"
             />
             <KpiCard
               loading={summary.loading}
               icon="👥"
               label="Users / Pandits"
               value={`${s.total_users || 0} / ${s.total_pandits || 0}`}
-              sub="Registered"
-              accent="purple"
+              sub="Registered total"
+              accent="cyan"
             />
           </div>
         </>
@@ -508,15 +505,16 @@ const TransactionsTab = () => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [status, setStatus] = useState("all");
+  const [payType, setPayType] = useState("all");
   const [applyRange, setApplyRange] = useState(false);
   const [rangePage, setRangePage] = useState(1);
 
   const txEndpoint =
     applyRange && from && to
-      ? `/date-range?from=${from}&to=${to}&status=${status}&page=${rangePage}&limit=10`
-      : `/transactions?page=${page}&limit=10`;
+      ? `/date-range?from=${from}&to=${to}&status=${status}&payment_type=${payType}&page=${rangePage}&limit=10`
+      : `/transactions?page=${page}&payment_type=${payType}&limit=10`;
 
-  const tx = useApi(txEndpoint, [page, applyRange, rangePage, status]);
+  const tx = useApi(txEndpoint, [page, applyRange, rangePage, status, payType]);
 
   // Date range wala data
   const rangeSummary = applyRange ? tx.data?.summary : null;
@@ -553,38 +551,47 @@ const TransactionsTab = () => {
           );
         })}
 
+        {/* Payment Type Dropdown */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold tracking-widest uppercase text-white/30">
+            Payment Type
+          </label>
+          <select
+            value={payType}
+            onChange={(e) => {
+              setPayType(e.target.value);
+              setPage(1);
+              setRangePage(1);
+            }}
+            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all min-w-[140px]"
+          >
+            <option value="all" className="bg-[#1a1f35]">All Types</option>
+            <option value="full" className="bg-[#1a1f35]">Full Payment</option>
+            <option value="advance" className="bg-[#1a1f35]">Advance Payment</option>
+          </select>
+        </div>
+
         {/* Status Dropdown */}
-        {applyRange && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold tracking-widest uppercase text-white/30">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setRangePage(1);
-              }}
-              className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all min-w-[140px]"
-            >
-              <option value="all" className="bg-[#1a1f35]">
-                All Status
-              </option>
-              <option value="completed" className="bg-[#1a1f35]">
-                Completed
-              </option>
-              <option value="pending" className="bg-[#1a1f35]">
-                Pending
-              </option>
-              <option value="accepted" className="bg-[#1a1f35]">
-                Accepted
-              </option>
-              <option value="declined" className="bg-[#1a1f35]">
-                Declined
-              </option>
-            </select>
-          </div>
-        )}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold tracking-widest uppercase text-white/30">
+            Status
+          </label>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+              setRangePage(1);
+            }}
+            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all min-w-[140px]"
+          >
+            <option value="all" className="bg-[#1a1f35]">All Status</option>
+            <option value="completed" className="bg-[#1a1f35]">Completed</option>
+            <option value="pending" className="bg-[#1a1f35]">Pending</option>
+            <option value="accepted" className="bg-[#1a1f35]">Accepted</option>
+            <option value="declined" className="bg-[#1a1f35]">Declined</option>
+          </select>
+        </div>
 
         <button
           onClick={() => {
@@ -654,14 +661,15 @@ const TransactionsTab = () => {
                 <thead>
                   <tr className="text-left text-[10px] text-white/30 border-b border-white/5 uppercase tracking-wider">
                     {[
-                      "Booking ID",
-                      "User",
-                      "Puja",
-                      "City",
-                      "Status",
-                      "Amount",
-                      "Date",
-                    ].map((h) => (
+                        "Booking ID",
+                        "User",
+                        "Puja / Type",
+                        "Total",
+                        "Paid",
+                        "Balance",
+                        "Payment Status",
+                        "Date",
+                      ].map((h) => (
                       <th
                         key={h}
                         className="pb-3 pr-4 font-bold whitespace-nowrap"
@@ -690,23 +698,35 @@ const TransactionsTab = () => {
                       <td className="py-3.5 pr-4 font-mono text-xs text-orange-400/80">
                         {t.bookingId || "—"}
                       </td>
-                      <td className="py-3.5 pr-4 font-semibold text-white/80">
-                        {t.user_name}
-                      </td>
-                      <td
-                        className="py-3.5 pr-4 text-white/50 max-w-[140px] truncate"
-                        title={t.puja_name}
-                      >
-                        {t.puja_name}
-                      </td>
-                      <td className="py-3.5 pr-4 text-white/40 text-xs">
-                        {t.city}
+                      <td className="py-3.5 pr-4">
+                        <p className="font-semibold text-white/80 leading-tight">{t.user_name}</p>
+                        <p className="text-[10px] text-white/30">{t.user_phone}</p>
                       </td>
                       <td className="py-3.5 pr-4">
-                        <StatusBadge s={t.status} />
+                        <p className="font-medium text-white/60 max-w-[140px] truncate" title={t.puja_name}>
+                          {t.puja_name}
+                        </p>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 uppercase font-black tracking-tighter">
+                          {typeLabel(t.puja_type)}
+                        </span>
                       </td>
-                      <td className="py-3.5 pr-4 font-black text-orange-400">
-                        {t.total_price > 0 ? fmt(t.total_price) : "—"}
+                      <td className="py-3.5 pr-4 font-black text-white/90">
+                        {fmt(t.total_price)}
+                      </td>
+                      <td className="py-3.5 pr-4 font-black text-emerald-400">
+                        {fmt(t.paid_amount)}
+                      </td>
+                      <td className="py-3.5 pr-4 font-black text-orange-500">
+                        {fmt(t.total_price - t.paid_amount)}
+                      </td>
+                      <td className="py-3.5 pr-4">
+                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                            t.payment_status === 'fully_paid' 
+                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                            : "bg-orange-500/15 text-orange-400 border-orange-500/30"
+                         }`}>
+                           {t.payment_status?.replace('_', ' ') || 'Pending'}
+                         </span>
                       </td>
                       <td className="py-3.5 text-white/30 text-xs whitespace-nowrap">
                         {t.created_at
@@ -1015,6 +1035,119 @@ const DonationsTab = () => {
 };
 
 // ══════════════════════════════════════════════════════════
+// SETTINGS TAB
+// ══════════════════════════════════════════════════════════
+const SettingsTab = () => {
+  const [advancePercent, setAdvancePercent] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+  useEffect(() => {
+    // Fetch current setting
+    fetch(`${API_BASE_URL}/settings/advance_payment_percentage`)
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) setAdvancePercent(data.value);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
+  const handleUpdate = async () => {
+    if(!advancePercent || isNaN(advancePercent) || advancePercent < 0 || advancePercent > 100) {
+      setMsg("Invalid percentage (0-100)");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/settings/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
+        },
+        body: JSON.stringify({
+          key: "advance_payment_percentage",
+          value: advancePercent
+        })
+      });
+      const data = await res.json();
+      if(data.success) {
+        setMsg("✅ Setting updated successfully!");
+        setTimeout(() => setMsg(""), 3000);
+      } else {
+        setMsg("❌ " + data.message);
+      }
+    } catch (err) {
+      setMsg("❌ Failed to update");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-white/5 bg-[#141828] p-6 max-w-xl">
+        <SectionTitle title="Payment Settings" />
+        
+        <div className="space-y-6">
+          <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
+            <h3 className="text-white font-bold mb-1">Advance Payment Percentage</h3>
+            <p className="text-xs text-white/40 mb-4 leading-relaxed">
+              Users will be required to pay this percentage of the total amount at the time of booking. 
+              Applicable to Home Puja, Katha, Online Rituals, and Pind Dan. 
+              (Temple Puja remains 100% full payment)
+            </p>
+            
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input 
+                  type="number"
+                  value={advancePercent}
+                  onChange={(e) => setAdvancePercent(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  placeholder="e.g. 25"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 font-bold">%</span>
+              </div>
+              <button 
+                onClick={handleUpdate}
+                disabled={loading}
+                className="bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-95"
+              >
+                {loading ? "Saving..." : "Save Setting"}
+              </button>
+            </div>
+          </div>
+
+          {msg && (
+            <p className={`text-sm font-bold p-3 rounded-lg ${msg.includes('✅') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+              {msg}
+            </p>
+          )}
+
+          <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+            <h3 className="text-white/80 font-bold text-sm mb-2">Current System Behavior</h3>
+            <ul className="space-y-2">
+               <li className="flex items-center gap-2 text-xs text-white/40">
+                 <span className="text-emerald-400">✓</span> Partial payment records in `payments` table
+               </li>
+               <li className="flex items-center gap-2 text-xs text-white/40">
+                 <span className="text-emerald-400">✓</span> Razorpay integration supports partial amounts
+               </li>
+               <li className="flex items-center gap-2 text-xs text-white/40">
+                 <span className="text-emerald-400">✓</span> Financial dashboard reflects Paid vs Balance
+               </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════
 // MAIN
 // ══════════════════════════════════════════════════════════
 export default function FinancialDashboard() {
@@ -1024,6 +1157,7 @@ export default function FinancialDashboard() {
     { key: "transactions", label: "Transactions", icon: "📋" },
     { key: "pandits", label: "Pandits", icon: "🧘" },
     { key: "donations", label: "Donations", icon: "🙏" },
+    { key: "settings", label: "Settings", icon: "⚙️" },
   ];
 
   return (
@@ -1072,6 +1206,7 @@ export default function FinancialDashboard() {
         {activeTab === "transactions" && <TransactionsTab />}
         {activeTab === "pandits" && <PanditsTab />}
         {activeTab === "donations" && <DonationsTab />}
+        {activeTab === "settings" && <SettingsTab />}
       </div>
     </div>
   );

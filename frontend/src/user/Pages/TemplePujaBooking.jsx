@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { handleRazorpayPayment } from "../utils/razorpay";
 import {
   MapPin,
   Calendar,
@@ -40,16 +41,18 @@ import {
   Bird,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import HowItProcess from "../Components/HowItProcess";
 import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { LotusIcon } from "../Components/Icons";
 
 // ═══════════════════════════════════════════════════════════
 // HELPER: Icon Mapper - Benefit names ke basis pe icons assign
 // ═══════════════════════════════════════════════════════════
 const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
-  return <CheckCircle />;
+  return <LotusIcon />;
 };
 // ─── Member Selection Modal ───────────────────────────────────────────────────
 
@@ -657,7 +660,15 @@ const TemplePujaBooking = () => {
       navigate("/signin");
       return;
     }
-    setIsBooking(true);
+
+    try {
+      await handleRazorpayPayment({
+        amount: calculateTotal(),
+        userName: token ? JSON.parse(atob(token.split(".")[1])).name : "Guest",
+        userEmail: "",
+        userPhone: "",
+        onSuccess: async (razorpayResponse) => {
+          setIsBooking(true);
 
     const selectedDonationObjects = contributionList
       .filter((item) => donations[item.id])
@@ -707,51 +718,68 @@ const TemplePujaBooking = () => {
       // state: service?.address.split(",")[service.address.split(",").length - 1],
       state: service?.address?.split(",").at(-1) ?? "N/A",
       devoteeName: token
-        ? JSON.parse(atob(token.split(".")[1])).name
+        ? jwtDecode(token).name
         : "Guest User",
       ticket_type: selectedTicket,
       member_ids: selectedMemberIds, // ← selected members pass karo
       donations: selectedDonationObjects,
       total_price: calculateTotal(),
+      paid_amount: calculateTotal(),
+      payment_type: "full",
+      razorpay_order_id: razorpayResponse.razorpay_order_id,
+      razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+      razorpay_signature: razorpayResponse.razorpay_signature,
     };
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/puja/bookingDetails`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          try {
+            const response = await fetch(`${API_BASE_URL}/puja/bookingDetails`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(bookingData),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || "Server crashed");
+            }
+
+            const result = await response.json();
+            if (result.success) {
+              if (selectedMemberIds.length > 0) {
+                await fetch(`${API_BASE_URL}/puja/save-members`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    request_id: result.bookingId,
+                    member_ids: selectedMemberIds,
+                  }),
+                });
+              }
+              navigate("/my-booking");
+            } else {
+              alert("Error: " + result.message);
+            }
+          } catch (error) {
+            console.error("Booking Error:", error);
+            alert("Booking failed: " + error.message);
+          } finally {
+            setIsBooking(false);
+          }
         },
-        body: JSON.stringify(bookingData),
+        onError: (error) => {
+          alert("Payment failed: " + error);
+          setIsBooking(false);
+        },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Server crashed");
-      }
-
-      const result = await response.json();
-      // if (result.success) navigate("/my-booking");
-      if (result.success) {
-        if (selectedMemberIds.length > 0) {
-          await fetch(`${API_BASE_URL}/puja/save-members`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              request_id: result.bookingId,
-              member_ids: selectedMemberIds,
-            }),
-          });
-        }
-        navigate("/my-booking");
-      }
     } catch (error) {
-      console.error("Booking Error:", error);
-      alert("Booking failed: " + error.message);
-    } finally {
+      console.error("Payment initiation failed:", error);
+      alert("Could not initiate payment. Please try again.");
       setIsBooking(false);
     }
   };
@@ -1092,32 +1120,32 @@ const TemplePujaBooking = () => {
                         // Fallback: Default benefits agar backend se nahi aaye
                         <>
                           <BenefitSmall
-                            icon={<Heart />}
+                            icon={<LotusIcon />}
                             title="Spiritual Peace"
                             desc="Inner calm through sacred rituals"
                           />
                           <BenefitSmall
-                            icon={<Shield />}
+                            icon={<LotusIcon />}
                             title="Protection"
                             desc="Divine protection for family"
                           />
                           <BenefitSmall
-                            icon={<Zap />}
+                            icon={<LotusIcon />}
                             title="Prosperity"
                             desc="Remove obstacles from path"
                           />
                           <BenefitSmall
-                            icon={<Users />}
+                            icon={<LotusIcon />}
                             title="Harmony"
                             desc="Strengthen family bonds"
                           />
                           <BenefitSmall
-                            icon={<Sparkles />}
+                            icon={<LotusIcon />}
                             title="Positive Energy"
                             desc="Purify soul with mantras"
                           />
                           <BenefitSmall
-                            icon={<Star />}
+                            icon={<LotusIcon />}
                             title="Karma"
                             desc="Balance spiritual energies"
                           />
@@ -1135,8 +1163,27 @@ const TemplePujaBooking = () => {
                     ref={sections.contributions}
                     className="scroll-mt-44 space-y-4"
                   >
-                    <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
-                      <Sparkles size={20} /> Sacred Contributions
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
+                        <Sparkles size={20} /> Sacred Contributions
+                      </div>
+                      <button
+                        onClick={() => {
+                          const allSelected = contributionList.every(
+                            (option) => donations[option.id],
+                          );
+                          const newDonations = { ...donations };
+                          contributionList.forEach((option) => {
+                            newDonations[option.id] = !allSelected;
+                          });
+                          setDonations(newDonations);
+                        }}
+                        className="px-3 py-2 text-xs font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition"
+                      >
+                        {contributionList.every((option) => donations[option.id])
+                          ? "Deselect All"
+                          : "Select All"}
+                      </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {contributionList.map((item) => (
@@ -1660,15 +1707,15 @@ const ContributionCard = ({ item, selected, onToggle }) => (
    BENEFIT SMALL
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-3 bg-white p-3 md:p-5 rounded-xl border border-orange-200 transition-all shadow-sm hover:border-orange-400">
-    <div className="hidden md:flex p-2.5 bg-orange-50 text-orange-500 rounded-xl shadow-sm shrink-0">
-      {React.cloneElement(icon, { size: 18 })}
+  <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
+    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 32 })}
     </div>
-    <div>
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none">
+    <div className="flex flex-col">
+      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 leading-tight font-medium">
+      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium">
         {desc}
       </p>
     </div>

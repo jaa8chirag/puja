@@ -1230,7 +1230,7 @@ export const getAllBookings = async (req, res) => {
       bookings: rows,
       currentPage: page,
       totalPages,
-      totalBookings: rows.length,
+      totalBookings: total,
     });
   } catch (error) {
     console.error(error);
@@ -1315,9 +1315,12 @@ export const getDashboardSummary = async (req, res) => {
   try {
     // Total Revenue (completed bookings)
     const [totalRevenue] = await db.query(`
-      SELECT COALESCE(SUM(total_price), 0) AS total_revenue
+      SELECT 
+        COALESCE(SUM(paid_amount), 0) AS total_revenue,
+        COALESCE(SUM(total_price), 0) AS total_receivable,
+        COALESCE(SUM(total_price - paid_amount), 0) AS total_balance
       FROM puja_requests
-      WHERE status = 'completed'
+      WHERE status IN ('completed', 'pending', 'accepted')
     `);
 
     // Total Bookings
@@ -1355,25 +1358,27 @@ export const getDashboardSummary = async (req, res) => {
 
     // Today's Revenue
     const [todayRevenue] = await db.query(`
-      SELECT COALESCE(SUM(total_price), 0) AS today_revenue
+      SELECT COALESCE(SUM(paid_amount), 0) AS today_revenue
       FROM puja_requests
-      WHERE status = 'completed'
-        AND DATE(completed_at) = CURDATE()
+      WHERE status IN ('completed', 'pending', 'accepted')
+        AND DATE(created_at) = CURDATE()
     `);
 
     // This Month Revenue
     const [monthRevenue] = await db.query(`
-      SELECT COALESCE(SUM(total_price), 0) AS month_revenue
+      SELECT COALESCE(SUM(paid_amount), 0) AS month_revenue
       FROM puja_requests
-      WHERE status = 'completed'
-        AND MONTH(completed_at) = MONTH(CURDATE())
-        AND YEAR(completed_at) = YEAR(CURDATE())
+      WHERE status IN ('completed', 'pending', 'accepted')
+        AND MONTH(created_at) = MONTH(CURDATE())
+        AND YEAR(created_at) = YEAR(CURDATE())
     `);
 
     res.json({
       success: true,
       data: {
         total_revenue: totalRevenue[0].total_revenue,
+        total_receivable: totalRevenue[0].total_receivable,
+        total_balance: totalRevenue[0].total_balance,
         total_donations: totalDonations[0].total_donations,
         total_bookings: totalBookings[0].total_bookings,
         today_revenue: todayRevenue[0].today_revenue,
@@ -1395,13 +1400,13 @@ export const getMonthlyRevenue = async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT
-        DATE_FORMAT(completed_at, '%Y-%m') AS month,
-        COALESCE(SUM(total_price), 0)      AS revenue,
+        DATE_FORMAT(created_at, '%Y-%m') AS month,
+        COALESCE(SUM(paid_amount), 0)      AS revenue,
         COUNT(*)                            AS bookings
       FROM puja_requests
-      WHERE status = 'completed'
-        AND completed_at >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-      GROUP BY DATE_FORMAT(completed_at, '%Y-%m')
+      WHERE status IN ('completed', 'pending', 'accepted')
+        AND created_at >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+      GROUP BY month
       ORDER BY month ASC
     `);
 
@@ -1420,7 +1425,7 @@ export const getRevenueByServiceType = async (req, res) => {
       SELECT
         s.puja_type,
         COUNT(pr.id)                       AS total_bookings,
-        COALESCE(SUM(pr.total_price), 0)   AS revenue
+        COALESCE(SUM(pr.paid_amount), 0)   AS revenue
       FROM puja_requests pr
       JOIN services s ON pr.service_id = s.id
       WHERE pr.status = 'completed'
@@ -1448,7 +1453,7 @@ export const getTopServices = async (req, res) => {
         s.puja_name,
         s.puja_type,
         COUNT(pr.id)                     AS total_bookings,
-        COALESCE(SUM(pr.total_price), 0) AS total_revenue
+        COALESCE(SUM(pr.paid_amount), 0) AS total_revenue
       FROM puja_requests pr
       JOIN services s ON pr.service_id = s.id
       WHERE pr.status = 'completed'
@@ -1519,7 +1524,7 @@ export const getRevenueByCity = async (req, res) => {
       SELECT
         city,
         COUNT(*)                         AS bookings,
-        COALESCE(SUM(total_price), 0)    AS revenue
+        COALESCE(SUM(paid_amount), 0)    AS revenue
       FROM puja_requests
       WHERE status = 'completed'
         AND city NOT IN ('N/A', 'default city', 'Default City', 'defalut city')
@@ -1542,7 +1547,16 @@ export const getRecentTransactions = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const paymentType = req.query.payment_type; // Optional: full/advance
     const offset = (page - 1) * limit;
+
+    let whereClause = "WHERE pr.status IN ('completed', 'pending', 'accepted')";
+    let params = [];
+
+    if (paymentType && paymentType !== 'all') {
+      whereClause += " AND pr.payment_type = ?";
+      params.push(paymentType);
+    }
 
     const [rows] = await db.query(
       `
@@ -1557,6 +1571,9 @@ export const getRecentTransactions = async (req, res) => {
         pr.state,
         pr.status,
         pr.total_price,
+        pr.paid_amount,
+        pr.payment_status,
+        pr.payment_type,
         pr.samagrikit,
         pr.donations,
         pr.created_at,
@@ -1564,15 +1581,16 @@ export const getRecentTransactions = async (req, res) => {
       FROM puja_requests pr
       JOIN users u    ON pr.user_id    = u.id
       JOIN services s ON pr.service_id = s.id
-      WHERE pr.status = 'completed'
+      ${whereClause}
       ORDER BY pr.created_at DESC
       LIMIT ? OFFSET ?
     `,
-      [limit, offset],
+      [...params, limit, offset],
     );
 
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM puja_requests WHERE status = 'completed'`,
+      `SELECT COUNT(*) AS total FROM puja_requests pr ${whereClause}`,
+      params
     );
 
     res.json({
@@ -1637,7 +1655,7 @@ export const getPanditEarnings = async (req, res) => {
 
 export const getRevenueByDateRange = async (req, res) => {
   try {
-    const { from, to, status } = req.query;
+    const { from, to, status, payment_type } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -1647,19 +1665,25 @@ export const getRevenueByDateRange = async (req, res) => {
         .status(400)
         .json({ success: false, message: "from aur to date required hai" });
 
-    // Status filter condition
-    let statusCondition = "";
-    let statusParam = [];
+    // Filter conditions
+    let extraCondition = "";
+    let extraParams = [];
+
     if (status && status !== "all") {
-      statusCondition = "AND pr.status = ?";
-      statusParam = [status];
+      extraCondition += " AND pr.status = ?";
+      extraParams.push(status);
+    }
+
+    if (payment_type && payment_type !== "all") {
+      extraCondition += " AND pr.payment_type = ?";
+      extraParams.push(payment_type);
     }
 
     // Total count query
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) AS total FROM puja_requests pr 
-       WHERE DATE(pr.created_at) BETWEEN ? AND ? ${statusCondition}`,
-      [from, to, ...statusParam],
+       WHERE DATE(pr.created_at) BETWEEN ? AND ? ${extraCondition}`,
+      [from, to, ...extraParams],
     );
 
     // Data query
@@ -1671,24 +1695,27 @@ export const getRevenueByDateRange = async (req, res) => {
         pr.city          AS city,
         pr.status,
         pr.total_price,
+        pr.paid_amount,
+        pr.payment_status,
+        pr.payment_type,
         pr.created_at
       FROM puja_requests pr
       LEFT JOIN users u ON u.id = pr.user_id
       LEFT JOIN services ps ON ps.id = pr.service_id
-      WHERE DATE(pr.created_at) BETWEEN ? AND ? ${statusCondition}
+      WHERE DATE(pr.created_at) BETWEEN ? AND ? ${extraCondition}
       ORDER BY pr.created_at DESC
       LIMIT ? OFFSET ?`,
-      [from, to, ...statusParam, limit, offset],
+      [from, to, ...extraParams, limit, offset],
     );
 
-    // Summary query with status filter
+    // Summary query with filters
     const [[summary]] = await db.query(
       `SELECT
-        COALESCE(SUM(total_price), 0) AS total_revenue,
+        COALESCE(SUM(paid_amount), 0) AS total_revenue,
         COUNT(*) AS total_bookings
       FROM puja_requests pr
-      WHERE DATE(pr.created_at) BETWEEN ? AND ? ${statusCondition}`,
-      [from, to, ...statusParam],
+      WHERE DATE(pr.created_at) BETWEEN ? AND ? ${extraCondition}`,
+      [from, to, ...extraParams],
     );
 
     res.json({

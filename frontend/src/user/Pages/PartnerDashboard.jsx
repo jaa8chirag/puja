@@ -221,6 +221,25 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
           {st.label}
         </span>
       </div>
+
+
+      <div className="mt-4 p-3 bg-white/50 rounded-xl border border-[#EDE8DC] flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <CreditCard size={16} className="text-orange-400" />
+          <span className="text-[11px] font-black uppercase tracking-wider text-gray-400">Payment Status:</span>
+          <span className={`text-[12px] font-bold px-3 py-0.5 rounded-full ${
+            puja.payment_status === 'fully_paid' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'
+          }`}>
+            {puja.payment_status === 'fully_paid' ? 'Fully Paid' : 'Partially Paid'}
+          </span>
+        </div>
+        {puja.payment_status !== 'fully_paid' && (
+          <div className="text-[12px] font-bold text-amber-700">
+            Balance: ₹{(puja.total_price - puja.paid_amount).toLocaleString('en-IN')}
+          </div>
+        )}
+      </div>
+
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[14px] text-[#6b5840]">
         <span className="flex items-center gap-2">
           <Clock size={16} className="text-orange-400" />

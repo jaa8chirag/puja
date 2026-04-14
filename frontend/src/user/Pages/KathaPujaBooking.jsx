@@ -20,13 +20,14 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { LotusIcon } from "../Components/Icons";
 const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
 
 // ═══════════════════════════════════════════════════════════
 // HELPER: Icon Mapper - Benefit names ke basis pe icons assign
 // ═══════════════════════════════════════════════════════════
 const getBenefitIcon = (benefitName, fallbackIndex = 0) => {
-  return <CheckCircle />;
+  return <LotusIcon />;
 };
 
 const KathaPujaBooking = () => {
@@ -334,34 +335,34 @@ const KathaPujaBooking = () => {
                       // Fallback: Default benefits agar backend se nahi aaye
                       <>
                         <BenefitSmall
-                          icon={<Heart />}
+                          icon={<LotusIcon />}
                           title="Spiritual Peace"
                           desc="Inner calm through sacred rituals"
                         />
                         <BenefitSmall
-                          icon={<Shield />}
+                          icon={<LotusIcon />}
                           title="Protection"
                           desc="Divine protection for family"
                         />
                         <BenefitSmall
-                          icon={<Zap />}
+                          icon={<LotusIcon />}
                           title="Prosperity"
                           desc="Remove obstacles from your path"
                         />
                         <BenefitSmall
-                          icon={<Users />}
+                          icon={<LotusIcon />}
                           title="Harmony"
                           desc="Strengthen family bonds"
                         />
                         <BenefitSmall
-                          icon={<Sparkles />}
+                          icon={<LotusIcon />}
                           title="Positive Energy"
                           desc="Purify home with mantras"
                         />
                         <BenefitSmall
-                          icon={<MapPin />}
-                          title="Vastu Benefits"
-                          desc="Harmonize living space"
+                          icon={<LotusIcon />}
+                          title="Karma"
+                          desc="Balance spiritual energies"
                         />
                       </>
                     )}
@@ -526,16 +527,15 @@ const KathaPujaBooking = () => {
    Mobile:  no icon, compact (2-col grid)
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 transition-all shadow-sm">
-    {/* Icon hidden on mobile */}
-    <div className="hidden md:flex p-2.5 bg-white text-orange-500 rounded-xl shadow-sm border border-orange-50 shrink-0">
-      {React.cloneElement(icon, { size: 18 })}
+  <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
+    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 32 })}
     </div>
-    <div>
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none">
+    <div className="flex flex-col">
+      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 leading-tight font-medium">
+      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium">
         {desc}
       </p>
     </div>

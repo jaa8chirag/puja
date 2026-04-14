@@ -24,7 +24,10 @@ export const getMyAssignedPujas = async (req, res) => {
         s.puja_name,
         s.puja_type,
         u.name AS customer_name,
-        u.phone AS customer_phone
+        u.phone AS customer_phone,
+        b.payment_status,
+        b.total_price,
+        b.paid_amount
       FROM request_assignments ra
       LEFT JOIN puja_requests b ON b.id = ra.request_id
       LEFT JOIN services s ON s.id = b.service_id
@@ -264,6 +267,19 @@ export const markPujaComplete = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Puja already completed" });
+
+    // Check payment status first
+    const [[booking]] = await db.query(
+      "SELECT payment_status FROM puja_requests WHERE id = ?",
+      [bookingId]
+    );
+
+    if (booking && booking.payment_status !== 'fully_paid') {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Customer has not paid the full amount yet. Please ask them to complete the payment before marking as finished." 
+      });
+    }
 
     if (rows[0].status !== "accepted")
       return res

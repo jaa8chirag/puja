@@ -19,6 +19,7 @@ import {
   bookOnlinePindDan,
   onlinePinddanBookingDetails,
   getOnlinePindDanServices,
+  payRemainingAmount,
 } from "../controllers/servicesController.js";
 
 const router = express.Router();
@@ -60,5 +61,7 @@ router.get("/my-support-queries", verifyToken, getUserSupportQueries);
 // ✅ NEW — puja_request_members routes
 router.post("/save-members", verifyToken, savePujaRequestMembers); // members save karo
 router.get("/get-members/:request_id", verifyToken, getPujaRequestMembers); // members fetch karo
+
+router.post("/pay-balance", verifyToken, payRemainingAmount);
 
 export default router;

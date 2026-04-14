@@ -81,10 +81,9 @@ const Footer = () => {
       { label: "Contact Us", to: "/help" },
       { label: "FAQs", to: "/help" },
       { label: "Privacy Policy", to: "/privacypolicy" },
-      { label: "Cancellation policy", to: "/cancellationpolicy" },
+      { label: "Cancellation Policy", to: "/cancellationpolicy" },
       { label: "Terms and Conditions", to: "/termsandconditions" },
-      { label: "Disclaimer", to: "/disclaimer" },
-      { label: "Discrimination Policy", to: "/discrimination" },
+      { label: "Disclaimer Policy", to: "/disclaimer" },
     ],
     community: [
       { label: "Temple Gallery", to: "/temples" },
@@ -232,7 +231,7 @@ const Footer = () => {
               <p className="text-[10px] text-gray-500 mb-3 leading-relaxed">
                 Join our spiritual community for sacred insights, ritual dates, and exclusive Vedic updates.
               </p>
-              
+
               <div className="flex flex-col gap-2">
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">

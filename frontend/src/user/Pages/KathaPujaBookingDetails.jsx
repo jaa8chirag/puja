@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { handleRazorpayPayment } from "../utils/razorpay";
 import {
   Calendar,
   Clock,
@@ -27,8 +28,60 @@ import {
 import CouponSelector from "../Components/CouponSelector";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+const PaymentOptionSelector = ({ paymentOption, setPaymentOption, grandTotal, advancePercentage }) => {
+  return (
+    <div className="space-y-3 pt-4 border-t border-orange-200 mt-4 px-2">
+      <h4 className="text-[11px] font-black uppercase text-orange-600 tracking-[0.2em] mb-3">Choose Payment Mode</h4>
+      <div className="grid grid-cols-1 gap-3">
+        {/* Full Payment */}
+        <div 
+          onClick={() => setPaymentOption("full")}
+          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${
+            paymentOption === "full" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              paymentOption === "full" ? "border-orange-500 bg-orange-500" : "border-orange-200"
+            }`}>
+              {paymentOption === "full" && <div className="w-2 h-2 rounded-full bg-white" />}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 leading-none">Full Payment</p>
+              <p className="text-[10px] text-gray-500 mt-1">Pay 100% amount now</p>
+            </div>
+          </div>
+          <span className="font-black text-orange-600">₹{grandTotal}</span>
+        </div>
+
+        {/* Advance Payment */}
+        <div 
+          onClick={() => setPaymentOption("advance")}
+          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${
+            paymentOption === "advance" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              paymentOption === "advance" ? "border-orange-500 bg-orange-500" : "border-orange-200"
+            }`}>
+              {paymentOption === "advance" && <div className="w-2 h-2 rounded-full bg-white" />}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 leading-none">Advance Payment</p>
+              <p className="text-[10px] text-gray-500 mt-1">Pay {advancePercentage}% now</p>
+            </div>
+          </div>
+          <span className="font-black text-orange-600">₹{Math.round(grandTotal * advancePercentage / 100)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const KathaPujaPaymentDetails = () => {
   const navigate = useNavigate();
@@ -54,9 +107,23 @@ const KathaPujaPaymentDetails = () => {
   const token = localStorage.getItem("token");
   const userName = token ? JSON.parse(atob(token.split(".")[1])).name : "Guest";
   const bookingId = generateBookingId();
-  // const generateOTP = () => {
-  //   return Math.floor(100000 + Math.random() * 900000).toString();
-  // };
+  const [paymentOption, setPaymentOption] = useState("full");
+  const [advancePercentage, setAdvancePercentage] = useState(25);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/settings/advance_payment_percentage`);
+        const data = await res.json();
+        if (data.success) {
+          setAdvancePercentage(Number(data.value));
+        }
+      } catch (err) {
+        console.error("Error fetching settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
   // const otp = generateOTP();
   const [formData, setFormData] = useState({
     date: "",
@@ -129,42 +196,63 @@ const KathaPujaPaymentDetails = () => {
       setTimeout(() => setErrorMsg(""), 3000);
       return;
     }
-    const token = localStorage.getItem("token");
-    const payload = {
-      puja_id: id,
-      date: formData.date,
-      time: formData.time,
-      location: `${formData.location} - ${formData.pincode}`,
-      city: formData.city,
-      state: formData.state,
-      pincode: formData.pincode,
-      devoteeName: formData.devoteeName,
-      bookingId,
-      // otp,
-      donations: selectedDonations,
-      total_price: grandTotal,
-      samagriKit: isSamagriSelected,
-      coupon_code: appliedCoupon ? appliedCoupon.code : null,
-      discount_amount: discountAmount,
-    };
+
+    const amountToPay = paymentOption === "full" ? grandTotal : Math.round((grandTotal * advancePercentage) / 100);
+
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/puja/home_KathaPujaBookingDetails`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
+      // 1. Start Razorpay Payment
+      await handleRazorpayPayment({
+        amount: amountToPay,
+        userName: formData.devoteeName,
+        userEmail: "", // Optionally add email
+        userPhone: "", // Optionally add phone
+        onSuccess: async (razorpayResponse) => {
+          // 2. If Payment Successful, Save Booking Details
+          const token = localStorage.getItem("token");
+          const payload = {
+            puja_id: id,
+            date: formData.date,
+            time: formData.time,
+            location: `${formData.location} - ${formData.pincode}`,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            devoteeName: formData.devoteeName,
+            bookingId,
+            donations: selectedDonations,
+            total_price: grandTotal,
+            samagriKit: isSamagriSelected,
+            coupon_code: appliedCoupon ? appliedCoupon.code : null,
+            discount_amount: discountAmount,
+            razorpay_order_id: razorpayResponse.razorpay_order_id,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature,
+            paid_amount: amountToPay,
+            payment_type: paymentOption,
+          };
+
+          const response = await fetch(
+            `${API_BASE_URL}/puja/home_KathaPujaBookingDetails`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(payload),
+            },
+          );
+          const data = await response.json();
+          if (data.success) navigate("/my-booking");
+          else alert("Error: " + data.message);
         },
-      );
-      const data = await response.json();
-      if (data.success) navigate("/my-booking");
-      else alert("Error: " + data.message);
+        onError: (error) => {
+          alert("Payment failed: " + error);
+        },
+      });
     } catch (error) {
-      console.error("Booking submission failed:", error);
-      alert("Server error. Please check if backend is running.");
+      console.error("Payment initiation failed:", error);
+      alert("Could not initiate payment. Please try again.");
     }
   };
 
@@ -260,14 +348,6 @@ const KathaPujaPaymentDetails = () => {
     setCouponError("");
   };
 
-  // const getDharmicTotal = () => {
-  //   let sum = contributionOptions.reduce(
-  //     (acc, opt) => (donations[opt.id] ? acc + opt.price : acc),
-  //     0,
-  //   );
-  //   if (donations["Gau Seva"]) sum += getPrice("Gau Seva");
-  //   return sum;
-  // };
   const getDharmicTotal = () => {
     let sum = contributionList.reduce(
       (acc, opt) => (donations[opt.id] ? acc + opt.price : acc),
@@ -287,13 +367,6 @@ const KathaPujaPaymentDetails = () => {
   const basePrice = Number(puja?.standard_price || 0);
   const samagriPrice = isSamagriSelected ? getPrice("Samagri Kit") : 0;
   const dharmicTotal = getDharmicTotal();
-  // const templeDonation = donations["Temple Donation"]
-  //   ? Number(
-  //       Array.from(contributionOptions2).filter(
-  //         (c) => c.name == "Temple Donation",
-  //       )[0].price,
-  //     )
-  //   : 0;
 
   const today = new Date().toISOString().split("T")[0];
   
@@ -360,7 +433,6 @@ const KathaPujaPaymentDetails = () => {
 
                 <div className="space-y-4 md:space-y-6">
                   {/* Date & Time */}
-                  {/* Date & Time */}
                   <div className="grid grid-cols-2 gap-3 md:gap-6">
                     <div className="space-y-1">
                       <label className={labelClass}>
@@ -376,14 +448,19 @@ const KathaPujaPaymentDetails = () => {
                         className={inputBaseClass}
                       />
                     </div>
-
-                    {/* ✅ Sirf yeh line badli */}
-                    <HourDropdown
-                      value={formData.time}
-                      onChange={handleInputChange}
-                      inputBaseClass={inputBaseClass}
-                      labelClass={labelClass}
-                    />
+                    <div className="space-y-1">
+                      <label className={labelClass}>
+                        <Clock size={12} /> Time{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="time"
+                        name="time"
+                        value={formData.time}
+                        onChange={handleInputChange}
+                        className={inputBaseClass}
+                      />
+                    </div>
                   </div>
 
                   {/* Address */}
@@ -468,7 +545,8 @@ const KathaPujaPaymentDetails = () => {
                           className={inputBaseClass}
                         />
                       </div>
-                      <div className="space-y-1">
+
+                      <div className="pt-4">
                         <label className={labelClass}>Gotra (Lineage)</label>
                         <input
                           type="text"
@@ -500,10 +578,10 @@ const KathaPujaPaymentDetails = () => {
                         </p>
                       </div>
                     </div>
-                    <button className="w-full md:w-auto bg-white border border-green-400 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-50 active:scale-95 transition-all shadow-sm">
+                    <a href="https://wa.me/918287479966" target="_blank" rel="noopener noreferrer" className="w-full md:w-auto bg-white border border-green-400 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-50 active:scale-95 transition-all shadow-sm">
                       <FaWhatsapp className="text-green-600 text-lg" />
                       <span className="text-green-700">WhatsApp Us</span>
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -513,16 +591,32 @@ const KathaPujaPaymentDetails = () => {
                 ref={dharmicRef}
                 className="bg-white rounded-2xl border border-orange-200 shadow-sm p-5 md:p-8 space-y-4 md:space-y-6 scroll-mt-28"
               >
-                <div>
-                  <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                    <div className="bg-orange-500 p-1.5 rounded-full text-white shadow-md">
-                      <Heart size={13} fill="currentColor" />
-                    </div>
-                    Dharmic Contributions
-                  </h3>
-                  <p className="text-[11px] text-gray-500 font-bold mt-1 uppercase tracking-widest">
-                    Complete your Sankalp with sacred donations
-                  </p>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
+                      <div className="bg-orange-500 p-1.5 rounded-full text-white shadow-md">
+                        <Heart size={13} fill="currentColor" />
+                      </div>
+                      Dharmic Contributions
+                    </h3>
+                    <p className="text-[11px] text-gray-500 font-bold mt-1 uppercase tracking-widest">
+                      Complete your Sankalp with sacred donations
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const allContributions = [...contributionList, { id: "Gau Seva" }];
+                      const allSelected = allContributions.every(option => donations[option.id]);
+                      const newDonations = { ...donations };
+                      allContributions.forEach(option => {
+                        newDonations[option.id] = !allSelected;
+                      });
+                      setDonations(newDonations);
+                    }}
+                    className="self-start md:self-center px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    {[...contributionList, { id: "Gau Seva" }].every(option => donations[option.id]) ? 'Deselect All' : 'Select All'}
+                  </button>
                 </div>
 
                 {/* Cards Grid (Top 4) */}
@@ -626,6 +720,9 @@ const KathaPujaPaymentDetails = () => {
                     couponError={couponError}
                     discountAmount={discountAmount}
                     publicCoupons={publicCoupons}
+                    paymentOption={paymentOption}
+                    setPaymentOption={setPaymentOption}
+                    advancePercentage={advancePercentage}
                   />
               </div>
             </div>
@@ -641,16 +738,6 @@ const KathaPujaPaymentDetails = () => {
                     <h4 className="text-sm font-black text-gray-900">
                       {puja?.puja_name}
                     </h4>
-                    {/* <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs font-bold text-gray-700">
-                        Samagri Kit
-                      </span>
-                      <span
-                        className={`text-xs font-bold ${isSamagriSelected ? "text-green-600" : "text-gray-400"}`}
-                      >
-                        {isSamagriSelected ? "Included ✓" : "Not Selected"}
-                      </span>
-                    </div> */}
                   </div>
 
                   <div
@@ -736,10 +823,16 @@ const KathaPujaPaymentDetails = () => {
                         </span>
                       </div>
                     )}
+                    <PaymentOptionSelector 
+                      paymentOption={paymentOption}
+                      setPaymentOption={setPaymentOption}
+                      grandTotal={grandTotal}
+                      advancePercentage={advancePercentage}
+                    />
 
                     <div className="flex justify-between items-center pt-3 mt-2 border-t border-orange-100">
                       <span className="text-lg font-bold text-gray-900 tracking-tight">
-                        Final Total
+                        {paymentOption === "full" ? "Final Total" : "Advance Total"}
                       </span>
                       <div className="text-right">
                         {discountAmount > 0 && (
@@ -748,7 +841,7 @@ const KathaPujaPaymentDetails = () => {
                           </p>
                         )}
                         <span className="text-2xl font-black text-orange-600">
-                          ₹{grandTotal}
+                          ₹{paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)}
                         </span>
                       </div>
                     </div>
@@ -785,16 +878,17 @@ const KathaPujaPaymentDetails = () => {
         }}
       >
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              Total Amount{" "}
-              <ChevronRight size={11} className="text-orange-400" />
-            </p>
+          <div className="flex flex-col">
+            {discountAmount > 0 && (
+               <span className="text-[10px] text-green-600 font-bold line-through opacity-70">
+                 ₹{grandTotal + discountAmount}
+               </span>
+            )}
             <p className="text-xl font-black text-orange-600 leading-tight">
-              ₹{grandTotal.toLocaleString("en-IN")}
+              ₹{(paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)).toLocaleString("en-IN")}
             </p>
             <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <ShieldCheck size={10} /> Incl. all taxes
+              <ShieldCheck size={10} /> {paymentOption === "full" ? "Total Payable" : "Advance Payable"}
             </p>
           </div>
           <button
@@ -802,7 +896,8 @@ const KathaPujaPaymentDetails = () => {
             onClick={handlePayment}
             className="flex-1 max-w-[200px] bg-gradient-to-r from-orange-500 to-orange-700 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-orange-200 flex items-center justify-center gap-2 text-[14px] uppercase tracking-[0.08em] active:scale-[0.97] transition-all"
           >
-            <ArrowRight size={16} /> Pay ₹{grandTotal}
+            <span>{paymentOption === "full" ? "Pay Now" : "Pay Advance"}</span>
+            <ArrowRight size={16} />
           </button>
         </div>
       </div>
@@ -829,8 +924,14 @@ const MobileSummaryInline = ({
   setCouponInput,
   appliedCoupon,
   handleApplyCoupon,
+  removeCoupon,
+  isApplying,
+  couponError,
   discountAmount,
-  publicCoupons
+  publicCoupons,
+  paymentOption,
+  setPaymentOption,
+  advancePercentage,
 }) => (
   <div className="space-y-4">
     <div>
@@ -846,7 +947,6 @@ const MobileSummaryInline = ({
     <div className="pb-3 border-b border-orange-100">
       <h4 className="text-sm font-black text-gray-900">{puja?.puja_name}</h4>
       <div className="flex items-center justify-between mt-1.5">
-        {/* <span className="text-xs font-bold text-gray-500">Samagri Kit</span>
         <span
           className={`text-xs font-bold ${isSamagriSelected ? "text-green-600" : "text-gray-400"}`}
         >
@@ -932,6 +1032,14 @@ const MobileSummaryInline = ({
 
       <div className="border-t border-dashed border-gray-300 w-full" />
 
+      {/* ✅ PAYMENT OPTION SELECTOR (MOBILE) */}
+      <PaymentOptionSelector 
+        paymentOption={paymentOption}
+        setPaymentOption={setPaymentOption}
+        grandTotal={grandTotal}
+        advancePercentage={advancePercentage}
+      />
+
       <div className="flex justify-between items-center pt-1">
         <div>
           <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">
@@ -1010,6 +1118,7 @@ const ContributionCard = ({ option, selected, onToggle }) => (
     </span>
   </div>
 );
+
 
 export default KathaPujaPaymentDetails;
 
