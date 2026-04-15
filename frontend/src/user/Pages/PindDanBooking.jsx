@@ -117,6 +117,7 @@ const PindDanBooking = () => {
     "Anna Dan": false,
     "Deep Dan": false,
     "Brahmin Dan": false,
+    "Jeev Daya": false,
     "Gau Seva": false,
     "Temple Donation": false,
   });
@@ -378,12 +379,12 @@ const PindDanBooking = () => {
   };
 
   const getPrice = (title) => {
-    const item = contributionOptions.find((c) => c.name === title);
-    return item ? Number(item.price) : 0;
+    const item = Array.isArray(contributionOptions) ? contributionOptions.find((c) => c.name.trim().toLowerCase() === title.trim().toLowerCase()) : null;
+    return Number(item?.price || 0);
   };
 
   const getDescription = (name) => {
-    const item = Array.from(contributionOptions).find((c) => c.name === name);
+    const item = Array.isArray(contributionOptions) ? contributionOptions.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase()) : null;
     return item?.description || "";
   };
 
@@ -397,7 +398,7 @@ const PindDanBooking = () => {
     { id: "Jal Dan", title: "Jal Dan", price: getPrice("Jal Dan"), icon: <Droplets size={16} />, sub: getDescription("Jal Dan") || "Provide clean water" },
     { id: "Vriksh Dan", title: "Vriksh Dan", price: getPrice("Vriksh Dan"), icon: <Leaf size={16} />, sub: getDescription("Vriksh Dan") || "Plant trees for nature" },
     { id: "Aashray Dan", title: "Aashray Dan", price: getPrice("Aashray Dan"), icon: <Home size={16} />, sub: getDescription("Aashray Dan") || "Shelter for the homeless" },
-    { id: "Jeev Daya", title: "Jeev Daya", price: getPrice("Jeev Daya"), icon: <span className="text-xl">🐄</span>, sub: getDescription("Jeev Daya") || "Compassion for all beings" },
+    { id: "Jeev Daya", title: "Jeev Daya", price: getPrice("Jeev Daya"), icon: <Bird size={16} />, sub: getDescription("Jeev Daya") || "Compassion for all beings" },
     { id: "Gau Seva", title: "Gau Seva", price: getPrice("Gau Seva"), icon: <span className="text-xl">🐄</span>, sub: getDescription("Gau Seva") || "Feed the Gau Mata" },
   ];
 
@@ -996,7 +997,9 @@ const MobileSummarySection = ({
   contributionOptions, couponInput, setCouponInput, appliedCoupon,
   handleApplyCoupon, removeCoupon, isApplying, couponError,
   paymentOption, setPaymentOption, grandTotal, advancePercentage,
-  handleBooking, isBooking, pendingRewards, useReferralDiscount, handleReferralToggle, referralDiscount
+  handleBooking, isBooking, pendingRewards, useReferralDiscount, 
+  handleReferralToggle, referralDiscount, publicCoupons, 
+  discountAmount, grandTotalBeforeDiscount, finalTotal
 }) => (
   <div>
     <div className="mb-5">

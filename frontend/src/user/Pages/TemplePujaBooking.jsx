@@ -41,6 +41,7 @@ import {
   Bird,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import CouponSelector from "../Components/CouponSelector";
 import { jwtDecode } from "jwt-decode";
 import HowItProcess from "../Components/HowItProcess";
 import HTMLContent from "../../Components/HTMLContent";
@@ -526,7 +527,7 @@ const TemplePujaBooking = () => {
   const [selectedTicket, setSelectedTicket] = useState("Single");
   const [activeTab, setActiveTab] = useState("about");
   const [aboutExpanded, setAboutExpanded] = useState(false);
-  const [contributionOptions, setContributionOptions] = useState("");
+  const [contributionOptions, setContributionOptions] = useState([]);
   const [donations, setDonations] = useState({
     "Vastra Dan": false,
     "Anna Dan": false,
@@ -550,6 +551,11 @@ const TemplePujaBooking = () => {
   const [selectedMemberIds, setSelectedMemberIds] = useState([]);
   const [pendingRewards, setPendingRewards] = useState(0);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
+  const [publicCoupons, setPublicCoupons] = useState([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -586,6 +592,15 @@ const TemplePujaBooking = () => {
         });
         const data = await response.json();
         if (data.success) setService(data.data[0]);
+
+        // Fetch public coupons
+        const publicCouponsRes = await fetch(`${API_BASE_URL}/coupons/public-coupons`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const publicCouponsData = await publicCouponsRes.json();
+        if (publicCouponsData.success) {
+          setPublicCoupons(publicCouponsData.data);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -830,13 +845,54 @@ const TemplePujaBooking = () => {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setIsApplying(true);
+    setCouponError("");
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`${API_BASE_URL}/coupons/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: couponInput }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAppliedCoupon(data.data);
+        setCouponInput("");
+        setUseReferralDiscount(false);
+      } else {
+        setCouponError(data.message);
+      }
+    } catch (error) {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError("");
+  };
+
+  const handleReferralToggle = () => {
+    if (!useReferralDiscount && appliedCoupon) {
+      setAppliedCoupon(null);
+    }
+    setUseReferralDiscount(!useReferralDiscount);
+  };
+
   const getPrice = (title) => {
-    const daan = Array.from(contributionOptions).filter((c) => c.name == title);
-    return Number(daan[0]?.price);
+    const item = Array.isArray(contributionOptions) ? contributionOptions.find((c) => c.name.trim().toLowerCase() === title.trim().toLowerCase()) : null;
+    return Number(item?.price || 0);
   };
 
   const getDescription = (name) => {
-    const item = Array.from(contributionOptions).find((c) => c.name === name);
+    const item = Array.isArray(contributionOptions) ? contributionOptions.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase()) : null;
     return item?.description || "";
   };
 
@@ -947,28 +1003,35 @@ const TemplePujaBooking = () => {
       (acc, item) => (donations[item.id] ? acc + item.price : acc),
       0,
     );
-    const templeDonation = donations["Temple Donation"]
-      ? Number(
-          Array.from(contributionOptions).filter(
-            (c) => c.name == "Temple Donation",
-          )[0]?.price || 0,
-        )
-      : 0;
+    const templeDonation = donations["Temple Donation"] ? getPrice("Temple Donation") : 0;
       
-    const referralDiscount = useReferralDiscount 
-    ? Math.floor(((base + extra + templeDonation) * 10) / 100) 
+    const subtotal = base + extra + templeDonation;
+    const couponDiscount = appliedCoupon
+      ? Math.floor((subtotal * appliedCoupon.discount_percentage) / 100)
+      : 0;
+
+    const referralDiscountAmount = useReferralDiscount 
+      ? Math.floor(((subtotal - couponDiscount) * 10) / 100) 
+      : 0;
+
+    return subtotal - couponDiscount - referralDiscountAmount;
+  };
+
+  const subtotalForRef = (tickets.find((t) => t.label === selectedTicket)?.price || 0) + 
+      contributionList.reduce((acc, item) => (donations[item.id] ? acc + item.price : acc), 0) + 
+      (donations["Temple Donation"] ? Number(getPrice("Temple Donation") || 0) : 0);
+
+  const couponDiscountValue = appliedCoupon
+    ? Math.floor((subtotalForRef * appliedCoupon.discount_percentage) / 100)
     : 0;
 
-  return (base + extra + templeDonation) - referralDiscount;
-};
+  const referralDiscountValue = useReferralDiscount 
+    ? Math.floor(((subtotalForRef - couponDiscountValue) * 10) / 100) 
+    : 0;
 
-const referralDiscountValue = useReferralDiscount 
-  ? Math.floor(((tickets.find((t) => t.label === selectedTicket)?.price || 0) + 
-    contributionList.reduce((acc, item) => (donations[item.id] ? acc + item.price : acc), 0) + 
-    (donations["Temple Donation"] ? Number(getPrice("Temple Donation") || 0) : 0)) * 10 / 100) 
-  : 0;
-
-const finalTotal = calculateTotal();
+  const discountAmount = couponDiscountValue + referralDiscountValue;
+  const grandTotalBeforeDiscount = subtotalForRef;
+  const finalTotal = calculateTotal();
 
   const selectedContributionsTotal =
     contributionList.reduce(
@@ -1286,11 +1349,21 @@ const finalTotal = calculateTotal();
                   getPrice={getPrice}
                   selectedMemberNames={selectedMemberNames}
                   contributionOptions={contributionOptions}
-                  finalTotal={calculateTotal()}
                   pendingRewards={pendingRewards}
                   useReferralDiscount={useReferralDiscount}
-                  setUseReferralDiscount={setUseReferralDiscount}
+                  handleReferralToggle={handleReferralToggle}
                   referralDiscount={referralDiscountValue}
+                  couponInput={couponInput}
+                  setCouponInput={setCouponInput}
+                  appliedCoupon={appliedCoupon}
+                  handleApplyCoupon={handleApplyCoupon}
+                  removeCoupon={removeCoupon}
+                  isApplying={isApplying}
+                  couponError={couponError}
+                  publicCoupons={publicCoupons}
+                  discountAmount={discountAmount}
+                  grandTotalBeforeDiscount={grandTotalBeforeDiscount}
+                  finalTotal={finalTotal}
                 />
               </div>
 
@@ -1472,7 +1545,7 @@ const finalTotal = calculateTotal();
                       </div>
                       
                       <div 
-                        onClick={() => setUseReferralDiscount(!useReferralDiscount)}
+                        onClick={handleReferralToggle}
                         className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
                           useReferralDiscount 
                             ? "border-orange-500 bg-orange-50" 
@@ -1493,6 +1566,20 @@ const finalTotal = calculateTotal();
                       </div>
                     </div>
                   )}
+
+                  {/* 🎫 Coupon Section */}
+                  <div className="py-2 border-y border-dashed border-orange-100 my-4 px-1">
+                    <CouponSelector 
+                      couponInput={couponInput}
+                      setCouponInput={setCouponInput}
+                      appliedCoupon={appliedCoupon}
+                      handleApplyCoupon={handleApplyCoupon}
+                      removeCoupon={removeCoupon}
+                      isApplying={isApplying}
+                      couponError={couponError}
+                      publicCoupons={publicCoupons}
+                    />
+                  </div>
 
                 </div>
 
@@ -1599,8 +1686,19 @@ const MobileSummarySection = ({
   contributionOptions,
   pendingRewards,
   useReferralDiscount,
-  setUseReferralDiscount,
+  handleReferralToggle,
   referralDiscount,
+  couponInput,
+  setCouponInput,
+  appliedCoupon,
+  handleApplyCoupon,
+  removeCoupon,
+  isApplying,
+  couponError,
+  publicCoupons,
+  discountAmount,
+  grandTotalBeforeDiscount,
+  finalTotal
 }) => (
   <div className="space-y-5">
     <div>
@@ -1739,7 +1837,7 @@ const MobileSummarySection = ({
           </div>
           
           <div 
-            onClick={() => setUseReferralDiscount(!useReferralDiscount)}
+            onClick={handleReferralToggle}
             className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
               useReferralDiscount 
                 ? "border-orange-500 bg-orange-50" 
@@ -1761,7 +1859,20 @@ const MobileSummarySection = ({
         </div>
       )}
 
-      <div className="border-t border-dashed border-gray-300 w-full" />
+      {/* 🎫 Coupon Section */}
+      <div className="py-2 border-y border-dashed border-orange-100 my-4 px-1">
+        <CouponSelector 
+          isMobile={true}
+          couponInput={couponInput}
+          setCouponInput={setCouponInput}
+          appliedCoupon={appliedCoupon}
+          handleApplyCoupon={handleApplyCoupon}
+          removeCoupon={removeCoupon}
+          isApplying={isApplying}
+          couponError={couponError}
+          publicCoupons={publicCoupons}
+        />
+      </div>
 
       <div className="flex justify-between items-center pt-1 px-1">
         <div>

@@ -171,12 +171,12 @@ const HomePujaPaymentDetails = () => {
   });
 
   const getPrice = (title) => {
-    const daan = contributionOptions2.find((c) => c.name === title);
-    return Number(daan?.price || 0);
+    const item = Array.isArray(contributionOptions2) ? contributionOptions2.find((c) => c.name.trim().toLowerCase() === title.trim().toLowerCase()) : null;
+    return Number(item?.price || 0);
   };
 
   const getDescription = (name) => {
-    const item = contributionOptions2.find((c) => c.name === name);
+    const item = Array.isArray(contributionOptions2) ? contributionOptions2.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase()) : null;
     return item?.description || "";
   };
 

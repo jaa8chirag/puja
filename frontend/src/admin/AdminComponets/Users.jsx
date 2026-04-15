@@ -285,6 +285,7 @@ const Users = () => {
                   </th>
                   <th className="px-5 py-4 font-bold">Registered</th>
                   <th className="px-5 py-4 text-center font-bold">Bookings</th>
+                  <th className="px-5 py-4 text-center font-bold">Rewards</th>
                   <th className="px-5 py-4 text-right font-bold">Actions</th>
                 </tr>
               </thead>
@@ -343,6 +344,11 @@ const Users = () => {
                     <td className="px-5 py-4 text-center">
                       <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black border bg-orange-500/10 text-orange-400 border-orange-500/20">
                         {u.total_bookings || 0}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                        {u.pending_referral_discounts || 0}
                       </span>
                     </td>
                     <td className="px-5 py-4">
