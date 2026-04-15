@@ -44,6 +44,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import HowItProcess from "../Components/HowItProcess";
 import HTMLContent from "../../Components/HTMLContent";
+import SEO from "../Components/SEO";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 import { LotusIcon } from "../Components/Icons";
@@ -997,6 +998,11 @@ const finalTotal = calculateTotal();
 
   return (
     <>
+      <SEO 
+        title={service?.puja_name || "Temple Puja"} 
+        description={`Book ${service?.puja_name || "Temple Puja"} at ${service?.address || "your favorite temple"}. Join sacred rituals and seek divine blessings.`}
+        keywords={`${service?.puja_name}, Online Temple Puja, Mandir Rituals, Book Puja at Temple`}
+      />
       <MemberSelectModal
         isOpen={modalOpen}
         onClose={handleCloseModal}

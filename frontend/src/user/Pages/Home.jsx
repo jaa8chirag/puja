@@ -7,6 +7,7 @@ import TrendingPuja from "../Components/TrendingPuja";
 import { useNavigate } from "react-router-dom";
 import WhyChooseUs from "../Components/Whychooseus";
 import VerifiedPanditSection from "../Components/VerifiedPanditSection";
+import SEO from "../Components/SEO";
 import {
   ShieldCheck,
   Sparkles,
@@ -94,6 +95,11 @@ export default function Home() {
 
   return (
     <div className="w-full overflow-x-hidden bg-[#FFF4E1] flex flex-col items-center">
+      <SEO 
+        title="Sacred Rituals, Modern Convenience" 
+        description="Book verified Pandits for your sacred ceremonies. Traditional Vedic Pujas like Havan, Griha Pravesh, and Wedding Rituals at your doorstep."
+        keywords="Book Pandit Online, Vedic Puja, Havan at home, Griha Pravesh Pandit, Sri Vedic Puja Home"
+      />
       {/* ================= HERO SECTION ================= */}
       <section className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 md:py-16 overflow-hidden">
         <div className="flex flex-col lg:flex-row items-start gap-10 lg:gap-12 max-w-[1250px] mx-auto">
