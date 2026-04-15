@@ -150,8 +150,8 @@ const LUCKY_MONTHS = [
 
 const FORECAST_ICONS  = ['🌱','🌿','🌳','🏆','🌟'];
 const YEAR_LABELS     = ['First Year','Second Year','Third Year','Fourth Year','Fifth Year'];
-// ── FIX 1: Updated total pages from 8 to 9
-const TOTAL_PAGES     = 9;
+// ── FIX 1: Updated total pages from 8 to 10
+const TOTAL_PAGES     = 10;
 
 // ── Utility ──────────────────────────────────────────────────
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1049,6 +1049,17 @@ ${topSuggestion ? buildForecastPage(
   </div>
   ${pageFooter(9)}
 </div>`}
+
+  <!-- ══════════ PAGE 10: IMPORTANT NOTICE ══════════ -->
+  <div class="page">
+    <div style="display:flex;flex-direction:column;justify-content:center;height:100%;padding:24px;">
+      <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:18px;text-align:center;">Important Notice</div>
+      <div style="font-size:10px;color:#374151;line-height:1.8;text-align:justify;">
+        This document is provided as a sample/template for reference purposes only. While every effort has been made to ensure the accuracy of the information, it may not be complete, correct, or up to date. The content should not be considered legally binding or fully reliable for official use. Users are advised to verify all details with the appropriate authorities before submitting or relying on this document. The creator of this document shall not be held responsible for any errors, omissions, or consequences arising from its use.
+      </div>
+    </div>
+    ${pageFooter(10)}
+  </div>
 
 </body></html>`;
 }
