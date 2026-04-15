@@ -55,6 +55,7 @@ import {
   getPageBySlug,
   createPage,
   updatePage,
+  uploadPageImage,
   deleteContribution,
   getAllNameCorrections,
   getAllPersonalInfo,
@@ -121,6 +122,13 @@ router.get("/pages", verifyToken, adminOnly, getPages);
 router.get("/pages/:slug", verifyToken, adminOnly, getPageBySlug);
 router.post("/pages", verifyToken, adminOnly, createPage);
 router.put("/pages/:slug", verifyToken, adminOnly, updatePage);
+router.post(
+  "/pages/:slug/upload-image",
+  verifyToken,
+  adminOnly,
+  upload.single("image"),
+  uploadPageImage,
+);
 
 //contributionn
 router.get("/contributions", verifyToken, adminOnly, getAllContributions);

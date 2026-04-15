@@ -19,33 +19,38 @@ const stripHtml = (html) => {
 };
 
 const parseSections = (sections) => {
-  if (!sections) return [{ title: "", content: "" }];
+  if (!sections) return [{ title: "", content: "", img: "" }];
 
   try {
     const parsed = typeof sections === "string" ? JSON.parse(sections) : sections;
     if (Array.isArray(parsed)) {
       return parsed.map(s => ({
         title: s.title || s.heading || "",
-        content: s.content || s.text || ""
+        content: s.content || s.desc || s.description || s.text || "",
+        img: s.img || s.image || s.image_url || "",
       }));
     }
-    if (parsed.content && typeof parsed.content === "string") {
-      return [{ title: "", content: parsed.content }];
+    if ((parsed.content || parsed.desc || parsed.description) && typeof parsed === "object") {
+      return [{
+        title: parsed.title || parsed.heading || "",
+        content: parsed.content || parsed.desc || parsed.description || "",
+        img: parsed.img || parsed.image || parsed.image_url || "",
+      }];
     }
     // Handle key-value legacy
     if (typeof parsed === "object") {
       const arr = [];
       Object.keys(parsed).forEach(k => {
         if (typeof parsed[k] === "string" && !k.includes("image_url")) {
-          arr.push({ title: k, content: parsed[k] });
+          arr.push({ title: k, content: parsed[k], img: "" });
         }
       });
-      return arr.length > 0 ? arr : [{ title: "", content: "" }];
+      return arr.length > 0 ? arr : [{ title: "", content: "", img: "" }];
     }
   } catch {
-    return [{ title: "", content: String(sections) }];
+    return [{ title: "", content: String(sections), img: "" }];
   }
-  return [{ title: "", content: "" }];
+  return [{ title: "", content: "", img: "" }];
 };
 
 const extractContentSnippet = (sections) => {
@@ -113,20 +118,118 @@ const EditModal = ({ page, onClose, onSaved }) => {
   const [pageTitle, setPageTitle] = useState(page.title);
   const [sections, setSections] = useState(() => parseSections(page.sections));
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImageIdx, setUploadingImageIdx] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
-  const handleAddSection = () => {
-    setSections([...sections, { title: "", content: "" }]);
+  const handleAddSection = async () => {
+    // Limit to 4 sections for home-hero page
+    if (page.slug === "home-hero" && sections.length >= 4) {
+      alert("Maximum 4 sections allowed for the home hero slider.");
+      return;
+    }
+
+    const newSections = [...sections, { title: "", content: "", img: "" }];
+    setSections(newSections);
+    
+    // Save to database immediately
+    try {
+      const sectionsJson = JSON.stringify(newSections);
+      await API.put(`/pages/${page.slug}`, {
+        title: pageTitle,
+        sections: sectionsJson,
+      });
+    } catch (error) {
+      console.error("Failed to save new section:", error);
+      // Revert the change if save failed
+      setSections(sections);
+      alert("Failed to add section. Please try again.");
+    }
   };
 
-  const handleRemoveSection = (idx) => {
+  const handleRemoveSection = async (idx) => {
     if (sections.length === 1) return;
-    setSections(sections.filter((_, i) => i !== idx));
+    
+    const newSections = sections.filter((_, i) => i !== idx);
+    const oldSections = [...sections]; // Keep old state for rollback
+    setSections(newSections);
+    
+    // Save to database immediately
+    try {
+      const sectionsJson = JSON.stringify(newSections);
+      await API.put(`/pages/${page.slug}`, {
+        title: pageTitle,
+        sections: sectionsJson,
+      });
+    } catch (error) {
+      console.error("Failed to save section removal:", error);
+      // Revert the change if save failed
+      setSections(oldSections);
+      alert("Failed to remove section. Please try again.");
+    }
   };
 
   const handleUpdateSection = (idx, field, value) => {
     const newSections = [...sections];
     newSections[idx][field] = value;
     setSections(newSections);
+  };
+
+  const getImagePreviewUrl = (img) => {
+    if (!img) return null;
+    if (img.startsWith("/uploads")) {
+      return `${import.meta.env.VITE_BACKEND_URL}${img}`;
+    }
+    return img;
+  };
+
+  const handleUploadSectionImage = async (idx, file) => {
+    if (!file) return;
+    setUploadingImageIdx(idx);
+    setUploadLoading(true);
+
+    // First save the current sections to ensure the section exists in the database
+    try {
+      const sectionsJson = JSON.stringify(sections);
+      await API.put(`/pages/${page.slug}`, {
+        title: pageTitle,
+        sections: sectionsJson,
+      });
+      console.log("Sections saved before upload");
+    } catch (saveError) {
+      console.error("Failed to save sections before upload:", saveError);
+      alert("Please save the page first before uploading images.");
+      setUploadLoading(false);
+      setUploadingImageIdx(null);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("sectionIndex", String(idx));
+
+    console.log("Sending formData:", {
+      file: { name: file.name, size: file.size, type: file.type },
+      sectionIndex: String(idx),
+      formDataKeys: Array.from(formData.keys()),
+    });
+
+    try {
+      const response = await API.post(`/pages/${page.slug}/upload-image`, formData);
+
+      if (response.data?.success && response.data.data?.section) {
+        const updated = [...sections];
+        updated[idx] = response.data.data.section;
+        setSections(updated);
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      alert("Image upload failed. Try again.");
+    } finally {
+      setUploadLoading(false);
+      setUploadingImageIdx(null);
+    }
   };
 
   const handleSubmit = async () => {
@@ -175,9 +278,23 @@ const EditModal = ({ page, onClose, onSaved }) => {
 
           <div className="space-y-12">
             <div className="flex items-center justify-between">
-              <label className="text-[12px] uppercase font-black text-orange-500 tracking-[0.2em]">Content Boxes ({sections.length})</label>
-              <button onClick={handleAddSection} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all text-[11px] font-black uppercase tracking-widest">
+              <div>
+                <label className="text-[12px] uppercase font-black text-orange-500 tracking-[0.2em]">Content Boxes ({sections.length})</label>
+                {page.slug === "home-hero" && (
+                  <p className="text-[10px] text-slate-500 mt-1">Maximum 4 sections for home hero slider</p>
+                )}
+              </div>
+              <button 
+                onClick={handleAddSection} 
+                disabled={page.slug === "home-hero" && sections.length >= 4}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest ${
+                  page.slug === "home-hero" && sections.length >= 4
+                    ? "bg-gray-500/10 text-gray-400 cursor-not-allowed"
+                    : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white"
+                }`}
+              >
                 <Plus size={14} /> Add New Box
+                {page.slug === "home-hero" && sections.length >= 4 && " (Max 4)"}
               </button>
             </div>
 
@@ -197,10 +314,66 @@ const EditModal = ({ page, onClose, onSaved }) => {
                       className="w-full bg-transparent border-b border-slate-800 text-white py-2 focus:border-orange-500 outline-none font-bold"
                     />
                   </div>
+                  {page.slug === "home-hero" && (
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-600 mb-2 block tracking-widest">Image URL</label>
+                      <input
+                        type="text"
+                        value={section.img}
+                        placeholder="/img/newImage1.jpg or /uploads/hero1.jpg"
+                        onChange={(e) => handleUpdateSection(idx, "img", e.target.value)}
+                        className="w-full bg-transparent border-b border-slate-800 text-white py-2 focus:border-orange-500 outline-none"
+                      />
+                      <div className="mt-4">
+                        <label className="text-[10px] uppercase font-bold text-slate-600 mb-2 block tracking-widest">Upload Image</label>
+                        
+                        {/* Image Dimension Warning */}
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">
+                              <span className="text-orange-400 text-xs">ℹ</span>
+                            </div>
+                            <div>
+                              <p className="text-orange-300 text-xs font-semibold">Recommended Image Size</p>
+                              <p className="text-orange-200/80 text-xs">1200×800 pixels, landscape ratio for best layout</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUploadSectionImage(idx, file);
+                          }}
+                          className="w-full text-sm text-slate-200 file:text-sm file:rounded-full file:border-0 file:bg-orange-500 file:px-3 file:py-2 file:text-white"
+                        />
+                        {uploadLoading && uploadingImageIdx === idx && (
+                          <p className="text-[11px] text-slate-400 mt-2">Uploading image...</p>
+                        )}
+                      </div>
+                      {section.img && (
+                        <div className="mt-3 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
+                          <img src={getImagePreviewUrl(section.img)} alt="Preview" className="w-full h-40 object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div>
-                    <label className="text-[10px] uppercase font-bold text-slate-600 mb-2 block tracking-widest">Box Content</label>
+                    <label className="text-[10px] uppercase font-bold text-slate-600 mb-2 block tracking-widest">{page.slug === "home-hero" ? "Description" : "Box Content"}</label>
                     <div className="bg-[#0f172a] rounded-2xl border border-slate-800 overflow-hidden text-white">
-                      <RichTextEditor value={section.content} onChange={(val) => handleUpdateSection(idx, "content", val)} />
+                      {page.slug === "home-hero" ? (
+                        <textarea
+                          value={section.content}
+                          onChange={(e) => handleUpdateSection(idx, "content", e.target.value)}
+                          rows={4}
+                          className="w-full bg-transparent border-none text-white p-4 resize-none outline-none"
+                          placeholder="Enter short description"
+                        />
+                      ) : (
+                        <RichTextEditor value={section.content} onChange={(val) => handleUpdateSection(idx, "content", val)} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -221,9 +394,9 @@ const EditModal = ({ page, onClose, onSaved }) => {
 };
 
 // ─── Create Page Modal ────────────────────────────────────────────────────────
-const CreateModal = ({ onClose, onSaved }) => {
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
+const CreateModal = ({ onClose, onSaved, defaultTitle = "", defaultSlug = "", fixedSlug = false }) => {
+  const [title, setTitle] = useState(defaultTitle);
+  const [slug, setSlug] = useState(defaultSlug);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -259,7 +432,12 @@ const CreateModal = ({ onClose, onSaved }) => {
           </div>
           <div>
             <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block">Slug</label>
-            <input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/ /g, "-"))} className="w-full bg-[#131e32] border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 transition-all font-mono text-sm" />
+            <input
+              value={slug}
+              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/ /g, "-"))}
+              disabled={fixedSlug}
+              className="w-full bg-[#131e32] border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 transition-all font-mono text-sm disabled:opacity-50"
+            />
           </div>
         </div>
         <div className="p-6 border-t border-slate-800 flex gap-4">
@@ -273,19 +451,81 @@ const CreateModal = ({ onClose, onSaved }) => {
   );
 };
 
-const AdminPages = () => {
+const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, subtitle = null }) => {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editPage, setEditPage] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  const createDefaultPage = async () => {
+    const defaultSections = [
+      {
+        title: "Sacred Havan",
+        content: "Purifying Fire Ritual",
+        img: "/img/newImage1.jpg",
+      },
+      {
+        title: "Vedic Puja",
+        content: "Traditional Worship",
+        img: "/img/newImage2.jpg",
+      },
+      {
+        title: "Wedding Rituals",
+        content: "Sacred Union Ceremonies",
+        img: "/img/newImage4.jpg",
+      },
+      {
+        title: "Griha Pravesh",
+        content: "New Beginnings",
+        img: "/img/newImage3.jpg",
+      },
+    ];
+
+    try {
+      const response = await API.post("/pages", {
+        title: defaultTitle || "Home Hero",
+        slug: defaultSlug,
+        sections: JSON.stringify(defaultSections),
+      });
+
+      if (response.data?.success) {
+        setPages([
+          {
+            id: Date.now(),
+            title: defaultTitle || "Home Hero",
+            slug: defaultSlug,
+            sections: JSON.stringify(defaultSections),
+            updated_at: new Date().toISOString(),
+            updated_by: "admin",
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error("Create default page error:", err);
+      setPages([]);
+    }
+  };
+
   const fetchPages = async () => {
     try {
       setLoading(true);
-      const response = await API.get("/pages");
-      if (response.data?.success) setPages(response.data.data);
+      if (defaultSlug) {
+        const response = await API.get(`/pages/${defaultSlug}`);
+        if (response.data?.success && response.data.data) {
+          setPages([response.data.data]);
+        } else {
+          await createDefaultPage();
+        }
+      } else {
+        const response = await API.get("/pages");
+        if (response.data?.success) setPages(response.data.data);
+      }
     } catch (err) {
-      console.error(err);
+      if (defaultSlug && err.response?.status === 404) {
+        await createDefaultPage();
+      } else {
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
@@ -300,28 +540,60 @@ const AdminPages = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-            <FileText className="text-orange-500" /> Dynamic Page Boxes
+            <FileText className="text-orange-500" /> {heading || "Dynamic Page Boxes"}
           </h1>
-          <p className="text-[12px] text-slate-500 font-medium">Manage About Us & Policies</p>
+          <p className="text-[12px] text-slate-500 font-medium">{subtitle || "Manage About Us & Policies"}</p>
         </div>
         <div className="flex items-center gap-4">
-
+          {!defaultSlug && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 bg-orange-500 text-white rounded-xl px-4 py-2 text-sm font-semibold hover:bg-orange-400 transition-all"
+            >
+              <Plus size={14} /> New Page
+            </button>
+          )}
           <div className="bg-[#131e32] border border-slate-800 rounded-xl px-4 py-2">
-            <span className="text-slate-400 text-[11px] font-bold">{pages.length} Pages</span>
+            <span className="text-slate-400 text-[11px] font-bold">{pages.length} Page{pages.length === 1 ? "" : "s"}</span>
           </div>
         </div>
       </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32"><Loader2 className="animate-spin text-orange-500" size={32} /></div>
-      ) : (
+      ) : pages.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {pages.map((page) => <PageCard key={page.id} page={page} onEdit={setEditPage} />)}
+        </div>
+      ) : (
+        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-10 text-center text-slate-400">
+          <p className="text-lg font-semibold text-white mb-2">No page found{defaultSlug ? ` for slug "${defaultSlug}"` : " yet"}.</p>
+          <p className="text-sm text-slate-500 mb-5">
+            {defaultSlug
+              ? "Home Hero page will be created automatically. Refresh after a moment if it does not appear."
+              : "Use the button above to add a new page."}
+          </p>
+          {!defaultSlug && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center gap-2 bg-orange-500 text-white rounded-xl px-4 py-2 text-sm font-semibold hover:bg-orange-400 transition-all"
+            >
+              <Plus size={14} /> Create {defaultTitle || "Page"}
+            </button>
+          )}
         </div>
       )}
 
       {editPage && <EditModal page={editPage} onClose={() => setEditPage(null)} onSaved={fetchPages} />}
-      {showCreateModal && <CreateModal onClose={() => setShowCreateModal(false)} onSaved={fetchPages} />}
+      {showCreateModal && (
+        <CreateModal
+          onClose={() => setShowCreateModal(false)}
+          onSaved={fetchPages}
+          defaultTitle={defaultTitle || ""}
+          defaultSlug={defaultSlug || ""}
+          fixedSlug={Boolean(defaultSlug)}
+        />
+      )}
     </div>
   );
 };

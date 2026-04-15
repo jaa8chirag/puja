@@ -1049,19 +1049,20 @@ const SettingsTab = () => {
     fetch(`${API_BASE_URL}/settings/advance_payment_percentage`)
       .then(res => res.json())
       .then(data => {
-        if(data.success) setAdvancePercent(data.value);
+        if (data.success) setAdvancePercent(data.value);
       })
       .catch(err => console.error(err));
   }, []);
 
   const handleUpdate = async () => {
-    if(!advancePercent || isNaN(advancePercent) || advancePercent < 0 || advancePercent > 100) {
+    const numericValue = Number(advancePercent);
+    if (advancePercent === "" || isNaN(numericValue) || numericValue < 0 || numericValue > 100) {
       setMsg("Invalid percentage (0-100)");
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/settings/update`, {
+      const res = await fetch(`${API_BASE_URL}/settings/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1069,7 +1070,7 @@ const SettingsTab = () => {
         },
         body: JSON.stringify({
           key: "advance_payment_percentage",
-          value: advancePercent
+          value: numericValue
         })
       });
       const data = await res.json();

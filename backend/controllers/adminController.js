@@ -2389,6 +2389,66 @@ export const updatePage = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+export const uploadPageImage = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const rawIndex = req.body.sectionIndex ?? req.query.sectionIndex ?? req.body["sectionIndex[]"];
+    const sectionIndex = parseInt(Array.isArray(rawIndex) ? rawIndex[0] : rawIndex, 10);
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Image file required" });
+    }
+    if (Number.isNaN(sectionIndex)) {
+      return res.status(400).json({ success: false, message: "sectionIndex is required", received: rawIndex });
+    }
+
+    const [rows] = await db.query(`SELECT * FROM pages WHERE slug = ?`, [slug]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Page nahi mila" });
+    }
+
+    const page = rows[0];
+    let sections = page.sections;
+    if (typeof sections === "string") {
+      try {
+        sections = JSON.parse(sections);
+      } catch {
+        sections = [];
+      }
+    }
+
+    if (!Array.isArray(sections)) {
+      return res.status(400).json({ success: false, message: "Invalid page sections" });
+    }
+    if (sectionIndex < 0 || sectionIndex >= sections.length) {
+      return res.status(400).json({ success: false, message: `Invalid sectionIndex: ${sectionIndex}. Available sections: 0-${sections.length - 1}` });
+    }
+
+    const imageUrl = `/uploads/${req.file.filename}`;
+    sections[sectionIndex] = {
+      ...sections[sectionIndex],
+      img: imageUrl,
+    };
+
+    await db.query(
+      `UPDATE pages SET sections = ?, updated_by = ? WHERE slug = ?`,
+      [JSON.stringify(sections), req.admin?.name || "admin", slug],
+    );
+
+    res.json({
+      success: true,
+      data: {
+        sectionIndex,
+        section: sections[sectionIndex],
+      },
+    });
+  } catch (error) {
+    console.error("Upload Page Image Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // name correction
 export const getAllNameCorrections = async (req, res) => {
   try {

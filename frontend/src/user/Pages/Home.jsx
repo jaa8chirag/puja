@@ -19,7 +19,7 @@ import {
 
 export default function Home() {
   const navigate = useNavigate();
-  const rituals = [
+  const defaultRituals = [
     {
       img: "/img/newImage1.jpg",
       title: "Sacred Havan",
@@ -42,8 +42,17 @@ export default function Home() {
     },
   ];
 
+  const [rituals, setRituals] = useState(defaultRituals);
   const [index, setIndex] = useState(0);
   const duration = 4000;
+
+  const buildImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("/uploads")) {
+      return `${import.meta.env.VITE_BACKEND_URL}${img}`;
+    }
+    return img;
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -51,6 +60,37 @@ export default function Home() {
     }, duration);
     return () => clearInterval(timer);
   }, [index, rituals.length]);
+
+  useEffect(() => {
+    const fetchHomeHero = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/pages/home-hero`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json.success || !json.data?.sections) return;
+
+        const parsedSections = typeof json.data.sections === "string"
+          ? JSON.parse(json.data.sections)
+          : json.data.sections;
+
+        if (!Array.isArray(parsedSections)) return;
+
+        const heroItems = parsedSections.map((item) => ({
+          img: buildImageUrl(item.img || item.image || item.image_url || "/img/newImage1.jpg"),
+          title: item.title || item.heading || item.text || "",
+          desc: item.desc || item.content || item.description || "",
+        }));
+
+        if (heroItems.length > 0) {
+          setRituals(heroItems);
+        }
+      } catch (error) {
+        console.error("Failed to load home hero content:", error);
+      }
+    };
+
+    fetchHomeHero();
+  }, []);
 
   return (
     <div className="w-full overflow-x-hidden bg-[#FFF4E1] flex flex-col items-center">
@@ -75,27 +115,27 @@ export default function Home() {
             </p>
 
             {/* ✅ Buttons - Always Side by Side */}
-            <div className="flex gap-3 mt-8">
+            <div className="grid grid-cols-2 gap-3 mt-8">
               <div className="flex flex-col items-center gap-1">
                 <button
-                  className="bg-orange-500 text-white font-bold py-3 px-12 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-sm sm:text-base"
+                  className="w-full bg-orange-500 text-white font-bold py-3 px-4 sm:px-12 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-sm sm:text-base whitespace-nowrap"
                   onClick={() => navigate("/kundli")}
                 >
                   Find Your Kundli
                 </button>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-center text-gray-600">
                   Vedic birth chart analysis
                 </p>
               </div>
 
               <div className="flex flex-col items-center gap-1">
                 <button
-                  className="bg-white text-orange-500 font-bold py-3 px-12 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base"
+                  className="w-full bg-white text-orange-500 font-bold py-3 px-4 sm:px-12 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base whitespace-nowrap"
                   onClick={() => navigate("/nameCorrection")}
                 >
                   Name correction
                 </button>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-center text-gray-600">
                   Rename it to Free after puja completion
                 </p>
               </div>
