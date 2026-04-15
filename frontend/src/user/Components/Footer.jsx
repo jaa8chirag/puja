@@ -80,6 +80,8 @@ const Footer = () => {
       { label: "About Us", to: "/aboutUs" },
       { label: "Contact Us", to: "/help" },
       { label: "FAQs", to: "/help" },
+    ],
+    policy: [
       { label: "Privacy Policy", to: "/privacypolicy" },
       { label: "Cancellation Policy", to: "/cancellationpolicy" },
       { label: "Terms and Conditions", to: "/termsandconditions" },
@@ -98,22 +100,20 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-5 py-6 md:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-8">
           {/* 1. BRAND & SOCIALS */}
-          <div className="lg:col-span-4 flex flex-row lg:flex-col justify-between items-center lg:items-start border-b border-orange-300/30 pb-4 lg:border-0 lg:pb-0">
+          <div className="lg:col-span-3 flex flex-row lg:flex-col justify-between items-center lg:items-start border-b border-orange-300/30 pb-4 lg:border-0 lg:pb-0">
             <div className="flex items-center gap-2">
               <img
                 src="/img/download.jpg"
                 alt="Logo"
                 className="h-8 w-8 rounded-lg shadow-sm"
               />
-              <span className="text-lg font-serif font-bold text-[#3b2a1a]">
+              <span className="text-lg font-serif font-bold text-[#3b2a1a] whitespace-nowrap">
                 Sri Vedic <span className="text-orange-500">Puja</span>
               </span>
             </div>
 
-            <p className="hidden lg:block text-xs text-gray-600 mt-3 leading-relaxed max-w-xs">
-              Sri Vedic Puja Authentic rituals, simplified. We connect you with
-              100% verified Pandits for offline (across Delhi NCR) and online
-              pujas. Your devotion, our dedication.
+            <p className="hidden lg:block text-[12px] text-gray-600 mt-1 leading-relaxed max-w-[240px]">
+              Sri Vedic Puja Authentic rituals, simplified. We connect you with 100% verified Pandits for offline (across Delhi NCR) and online pujas. Your devotion, our dedication.
             </p>
 
             <div className="flex gap-2 lg:mt-4">
@@ -148,9 +148,9 @@ const Footer = () => {
           </div>
 
           {/* 2. LINKS SECTIONS */}
-          <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-4">
+          <div className="lg:col-span-6 grid grid-cols-2 sm:grid-cols-4 gap-y-1 gap-x-2 md:gap-x-1">
             <div>
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-orange-800 mb-2">
+              <h4 className="text-[12px] font-bold uppercase tracking-widest text-orange-800 mb-3 ml-1">
                 Services
               </h4>
               <ul className="space-y-2">
@@ -158,7 +158,7 @@ const Footer = () => {
                   <li key={link.label}>
                     <NavLink
                       to={link.to}
-                      className="text-gray-600 text-xs hover:text-orange-600"
+                      className="text-gray-600 text-[12px] hover:text-orange-600 truncate block px-1"
                     >
                       {link.label}
                     </NavLink>
@@ -167,7 +167,7 @@ const Footer = () => {
               </ul>
             </div>
             <div>
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-orange-800 mb-2">
+              <h4 className="text-[12px] font-bold uppercase tracking-widest text-orange-800 mb-3 ml-1">
                 Community
               </h4>
               <ul className="space-y-2">
@@ -175,7 +175,7 @@ const Footer = () => {
                   <li key={link.label}>
                     <NavLink
                       to={link.to}
-                      className="text-gray-600 text-xs hover:text-orange-600"
+                      className="text-gray-600 text-[12px] hover:text-orange-600 truncate block px-1"
                     >
                       {link.label}
                     </NavLink>
@@ -183,16 +183,33 @@ const Footer = () => {
                 ))}
               </ul>
             </div>
-            <div className="col-span-2 sm:col-span-1 border-t border-orange-300/20 pt-4 sm:border-0 sm:pt-0">
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-orange-800 mb-2">
+            <div className="pt-4 sm:pt-0">
+              <h4 className="text-[12px] font-bold uppercase tracking-widest text-orange-800 mb-3 ml-1">
                 Support
               </h4>
-              <ul className="grid grid-cols-2 sm:block gap-2">
+              <ul className="space-y-2">
                 {footerLinks.support.map((link) => (
                   <li key={link.label}>
                     <NavLink
                       to={link.to}
-                      className="text-gray-600 text-xs hover:text-orange-600"
+                      className="text-gray-600 text-[12px] hover:text-orange-600 truncate block px-1"
+                    >
+                      {link.label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="pt-4 sm:pt-0">
+              <h4 className="text-[12px] font-bold uppercase tracking-widest text-orange-800 mb-3 ml-1">
+                Policies
+              </h4>
+              <ul className="space-y-2">
+                {footerLinks.policy.map((link) => (
+                  <li key={link.label}>
+                    <NavLink
+                      to={link.to}
+                      className="text-gray-600 text-[12px] hover:text-orange-600 whitespace-nowrap block px-1"
                     >
                       {link.label}
                     </NavLink>
@@ -213,22 +230,22 @@ const Footer = () => {
                 {/* Phone - from backend */}
                 <div className="flex items-center gap-2 text-xs text-gray-600">
                   <Phone size={14} className="text-orange-500 shrink-0" />
-                  <span>{contactInfo.phone ?? "Loading..."}</span>
+                  <span>{contactInfo.phone || "+91 9771157571"}</span>
                 </div>
                 {/* Email - from backend */}
                 <div className="flex items-center gap-2 text-xs text-gray-600 truncate">
                   <Mail size={14} className="text-orange-500 shrink-0" />
-                  <span className="truncate">{contactInfo.email ?? "Loading..."}</span>
+                  <span className="truncate">{contactInfo.email || "info@srivedicpuja.com"}</span>
                 </div>
               </div>
             </div>
 
             {/* Newsletter Section - Redesigned for "Real Application" feel */}
             <div className="mt-2 pt-4 border-t border-orange-300/20 lg:border-t-0 lg:pt-0">
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-orange-800 mb-2">
+              <h4 className="text-[12px] font-bold uppercase tracking-widest text-orange-800 mb-2">
                 Divine Updates
               </h4>
-              <p className="text-[10px] text-gray-500 mb-3 leading-relaxed">
+              <p className="text-[12px] text-gray-500 mb-3 leading-relaxed">
                 Join our spiritual community for sacred insights, ritual dates, and exclusive Vedic updates.
               </p>
 

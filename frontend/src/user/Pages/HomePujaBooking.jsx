@@ -142,15 +142,22 @@ const HomePujaBooking = () => {
           <div className="lg:col-span-8 space-y-5">
             {/* HERO SECTION */}
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
-              <div className="relative h-64 md:h-80">
+              {/* Hero Image - Fixed 16:9 landscape ratio */}
+              <div className="relative w-full aspect-[16/7]">
                 {service?.image_url ? (
                   <img
-                    src={`${API_BASE_URL}/uploads/${service?.image_url}`}
-                    className="w-full h-full object-cover"
+                    src={`${API_BASE_URL}${
+                      service.image_url.startsWith("uploads/")
+                        ? `/${service.image_url}`
+                        : service.image_url.startsWith("/uploads/")
+                        ? service.image_url
+                        : `/uploads/${service.image_url}`
+                    }`}
+                    className="absolute inset-0 w-full h-full object-cover"
                     alt="Puja"
                   />
                 ) : (
-                  <div className="w-full h-full bg-orange-50 flex items-center justify-center">
+                  <div className="absolute inset-0 w-full h-full bg-orange-50 flex items-center justify-center">
                     <Sparkles className="text-orange-200" size={60} />
                   </div>
                 )}
@@ -168,6 +175,7 @@ const HomePujaBooking = () => {
               </div>
             </div>
 
+
             {/* STICKY TAB HEADER */}
             <nav className="sticky top-[76px] z-40 bg-white border border-orange-200 rounded-xl shadow-md mb-4">
               <div className="flex overflow-x-auto no-scrollbar">
@@ -175,11 +183,10 @@ const HomePujaBooking = () => {
                   <button
                     key={tab}
                     onClick={() => scrollToSection(tab)}
-                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${
-                      activeTab === tab
-                        ? "text-orange-600 bg-orange-50/50"
-                        : "text-gray-400"
-                    }`}
+                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
+                      ? "text-orange-600 bg-orange-50/50"
+                      : "text-gray-400"
+                      }`}
                   >
                     {tab}
                     {activeTab === tab && (

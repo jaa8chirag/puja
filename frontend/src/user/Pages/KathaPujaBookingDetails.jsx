@@ -38,16 +38,14 @@ const PaymentOptionSelector = ({ paymentOption, setPaymentOption, grandTotal, ad
       <h4 className="text-[11px] font-black uppercase text-orange-600 tracking-[0.2em] mb-3">Choose Payment Mode</h4>
       <div className="grid grid-cols-1 gap-3">
         {/* Full Payment */}
-        <div 
+        <div
           onClick={() => setPaymentOption("full")}
-          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${
-            paymentOption === "full" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
-          }`}
+          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${paymentOption === "full" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
+            }`}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-              paymentOption === "full" ? "border-orange-500 bg-orange-500" : "border-orange-200"
-            }`}>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === "full" ? "border-orange-500 bg-orange-500" : "border-orange-200"
+              }`}>
               {paymentOption === "full" && <div className="w-2 h-2 rounded-full bg-white" />}
             </div>
             <div>
@@ -59,16 +57,14 @@ const PaymentOptionSelector = ({ paymentOption, setPaymentOption, grandTotal, ad
         </div>
 
         {/* Advance Payment */}
-        <div 
+        <div
           onClick={() => setPaymentOption("advance")}
-          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${
-            paymentOption === "advance" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
-          }`}
+          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${paymentOption === "advance" ? "border-orange-500 bg-orange-50/50 shadow-md" : "border-orange-100 hover:border-orange-200 bg-white"
+            }`}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-              paymentOption === "advance" ? "border-orange-500 bg-orange-500" : "border-orange-200"
-            }`}>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === "advance" ? "border-orange-500 bg-orange-500" : "border-orange-200"
+              }`}>
               {paymentOption === "advance" && <div className="w-2 h-2 rounded-full bg-white" />}
             </div>
             <div>
@@ -95,7 +91,7 @@ const KathaPujaPaymentDetails = () => {
 
   const isSamagriSelected = location.state?.isSamagriSelected || false;
   const [contributionOptions2, setContributionOptions2] = useState([]);
-  
+
   // 🎟️ Coupon State
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -369,9 +365,9 @@ const KathaPujaPaymentDetails = () => {
   const dharmicTotal = getDharmicTotal();
 
   const today = new Date().toISOString().split("T")[0];
-  
+
   const grandTotalBeforeDiscount = basePrice + samagriPrice + dharmicTotal;
-  const discountAmount = appliedCoupon 
+  const discountAmount = appliedCoupon
     ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
   const grandTotal = grandTotalBeforeDiscount - discountAmount;
@@ -635,19 +631,17 @@ const KathaPujaPaymentDetails = () => {
                 <div className="mt-3">
                   <div
                     onClick={() => toggleDonation("Gau Seva")}
-                    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${
-                      donations["Gau Seva"]
-                        ? "border-orange-500 bg-orange-50/30 shadow-sm"
-                        : "border-orange-200 bg-white hover:border-orange-300"
-                    }`}
+                    className={`p-4 flex items-center gap-3 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
+                      ? "border-orange-500 bg-orange-50/30 shadow-sm"
+                      : "border-orange-200 bg-white hover:border-orange-300"
+                      }`}
                   >
                     {/* Checkbox */}
                     <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-                        donations["Gau Seva"]
-                          ? "bg-orange-500 border-orange-500"
-                          : "border-orange-200 bg-white"
-                      }`}
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${donations["Gau Seva"]
+                        ? "bg-orange-500 border-orange-500"
+                        : "border-orange-200 bg-white"
+                        }`}
                     >
                       {donations["Gau Seva"] && (
                         <svg
@@ -699,31 +693,31 @@ const KathaPujaPaymentDetails = () => {
                 id="mobile-summary"
                 className="lg:hidden bg-white rounded-2xl border border-orange-200 shadow-sm p-5"
               >
-                  <MobileSummaryInline
-                    puja={puja}
-                    isSamagriSelected={isSamagriSelected}
-                    basePrice={basePrice}
-                    samagriPrice={samagriPrice}
-                    dharmicTotal={dharmicTotal}
-                    grandTotal={grandTotal}
-                    donations={donations}
-                    toggleDonation={toggleDonation}
-                    dharmicRef={dharmicRef}
-                    getPrice={getPrice}
-                    contributionOptions2={contributionOptions2}
-                    couponInput={couponInput}
-                    setCouponInput={setCouponInput}
-                    appliedCoupon={appliedCoupon}
-                    handleApplyCoupon={handleApplyCoupon}
-                    removeCoupon={removeCoupon}
-                    isApplying={isApplying}
-                    couponError={couponError}
-                    discountAmount={discountAmount}
-                    publicCoupons={publicCoupons}
-                    paymentOption={paymentOption}
-                    setPaymentOption={setPaymentOption}
-                    advancePercentage={advancePercentage}
-                  />
+                <MobileSummaryInline
+                  puja={puja}
+                  isSamagriSelected={isSamagriSelected}
+                  basePrice={basePrice}
+                  samagriPrice={samagriPrice}
+                  dharmicTotal={dharmicTotal}
+                  grandTotal={grandTotal}
+                  donations={donations}
+                  toggleDonation={toggleDonation}
+                  dharmicRef={dharmicRef}
+                  getPrice={getPrice}
+                  contributionOptions2={contributionOptions2}
+                  couponInput={couponInput}
+                  setCouponInput={setCouponInput}
+                  appliedCoupon={appliedCoupon}
+                  handleApplyCoupon={handleApplyCoupon}
+                  removeCoupon={removeCoupon}
+                  isApplying={isApplying}
+                  couponError={couponError}
+                  discountAmount={discountAmount}
+                  publicCoupons={publicCoupons}
+                  paymentOption={paymentOption}
+                  setPaymentOption={setPaymentOption}
+                  advancePercentage={advancePercentage}
+                />
               </div>
             </div>
 
@@ -803,16 +797,16 @@ const KathaPujaPaymentDetails = () => {
 
                     {/* 🎟️ Premium Coupon Section */}
                     <div className="py-2 border-y border-dashed border-orange-100 my-2">
-                       <CouponSelector 
-                         couponInput={couponInput}
-                         setCouponInput={setCouponInput}
-                         appliedCoupon={appliedCoupon}
-                         handleApplyCoupon={handleApplyCoupon}
-                         removeCoupon={removeCoupon}
-                         isApplying={isApplying}
-                         couponError={couponError}
-                         publicCoupons={publicCoupons}
-                       />
+                      <CouponSelector
+                        couponInput={couponInput}
+                        setCouponInput={setCouponInput}
+                        appliedCoupon={appliedCoupon}
+                        handleApplyCoupon={handleApplyCoupon}
+                        removeCoupon={removeCoupon}
+                        isApplying={isApplying}
+                        couponError={couponError}
+                        publicCoupons={publicCoupons}
+                      />
                     </div>
 
                     {discountAmount > 0 && (
@@ -823,28 +817,14 @@ const KathaPujaPaymentDetails = () => {
                         </span>
                       </div>
                     )}
-                    <PaymentOptionSelector 
+                    <PaymentOptionSelector
                       paymentOption={paymentOption}
                       setPaymentOption={setPaymentOption}
                       grandTotal={grandTotal}
                       advancePercentage={advancePercentage}
                     />
 
-                    <div className="flex justify-between items-center pt-3 mt-2 border-t border-orange-100">
-                      <span className="text-lg font-bold text-gray-900 tracking-tight">
-                        {paymentOption === "full" ? "Final Total" : "Advance Total"}
-                      </span>
-                      <div className="text-right">
-                        {discountAmount > 0 && (
-                          <p className="text-[12px] font-bold text-gray-400 line-through mb-0.5">
-                            ₹{grandTotal + discountAmount}
-                          </p>
-                        )}
-                        <span className="text-2xl font-black text-orange-600">
-                          ₹{paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)}
-                        </span>
-                      </div>
-                    </div>
+
 
                     <button
                       onClick={handlePayment}
@@ -880,15 +860,12 @@ const KathaPujaPaymentDetails = () => {
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             {discountAmount > 0 && (
-               <span className="text-[10px] text-green-600 font-bold line-through opacity-70">
-                 ₹{grandTotal + discountAmount}
-               </span>
+              <span className="text-[10px] text-green-600 font-bold line-through opacity-70">
+                ₹{grandTotal + discountAmount}
+              </span>
             )}
             <p className="text-xl font-black text-orange-600 leading-tight">
               ₹{(paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)).toLocaleString("en-IN")}
-            </p>
-            <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <ShieldCheck size={10} /> {paymentOption === "full" ? "Total Payable" : "Advance Payable"}
             </p>
           </div>
           <button
@@ -951,7 +928,7 @@ const MobileSummaryInline = ({
           className={`text-xs font-bold ${isSamagriSelected ? "text-green-600" : "text-gray-400"}`}
         >
           {isSamagriSelected ? "Included ✓" : "Not Selected"}
-        </span> */}
+        </span>
       </div>
     </div>
 
@@ -1017,7 +994,7 @@ const MobileSummaryInline = ({
 
       {/* 🎟️ Mobile Coupon Section */}
       <div className="py-2 border-y border-dashed border-orange-100">
-        <CouponSelector 
+        <CouponSelector
           isMobile={true}
           couponInput={couponInput}
           setCouponInput={setCouponInput}
@@ -1033,7 +1010,7 @@ const MobileSummaryInline = ({
       <div className="border-t border-dashed border-gray-300 w-full" />
 
       {/* ✅ PAYMENT OPTION SELECTOR (MOBILE) */}
-      <PaymentOptionSelector 
+      <PaymentOptionSelector
         paymentOption={paymentOption}
         setPaymentOption={setPaymentOption}
         grandTotal={grandTotal}
@@ -1072,19 +1049,17 @@ const MobileSummaryInline = ({
 const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
-    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${
-      selected
-        ? "border-orange-500 bg-orange-50/30 shadow-sm"
-        : "border-orange-200 hover:border-orange-300 bg-white"
-    }`}
+    className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
+      ? "border-orange-500 bg-orange-50/30 shadow-sm"
+      : "border-orange-200 hover:border-orange-300 bg-white"
+      }`}
   >
     {/* ✅ CHECKBOX STYLE (Radio dot ki jagah) */}
     <div
-      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-        selected
-          ? "bg-orange-500 border-orange-500"
-          : "border-orange-200 bg-white"
-      }`}
+      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${selected
+        ? "bg-orange-500 border-orange-500"
+        : "border-orange-200 bg-white"
+        }`}
     >
       {selected && (
         <svg

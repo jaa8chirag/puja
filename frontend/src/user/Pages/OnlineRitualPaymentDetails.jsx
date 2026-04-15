@@ -630,8 +630,8 @@ const OnlineRitualPaymentDetails = () => {
                 <div
                   onClick={() => toggleDonation("Gau Seva")}
                   className={`p-4 flex items-center gap-4 transition-all cursor-pointer rounded-xl border-2 ${donations["Gau Seva"]
-                      ? "border-orange-500 bg-orange-50/30"
-                      : "border-orange-200 bg-white hover:border-orange-300"
+                    ? "border-orange-500 bg-orange-50/30"
+                    : "border-orange-200 bg-white hover:border-orange-300"
                     }`}
                 >
                   <div
@@ -816,21 +816,7 @@ const OnlineRitualPaymentDetails = () => {
                       />
                     )}
 
-                    <div className="flex justify-between items-center pt-3 mt-4 border-t border-orange-100">
-                      <span className="text-lg font-bold text-gray-900 tracking-tight">
-                        {paymentOption === "full" ? "Final Total" : "Advance Total"}
-                      </span>
-                      <div className="text-right">
-                        {discountAmount > 0 && (
-                          <p className="text-[12px] font-bold text-gray-400 line-through mb-0.5">
-                            ₹{grandTotal + discountAmount}
-                          </p>
-                        )}
-                        <span className="text-2xl font-black text-orange-600">
-                          ₹{paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)}
-                        </span>
-                      </div>
-                    </div>
+
 
                     <button
                       onClick={handlePayment}
@@ -864,16 +850,13 @@ const OnlineRitualPaymentDetails = () => {
         }}
       >
         <div className="flex items-center justify-between gap-4">
-          <div>
+          <div className="flex flex-col">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
               Total Amount{" "}
               <ChevronRight size={11} className="text-orange-400" />
             </p>
             <p className="text-xl font-black text-orange-600 leading-tight">
               ₹{(paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)).toLocaleString("en-IN")}
-            </p>
-            <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <ShieldCheck size={10} /> {paymentOption === "full" ? "Total Payable" : "Advance Payable"}
             </p>
           </div>
           <button
@@ -1059,8 +1042,8 @@ const ContributionCard = ({ option, selected, onToggle }) => (
   <div
     onClick={onToggle}
     className={`flex items-center gap-3 p-4 transition-all cursor-pointer rounded-xl border-2 ${selected
-        ? "border-orange-500 bg-orange-50/30"
-        : "border-orange-200 hover:border-orange-300"
+      ? "border-orange-500 bg-orange-50/30"
+      : "border-orange-200 hover:border-orange-300"
       }`}
   >
     <div

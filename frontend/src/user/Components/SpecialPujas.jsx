@@ -60,11 +60,11 @@ export default function SpecialPujas() {
                 className="group relative cursor-pointer bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 ease-out flex flex-col active:scale-[0.98] w-full"
               >
                 {/* IMAGE - Reduced height from h-64 to h-48 on mobile */}
-                <div className="relative h-48 md:h-64 overflow-hidden">
+                <div className="relative w-full aspect-[16/7] overflow-hidden">
                   <img
                     src={`${API_BASE_URL}/uploads/${service.image_url}`}
                     alt={service.puja_name}
-                    className="h-full w-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1108]/90 via-transparent to-transparent opacity-60" />
 

@@ -94,7 +94,12 @@ const ServiceModal = ({ close, editData, refresh }) => {
 
       if (editData.image_url) {
         const baseUrl = import.meta.env.VITE_BACKEND_URL;
-        setPreview(`${baseUrl}${editData.image_url}`);
+        const imageUrl = editData.image_url.startsWith("uploads/")
+          ? `/${editData.image_url}`
+          : editData.image_url.startsWith("/uploads/")
+          ? editData.image_url
+          : `/uploads/${editData.image_url}`;
+        setPreview(`${baseUrl}${imageUrl}`);
       }
       loadBenefits(editData.id);
     }
@@ -579,7 +584,8 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 {preview ? (
                   <img
                     src={preview}
-                    className="h-32 mx-auto rounded-2xl shadow-lg"
+                    className="w-full rounded-2xl shadow-lg object-cover"
+                    style={{ aspectRatio: "16/7" }}
                     alt="preview"
                   />
                 ) : (
@@ -593,6 +599,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
               </div>
               <input
                 type="file"
+                accept="image/*"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files[0];
@@ -603,6 +610,21 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 }}
               />
             </label>
+            {/* ✅ Image Ratio Hint */}
+            <div className="mt-2 flex items-center gap-2 px-1">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                <span className="text-orange-400 text-[10px] font-black uppercase tracking-wider">📐 Required Ratio:</span>
+                <span className="text-white text-[11px] font-bold">16 : 7</span>
+                <span className="text-slate-500 text-[10px]">(Landscape)</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl">
+                <span className="text-slate-400 text-[10px] font-bold">Recommended:</span>
+                <span className="text-slate-300 text-[11px] font-bold">1140 × 498 px</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-600 px-1 mt-1.5 italic">
+              Images uploaded in any other ratio will be cropped automatically. Use exact 16:7 for best results.
+            </p>
           </div>
         </form>
 

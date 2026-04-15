@@ -425,15 +425,15 @@ const PindDanBooking = () => {
           <div className="lg:col-span-8 space-y-6">
             {/* 1. HERO SECTION */}
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
-              <div className="relative h-64 md:h-80">
+              <div className="relative w-full aspect-[16/7]">
                 {service?.image_url ? (
                   <img
                     src={`${API_BASE_URL}/uploads/${service?.image_url}`}
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
                     alt="Puja"
                   />
                 ) : (
-                  <div className="w-full h-full bg-orange-50 flex items-center justify-center">
+                  <div className="absolute inset-0 w-full h-full bg-orange-50 flex items-center justify-center">
                     <Sparkles className="text-orange-200" size={60} />
                   </div>
                 )}

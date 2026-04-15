@@ -147,12 +147,11 @@ export default function HomeOnlineRitual() {
                 className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-200 cursor-pointer flex flex-col hover:-translate-y-2 active:scale-[0.98]"
               >
                 {/* Image */}
-                {/* Image */}
-                <div className="relative h-48 md:h-64 overflow-hidden">
+                <div className="relative w-full aspect-[16/7] overflow-hidden">
                   <img
                     src={`${API_BASE_URL}/uploads/${service.image_url}`}
                     alt={service.puja_name}
-                    className="w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                   />
 
                   {/* ✅ Sirf tab dikhe jab status ho */}
