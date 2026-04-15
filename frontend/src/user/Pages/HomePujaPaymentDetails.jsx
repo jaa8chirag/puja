@@ -100,10 +100,30 @@ const HomePujaPaymentDetails = () => {
 
   const [paymentOption, setPaymentOption] = useState("full");
   const [advancePercentage, setAdvancePercentage] = useState(25);
+  const [pendingRewards, setPendingRewards] = useState(0);
+  const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/user/get-profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data && data.user) {
+          setPendingRewards(data.user.pending_referral_discounts || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    };
+    if (token) fetchProfile();
+  }, [token]);
 
   const generateBookingId = () =>
     `BK-${Math.random().toString(36).substring(2, 8)}`;
-  const token = localStorage.getItem("token");
   const userName = token
     ? JSON.parse(atob(token.split(".")[1])).name
     : "Guest User";
@@ -226,6 +246,7 @@ const HomePujaPaymentDetails = () => {
             razorpay_signature: razorpayResponse.razorpay_signature,
             paid_amount: amountToPay,
             payment_type: paymentOption,
+            useReferralDiscount: useReferralDiscount,
           };
 
           const response = await fetch(
@@ -330,6 +351,7 @@ const HomePujaPaymentDetails = () => {
       if (data.success) {
         setAppliedCoupon(data.data);
         setCouponInput("");
+        setUseReferralDiscount(false);
       } else {
         setCouponError(data.message);
       }
@@ -343,6 +365,13 @@ const HomePujaPaymentDetails = () => {
   const removeCoupon = () => {
     setAppliedCoupon(null);
     setCouponError("");
+  };
+
+  const handleReferralToggle = () => {
+    if (!useReferralDiscount && appliedCoupon) {
+      setAppliedCoupon(null);
+    }
+    setUseReferralDiscount(!useReferralDiscount);
   };
 
   const getDharmicTotal = () => {
@@ -362,9 +391,15 @@ const HomePujaPaymentDetails = () => {
   const today = new Date().toISOString().split("T")[0];
 
   const grandTotalBeforeDiscount = basePrice + samagriPrice + dharmicTotal;
-  const discountAmount = appliedCoupon
+  const couponDiscount = appliedCoupon
     ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
+  
+  const referralDiscount = useReferralDiscount 
+    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100) 
+    : 0;
+
+  const discountAmount = couponDiscount + referralDiscount;
   const grandTotal = grandTotalBeforeDiscount - discountAmount;
 
   const inputBaseClass =
@@ -711,6 +746,10 @@ const HomePujaPaymentDetails = () => {
                   paymentOption={paymentOption}
                   setPaymentOption={setPaymentOption}
                   advancePercentage={advancePercentage}
+                  pendingRewards={pendingRewards}
+                  useReferralDiscount={useReferralDiscount}
+                  handleReferralToggle={handleReferralToggle}
+                  referralDiscount={referralDiscount}
                 />
               </div>
             </div>
@@ -794,6 +833,45 @@ const HomePujaPaymentDetails = () => {
                             "Your donation helps maintain the temple and support daily rituals."}
                         </p>
                       </div>
+
+                      {/* 🎟️ Referral Reward Section */}
+                      {pendingRewards > 0 && (
+                        <div className="py-3 border-y border-dashed border-orange-100 my-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Sparkles size={14} className="text-orange-500" />
+                              <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Reward</span>
+                            </div>
+                            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                              {pendingRewards} Available
+                            </span>
+                          </div>
+                          
+                          <div 
+                            onClick={handleReferralToggle}
+                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                              useReferralDiscount 
+                                ? "border-orange-500 bg-orange-50" 
+                                : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                              }`}>
+                                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+                              </div>
+                              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+                            </div>
+                            {useReferralDiscount && (
+                              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
+                            )}
+                          </div>
+                          <p className="text-[9px] text-gray-400 mt-2 italic leading-tight">
+                            * Once used, one referral reward will be deducted from your account.
+                          </p>
+                        </div>
+                      )}
 
                       {/* 🎟️ Premium Coupon Section */}
                       <div className="py-2 border-y border-dashed border-orange-100 my-2">
@@ -918,6 +996,10 @@ const MobileSummaryInline = ({
   paymentOption,
   setPaymentOption,
   advancePercentage,
+  pendingRewards,
+  useReferralDiscount,
+  handleReferralToggle,
+  referralDiscount,
 }) => (
   <div className="space-y-4">
     <div>
@@ -978,7 +1060,6 @@ const MobileSummaryInline = ({
       </button>
 
       {/* Temple donation */}
-
       <div className="flex flex-col border-y border-orange-200 pt-3">
         <div className="flex items-center justify-between py-1 px-1">
           <label className="flex items-center gap-3 cursor-pointer">
@@ -996,14 +1077,48 @@ const MobileSummaryInline = ({
             +₹{getPrice("Temple Donation")}
           </span>
         </div>
-
-        {/* ✅ ADD THIS LINE BELOW */}
-        <p className="text-[12px] text-gray-500 mt-1 ml-7 leading-snug">
+        <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
           {contributionOptions2?.find((c) => c.name === "Temple Donation")
             ?.description ||
             "Helps in temple upkeep, rituals, and serving the community."}
         </p>
       </div>
+      
+      {/* 🎟️ Mobile Referral Reward Section */}
+      {pendingRewards > 0 && (
+        <div className="py-3 border-y border-dashed border-orange-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-orange-500" />
+              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Reward</span>
+            </div>
+            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+              {pendingRewards} Available
+            </span>
+          </div>
+          
+          <div 
+            onClick={handleReferralToggle}
+            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+              useReferralDiscount 
+                ? "border-orange-500 bg-orange-50" 
+                : "border-gray-100 bg-gray-50 hover:border-orange-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+              }`}>
+                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+              </div>
+              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+            </div>
+            {useReferralDiscount && (
+              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 🎟️ Mobile Coupon Section */}
       <div className="py-2 border-y border-dashed border-orange-100">

@@ -387,6 +387,9 @@ export const updatePujaStatus = async (req, res) => {
         "UPDATE puja_requests SET status = ?, completed_at = NOW() WHERE id = ?",
         [status, id],
       );
+      import('../utils/referralUtil.js').then(({ processReferralReward }) => {
+        processReferralReward(id);
+      }).catch(console.error);
     } else {
       await db.query("UPDATE puja_requests SET status = ? WHERE id = ?", [
         status,

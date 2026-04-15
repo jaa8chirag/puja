@@ -127,6 +127,8 @@ const PindDanBooking = () => {
   const [publicCoupons, setPublicCoupons] = useState([]);
   const [paymentOption, setPaymentOption] = useState("full");
   const [advancePercentage, setAdvancePercentage] = useState(25);
+  const [pendingRewards, setPendingRewards] = useState(0);
+  const [useReferralDiscount, setUseReferralDiscount] = useState(false);
 
   const sections = {
     about: useRef(null),
@@ -166,6 +168,23 @@ const PindDanBooking = () => {
       }
     };
     fetchService();
+
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/user/get-profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data && data.user) {
+          setPendingRewards(data.user.pending_referral_discounts || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    };
+    fetchProfile();
   }, [id]);
 
   useEffect(() => {
@@ -335,6 +354,7 @@ const PindDanBooking = () => {
       if (data.success) {
         setAppliedCoupon(data.data);
         setCouponInput("");
+        setUseReferralDiscount(false);
       } else {
         setCouponError(data.message);
       }
@@ -343,6 +363,13 @@ const PindDanBooking = () => {
     } finally {
       setIsApplying(false);
     }
+  };
+
+  const handleReferralToggle = () => {
+    if (!useReferralDiscount && appliedCoupon) {
+      setAppliedCoupon(null);
+    }
+    setUseReferralDiscount(!useReferralDiscount);
   };
 
   const removeCoupon = () => {
@@ -388,9 +415,15 @@ const PindDanBooking = () => {
   };
 
   const grandTotalBeforeDiscount = calculateTotal();
-  const discountAmount = appliedCoupon 
+  const couponDiscount = appliedCoupon
     ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
+
+  const referralDiscount = useReferralDiscount
+    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100)
+    : 0;
+
+  const discountAmount = couponDiscount + referralDiscount;
   const finalTotal = grandTotalBeforeDiscount - discountAmount;
 
   const selectedContributionsTotal =
@@ -677,6 +710,10 @@ const PindDanBooking = () => {
                 advancePercentage={advancePercentage}
                 handleBooking={handlePindDanPayment}
                 isBooking={isBooking}
+                pendingRewards={pendingRewards}
+                useReferralDiscount={useReferralDiscount}
+                handleReferralToggle={handleReferralToggle}
+                referralDiscount={referralDiscount}
               />
             </div>
 
@@ -790,6 +827,41 @@ const PindDanBooking = () => {
                     {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
                   </p>
                 </div>
+
+                {/* 🎟️ Referral Reward Section */}
+                {pendingRewards > 0 && (
+                  <div className="py-3 border-y border-dashed border-orange-100 my-2 px-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={14} className="text-orange-500" />
+                        <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Reward</span>
+                      </div>
+                      <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                        {pendingRewards} Available
+                      </span>
+                    </div>
+                    <div 
+                      onClick={handleReferralToggle}
+                      className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                        useReferralDiscount 
+                          ? "border-orange-500 bg-orange-50" 
+                          : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                        }`}>
+                          {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+                        </div>
+                        <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+                      </div>
+                      {useReferralDiscount && (
+                        <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* 🎫 Coupon Section */}
                 <div className="py-2 border-y border-dashed border-orange-100 my-4 px-1">
@@ -923,9 +995,8 @@ const MobileSummarySection = ({
   calculateTotal, selectedContributionsTotal, scrollToSection, getPrice,
   contributionOptions, couponInput, setCouponInput, appliedCoupon,
   handleApplyCoupon, removeCoupon, isApplying, couponError,
-  discountAmount, grandTotalBeforeDiscount, finalTotal, publicCoupons,
   paymentOption, setPaymentOption, grandTotal, advancePercentage,
-  handleBooking, isBooking
+  handleBooking, isBooking, pendingRewards, useReferralDiscount, handleReferralToggle, referralDiscount
 }) => (
   <div>
     <div className="mb-5">
@@ -998,9 +1069,45 @@ const MobileSummarySection = ({
         </div>
 
         <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
-  {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, daily rituals, and serving devotees."}
+  {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving devotees."}
 </p>
       </div>
+
+      {/* 🎟️ Mobile Referral Reward Section */}
+      {pendingRewards > 0 && (
+        <div className="py-3 border-y border-dashed border-orange-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-orange-500" />
+              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Reward</span>
+            </div>
+            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+              {pendingRewards} Available
+            </span>
+          </div>
+          
+          <div 
+            onClick={handleReferralToggle}
+            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+              useReferralDiscount 
+                ? "border-orange-500 bg-orange-50" 
+                : "border-gray-100 bg-gray-50 hover:border-orange-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+              }`}>
+                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+              </div>
+              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+            </div>
+            {useReferralDiscount && (
+              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="py-2 border-y border-dashed border-orange-100 my-2">
         <CouponSelector 

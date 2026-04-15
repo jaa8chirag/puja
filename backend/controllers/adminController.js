@@ -2130,6 +2130,12 @@ export const updateBookingStatus = async (req, res) => {
       [status, id],
     );
 
+    if (status === 'completed') {
+      import('../utils/referralUtil.js').then(({ processReferralReward }) => {
+        processReferralReward(id);
+      }).catch(console.error);
+    }
+
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,

@@ -14,7 +14,8 @@ const SignUp = () => {
         email: '',
         phone: '',
         otp: '',
-        role: 'user'
+        role: 'user',
+        referralCode: ''
     });
 
     const navigate = useNavigate();
@@ -175,6 +176,19 @@ const SignUp = () => {
                                         onChange={(e) => setFormData({ ...formData, gotra: e.target.value })}
                                     />
                                     <p className="text-[10px] text-gray-400 italic">Gotra is essential for Puja rituals</p>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase flex items-center gap-2">
+                                        🎟️ Referral Code (Optional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter Referral Code"
+                                        className="w-full px-4 py-3.5 bg-[#FFFCF5]/50 border border-gray-200 rounded-xl outline-none focus:border-[#FFB347] transition-all text-sm text-gray-700 placeholder:text-gray-300"
+                                        value={formData.referralCode}
+                                        onChange={(e) => setFormData({ ...formData, referralCode: e.target.value.toUpperCase() })}
+                                    />
                                 </div>
 
                                 <button

@@ -292,6 +292,10 @@ export const markPujaComplete = async (req, res) => {
       [bookingId],
     );
 
+    import('../utils/referralUtil.js').then(({ processReferralReward }) => {
+      processReferralReward(bookingId);
+    }).catch(console.error);
+
     await db.query(
       "UPDATE request_assignments SET status = 'completed', updated_at = NOW() WHERE request_id = ? AND pandit_id = ?",
       [bookingId, panditId],

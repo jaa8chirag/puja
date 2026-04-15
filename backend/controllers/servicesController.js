@@ -168,8 +168,15 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
 
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const userId = req.user.id;
+    if (req.body.useReferralDiscount) {
+      const [uRows] = await connection.query("SELECT pending_referral_discounts FROM users WHERE id = ?", [userId]);
+      if (uRows.length > 0 && uRows[0].pending_referral_discounts > 0) {
+        await connection.query("UPDATE users SET pending_referral_discounts = pending_referral_discounts - 1 WHERE id = ?", [userId]);
+      }
+    }
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0];
@@ -430,9 +437,15 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
 
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    console.log("home or katha booking details--", req.body);
     const userId = req.user.id;
+    if (req.body.useReferralDiscount) {
+      const [uRows] = await connection.query("SELECT pending_referral_discounts FROM users WHERE id = ?", [userId]);
+      if (uRows.length > 0 && uRows[0].pending_referral_discounts > 0) {
+        await connection.query("UPDATE users SET pending_referral_discounts = pending_referral_discounts - 1 WHERE id = ?", [userId]);
+      }
+    }
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0];
@@ -594,8 +607,14 @@ export const bookingDetails = async (req, res) => {
     if (razorpay_signature !== expectedSign) {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
-    console.log("booking details", req.body);
+
     const userId = req.user.id;
+    if (req.body.useReferralDiscount) {
+      const [uRows] = await connection.query("SELECT pending_referral_discounts FROM users WHERE id = ?", [userId]);
+      if (uRows.length > 0 && uRows[0].pending_referral_discounts > 0) {
+        await connection.query("UPDATE users SET pending_referral_discounts = pending_referral_discounts - 1 WHERE id = ?", [userId]);
+      }
+    }
 
     const formattedDate = date
       ? new Date(date).toISOString().split("T")[0]

@@ -7,6 +7,7 @@ import {
   Save,
   MapPin,
   Check,
+  Copy,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -23,12 +24,22 @@ const ProfileSection = () => {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const [personalData, setPersonalData] = useState({
     name: decoded.name || "",
     email: decoded.email || "",
     gotra: "",
+    referral_code: "",
+    pending_referral_discounts: 0,
   });
+
+  const copyToClipboard = () => {
+    if (!personalData.referral_code) return;
+    navigator.clipboard.writeText(personalData.referral_code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const [addressData, setAddressData] = useState({
     address_line1: "",
@@ -54,6 +65,8 @@ const ProfileSection = () => {
             name: data.user.name || "",
             email: data.user.email || "",
             gotra: data.user.gotra || "",
+            referral_code: data.user.referral_code || "",
+            pending_referral_discounts: data.user.pending_referral_discounts || 0,
           });
         }
 
@@ -329,6 +342,37 @@ const ProfileSection = () => {
                     </>
                   )}
                 </button>
+              </div>
+
+              {/* Referral Section */}
+              <div className="mt-6 pt-6 border-t border-orange-100">
+                <label className={labelStyle}>My Referral Program</label>
+                <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-xs font-bold text-gray-600">Referral Code</span>
+                    <div className="flex items-center gap-2">
+                       <span className="text-sm font-black text-orange-600 tracking-wider">
+                        {personalData.referral_code || "GEN-1234"}
+                      </span>
+                      <button 
+                        onClick={copyToClipboard}
+                        className="p-1.5 bg-white rounded-lg border border-orange-200 text-orange-500 hover:bg-orange-600 hover:text-white transition-all active:scale-95"
+                      >
+                        {copied ? <Check size={12} /> : <Copy size={12} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-gray-600">Available 10% Discounts</span>
+                    <span className="bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {personalData.pending_referral_discounts} Rewards
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-gray-400 mt-3 leading-relaxed">
+                    * Share your code with friends. Once they complete their first puja, 
+                    you'll earn 10% off on your next booking!
+                  </p>
+                </div>
               </div>
             </div>
           )}

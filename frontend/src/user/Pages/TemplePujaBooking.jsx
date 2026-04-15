@@ -545,9 +545,28 @@ const TemplePujaBooking = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [familyMembers, setFamilyMembers] = useState([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
-  const [selectedMemberIds, setSelectedMemberIds] = useState([]);
-  // pendingTicket = ticket user clicked but not confirmed yet
   const [pendingTicket, setPendingTicket] = useState(null);
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]);
+  const [pendingRewards, setPendingRewards] = useState(0);
+  const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const res = await fetch(`${API_BASE_URL}/user/get-profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data && data.user) {
+          setPendingRewards(data.user.pending_referral_discounts || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const sections = {
     about: useRef(null),
@@ -729,6 +748,7 @@ const TemplePujaBooking = () => {
       razorpay_order_id: razorpayResponse.razorpay_order_id,
       razorpay_payment_id: razorpayResponse.razorpay_payment_id,
       razorpay_signature: razorpayResponse.razorpay_signature,
+      useReferralDiscount: useReferralDiscount,
     };
 
           try {
@@ -934,10 +954,20 @@ const TemplePujaBooking = () => {
         )
       : 0;
       
-    return base + extra + templeDonation;
-  };
+    const referralDiscount = useReferralDiscount 
+    ? Math.floor(((base + extra + templeDonation) * 10) / 100) 
+    : 0;
 
-  const finalTotal = calculateTotal();
+  return (base + extra + templeDonation) - referralDiscount;
+};
+
+const referralDiscountValue = useReferralDiscount 
+  ? Math.floor(((tickets.find((t) => t.label === selectedTicket)?.price || 0) + 
+    contributionList.reduce((acc, item) => (donations[item.id] ? acc + item.price : acc), 0) + 
+    (donations["Temple Donation"] ? Number(getPrice("Temple Donation") || 0) : 0)) * 10 / 100) 
+  : 0;
+
+const finalTotal = calculateTotal();
 
   const selectedContributionsTotal =
     contributionList.reduce(
@@ -1251,6 +1281,10 @@ const TemplePujaBooking = () => {
                   selectedMemberNames={selectedMemberNames}
                   contributionOptions={contributionOptions}
                   finalTotal={calculateTotal()}
+                  pendingRewards={pendingRewards}
+                  useReferralDiscount={useReferralDiscount}
+                  setUseReferralDiscount={setUseReferralDiscount}
+                  referralDiscount={referralDiscountValue}
                 />
               </div>
 
@@ -1418,6 +1452,41 @@ const TemplePujaBooking = () => {
                     </p>
                   </div>
 
+                  {/* 🎟️ Referral Reward Section */}
+                  {pendingRewards > 0 && (
+                    <div className="py-3 border-y border-dashed border-orange-100 my-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles size={14} className="text-orange-500" />
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Reward</span>
+                        </div>
+                        <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                          {pendingRewards} Available
+                        </span>
+                      </div>
+                      
+                      <div 
+                        onClick={() => setUseReferralDiscount(!useReferralDiscount)}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                          useReferralDiscount 
+                            ? "border-orange-500 bg-orange-50" 
+                            : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                          }`}>
+                            {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+                          </div>
+                          <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+                        </div>
+                        {useReferralDiscount && (
+                          <span className="text-[10px] font-black text-green-600">-₹{referralDiscountValue}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                 </div>
 
@@ -1522,6 +1591,10 @@ const MobileSummarySection = ({
   getPrice,
   selectedMemberNames,
   contributionOptions,
+  pendingRewards,
+  useReferralDiscount,
+  setUseReferralDiscount,
+  referralDiscount,
 }) => (
   <div className="space-y-5">
     <div>
@@ -1616,7 +1689,7 @@ const MobileSummarySection = ({
         </div>
       </button>
 
-                  <div className="flex flex-col border-y border-orange-200 pt-3">
+      <div className="flex flex-col border-y border-orange-200 pt-3">
         <div className="flex items-center justify-between py-1 px-1">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
@@ -1645,6 +1718,42 @@ const MobileSummarySection = ({
             "Helps in temple upkeep, rituals, and serving the community."}
         </p>
       </div>
+
+      {/* 🎟️ Mobile Referral Reward Section */}
+      {pendingRewards > 0 && (
+        <div className="py-3 border-y border-dashed border-orange-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-orange-500" />
+              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Reward</span>
+            </div>
+            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+              {pendingRewards} Available
+            </span>
+          </div>
+          
+          <div 
+            onClick={() => setUseReferralDiscount(!useReferralDiscount)}
+            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+              useReferralDiscount 
+                ? "border-orange-500 bg-orange-50" 
+                : "border-gray-100 bg-gray-50 hover:border-orange-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+              }`}>
+                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+              </div>
+              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+            </div>
+            {useReferralDiscount && (
+              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="border-t border-dashed border-gray-300 w-full" />
 

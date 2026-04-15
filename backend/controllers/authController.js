@@ -67,6 +67,7 @@ export const signupVerify = async (req, res) => {
       bankAccountNumber,
       ifscCode,
       upiId,
+      referralCode,
     } = req.body;
 
     const documentPath = req.file ? req.file.path : null;
@@ -89,9 +90,24 @@ export const signupVerify = async (req, res) => {
     await connection.beginTransaction();
 
     // 1️⃣ Insert into users
+    let referredBy = null;
+    if (referralCode) {
+      console.log(`[Signup] Attempting to find referrer for code: ${referralCode}`);
+      const [refRow] = await connection.query("SELECT id FROM users WHERE referral_code = ?", [referralCode]);
+      if (refRow.length > 0) {
+        referredBy = refRow[0].id;
+        console.log(`[Signup] Found referrer: ${referredBy} for code: ${referralCode}`);
+      } else {
+        console.log(`[Signup] Referrer NOT found for code: ${referralCode}`);
+      }
+    }
+
+    const uniqueReferralCode = 'PUJA' + (name ? name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') : 'USR') + Math.floor(1000 + Math.random() * 9000);
+    console.log(`[Signup] Registering new user ${phone} with referred_by: ${referredBy}`);
+
     const [userResult] = await connection.query(
-      "INSERT INTO users (name, phone, email, gotra, role) VALUES (?, ?, ?, ?, ?)",
-      [name, phone, email || null, gotra || null, role || "user"],
+      "INSERT INTO users (name, phone, email, gotra, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [name, phone, email || null, gotra || null, role || "user", uniqueReferralCode, referredBy],
     );
 
     const newUserId = userResult.insertId;
@@ -291,7 +307,7 @@ export const getProfile = async (req, res) => {
     const userId = req.user.id;
 
     const [userRows] = await db.query(
-      "SELECT id, name, phone, email, gotra, role FROM users WHERE id = ?",
+      "SELECT id, name, phone, email, gotra, role, referral_code, pending_referral_discounts FROM users WHERE id = ?",
       [userId],
     );
 
