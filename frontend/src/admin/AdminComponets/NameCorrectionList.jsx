@@ -239,7 +239,7 @@ const NameCorrectionList = () => {
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => navigate("/nameCorrect")}
+                          onClick={() => navigate("/admin/nameCorrect", { state: { name: rec.name, dob: rec.dob } })}
                           disabled={actionLoading === rec.id}
                           title="Generate Name"
                           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 hover:text-orange-300 border border-orange-500/20 transition-all text-[10px] font-black uppercase tracking-wide disabled:opacity-50"

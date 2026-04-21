@@ -84,6 +84,7 @@ function App() {
     "/customerCare/dashboard",
     "/admin/login",
     "/admin/dashboard",
+    "/admin/nameCorrect",
   ].includes(location.pathname);
 
   const isHomePage = location.pathname === "/";
@@ -113,7 +114,7 @@ function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/nameCorrection" element={<NameCorrectionDummy />} />
           </Route>
-          <Route path="/nameCorrect" element={<NameCorrection />} />
+
           <Route element={<ProtectedLayout />}>
             <Route
               path="/online-ritual-paymentdetails/:id"
@@ -212,6 +213,7 @@ function App() {
         {/* admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/nameCorrect" element={<NameCorrection />} />
 
         {/* ================= 404 ================= */}
         <Route path="*" element={<NotFound />} />
