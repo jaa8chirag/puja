@@ -196,10 +196,10 @@ export const loginRequest = async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ message: "Account not found." });
 
-    // Security Check: Agar Pandit login page hai aur user 'user' hai, toh block karein
+    // Security Check: Role match hona chahiye
     if (role && rows[0].role !== role) {
       return res.status(403).json({
-        message: `Access denied. You are registered as a ${rows[0].role}.`,
+        message: "Access denied. You are not authorized to login here.",
       });
     }
 

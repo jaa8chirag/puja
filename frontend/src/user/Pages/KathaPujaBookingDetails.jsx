@@ -478,19 +478,12 @@ const KathaPujaPaymentDetails = () => {
                         className={inputBaseClass}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className={labelClass}>
-                        <Clock size={12} /> Time{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={formData.time}
-                        onChange={handleInputChange}
-                        className={inputBaseClass}
-                      />
-                    </div>
+                    <HourDropdown
+                      value={formData.time}
+                      onChange={handleInputChange}
+                      inputBaseClass={inputBaseClass}
+                      labelClass={labelClass}
+                    />
                   </div>
 
                   {/* Address */}
@@ -1208,7 +1201,6 @@ const ContributionCard = ({ option, selected, onToggle }) => (
 );
 
 
-export default KathaPujaPaymentDetails;
 
 export const HourDropdown = ({
   value,
@@ -1216,14 +1208,11 @@ export const HourDropdown = ({
   inputBaseClass,
   labelClass,
 }) => {
-  // 7 AM se 5 PM tak ke hours generate karne ke liye
   const generateHours = () => {
     const hours = [];
     for (let i = 7; i <= 17; i++) {
       const period = i < 12 ? "AM" : "PM";
-      const displayHour = i <= 12 ? i : i - 12; // 13 becomes 1 PM
-
-      // Select value format: "07:00 AM", "01:00 PM", etc.
+      const displayHour = i <= 12 ? i : i - 12;
       const timeString = `${displayHour < 10 ? "0" + displayHour : displayHour}:00 ${period}`;
       hours.push(timeString);
     }
@@ -1253,3 +1242,5 @@ export const HourDropdown = ({
     </div>
   );
 };
+
+export default KathaPujaPaymentDetails;

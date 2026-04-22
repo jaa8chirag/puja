@@ -105,6 +105,14 @@ const buildPujaCards = (doshas, allServices) => {
     if (addedIds.has(id)) return;
     addedIds.add(id);
 
+    const typeMap = {
+      home_puja: "home-Puja",
+      katha: "katha-jaap",
+      temple_puja: "temple-puja",
+      pind_dan: "pind-dan",
+    };
+    const routePrefix = typeMap[service.puja_type] || "home-Puja";
+
     cards.push({
       doshaName: dosha.name,
       severity: dosha.severity,
@@ -112,7 +120,7 @@ const buildPujaCards = (doshas, allServices) => {
       pujaName: service.puja_name || service.name || service.title,
       pujaId: id,
       price: service.price || service.amount || "",
-      bookingUrl: `${process.env.FRONTEND_URL}/home-Puja/${id}`,
+      bookingUrl: `${process.env.FRONTEND_URL}/${routePrefix}/${id}`,
     });
   });
 

@@ -28,6 +28,9 @@ import {
   ChartArea,
   Send,
   MessageCircle,
+  IndianRupee,
+  Ticket,
+  Heart,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -705,13 +708,297 @@ const ChatSupportPanel = ({
   );
 };
 
+const BookingDetailDrawer = ({ booking, onClose }) => {
+  const [members, setMembers] = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  const isTemple = booking?.puja_type === "temple_puja";
+  const isSingle = booking?.ticket_type === "Single" || !booking?.ticket_type;
+
+  useEffect(() => {
+    if (!booking || isSingle) return;
+    const fetchMembers = async () => {
+      setLoadingMembers(true);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${API_BASE_URL}/puja/get-members/${booking.id}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const data = await res.json();
+        setMembers(data.data || []);
+      } catch (err) {
+        console.error("Members fetch error:", err);
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+    fetchMembers();
+  }, [booking?.id]);
+
+  if (!booking) return null;
+
+  const st = getStatus(booking.status);
+
+  return (
+    <div
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-md bg-[#0f172a] rounded-2xl border border-white/5 shadow-2xl flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.04] bg-[#131e32] rounded-t-2xl">
+          <div>
+            <h2 className="text-[13px] font-extrabold text-white">
+              Booking Detail
+            </h2>
+            <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+              {booking.bookingId}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="flex-1 px-6 py-5 space-y-5 overflow-y-auto custom-scrollbar">
+          {/* Status + Price */}
+          <div className="flex items-center justify-between">
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border capitalize ${st.badge}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+              {booking.status}
+            </span>
+            <span className="inline-flex items-center gap-1 font-black text-emerald-400 text-sm">
+              <IndianRupee size={14} className="text-emerald-500" />
+              {booking.total_price}
+            </span>
+          </div>
+
+          {/* Puja Info */}
+          <div className="bg-[#0d1829] rounded-2xl border border-white/5 p-4 space-y-3">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Puja Info
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <BookOpen size={18} className="text-blue-400" />
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-slate-200">
+                  {booking.puja_name}
+                </p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold mt-0.5">
+                  {booking.puja_type?.replace("_", " ")}
+                </p>
+              </div>
+            </div>
+
+            {/* Date & Time */}
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/[0.04]">
+              <div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">
+                  Date
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-300">
+                  <CalendarDays size={11} className="text-slate-500" />
+                  {new Date(booking.preferred_date).toLocaleDateString(
+                    "en-IN",
+                    {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    },
+                  )}
+                </span>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">
+                  Time
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-300">
+                  <Clock size={11} className="text-slate-500" />
+                  {booking.preferred_time}
+                </span>
+              </div>
+            </div>
+
+            {/* Ticket Type */}
+            {booking.ticket_type && (
+              <div className="pt-2 border-t border-white/[0.04]">
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">
+                  Ticket Type
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-300">
+                  <Ticket size={11} className="text-slate-500" />
+                  {booking.ticket_type}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Customer Info */}
+          <div className="bg-[#0d1829] rounded-2xl border border-white/5 p-4 space-y-3">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Customer
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-sm">
+                {booking.user_name?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-slate-200">
+                  {booking.user_name}
+                </p>
+                <p className="text-[11px] text-slate-500 font-semibold">
+                  {booking.devotee_name}
+                </p>
+              </div>
+            </div>
+            {booking.address && (
+              <div className="flex items-start gap-2 pt-2 border-t border-white/[0.04]">
+                <MapPin size={12} className="text-slate-500 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
+                  {booking.address}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Members Section */}
+          {isTemple && (
+            <div className="bg-[#0d1829] rounded-2xl border border-white/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-blue-400" />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isSingle ? "Devotee" : "Family Members"}
+                </p>
+              </div>
+
+              {isSingle ? (
+                <div className="flex items-center gap-3 bg-[#0a1220] rounded-xl p-3 border border-white/[0.04]">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-sm">
+                    {booking.devotee_name?.charAt(0)?.toUpperCase() || "S"}
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-bold text-slate-200">
+                      {booking.devotee_name}
+                    </p>
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wide">
+                      Self
+                    </span>
+                  </div>
+                </div>
+              ) : loadingMembers ? (
+                <div className="flex items-center gap-2 py-4 justify-center text-slate-500">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-[11px]">Loading members...</span>
+                </div>
+              ) : members.length === 0 ? (
+                <div className="py-4 text-center text-slate-500 text-[11px]">
+                  No members found for this booking
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {members.map((m) => (
+                    <div
+                      key={m.id}
+                      className="flex items-center gap-3 bg-[#0a1220] rounded-xl p-3 border border-white/[0.04]"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-sm shrink-0">
+                        {m.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-bold text-slate-200 truncate">
+                          {m.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wide">
+                            {m.relation}
+                          </span>
+                          {m.gotra && (
+                            <span className="text-[10px] text-slate-500">
+                              • {m.gotra} gotra
+                            </span>
+                          )}
+                          {m.rashi && (
+                            <span className="text-[10px] text-slate-500">
+                              • {m.rashi}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Samagri Kit */}
+          {booking.samagrikit === 1 && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4">
+              <p className="text-[11px] font-bold text-blue-300">
+                📦 Samagri Kit Included
+              </p>
+            </div>
+          )}
+
+          {/* Donations */}
+          {booking.donations > 0 && (
+            <div className="bg-[#0d1829] rounded-2xl border border-white/5 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Heart size={13} className="text-rose-400" />
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Donations
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-0.5 text-[12px] font-black text-rose-400">
+                  <IndianRupee size={11} /> {booking.donations}
+                </span>
+              </div>
+              {/* ✅ Contributions (Specific names) */}
+              {booking.contribution_names && (
+                <div className="mt-3 pt-3 border-t border-white/[0.04]">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Selected Contributions
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {booking.contribution_names.split(", ").map((name, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 text-[9px] font-semibold border border-rose-500/20"
+                      >
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ════════════════════════════════════════════
    MAIN DASHBOARD
-════════════════════════════════════════════ */
+   ════════════════════════════════════════════ */
 const CustomerCareDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [bookings, setBookings] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [completeConfirmId, setCompleteConfirmId] = useState(null); // For confirmation modal
   const [loading, setLoading] = useState(false);
+  const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState("");
   const [pandits, setPandits] = useState([]);
   const [users, setUsers] = useState([]);
@@ -958,12 +1245,14 @@ const CustomerCareDashboard = () => {
   };
 
   /* ── Filtered lists ── */
-  const filteredBookings = bookings.filter((b) => {
-    const matchesSearch = b.puja_name?.toLowerCase().includes(search.toLowerCase()) || 
-                          b.bookingId?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = pujaStatusFilter === "all" || b.status?.toLowerCase() === pujaStatusFilter.toLowerCase();
-    return matchesSearch && matchesStatus;
-  });
+  const filteredBookings = bookings
+    .filter((b) => {
+      const matchesSearch = b.puja_name?.toLowerCase().includes(search.toLowerCase()) || 
+                            b.bookingId?.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = pujaStatusFilter === "all" || b.status?.toLowerCase() === pujaStatusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   const filteredPandits = pandits.filter(
     (p) =>
       p.phone.includes(panditSearch) ||
@@ -1188,10 +1477,28 @@ const CustomerCareDashboard = () => {
                   <StatCard key={i} {...s} />
                 ))}
               </div>
-              <TableCard
-                title="Recent Puja Requests"
-                count={`${bookings.length} total`}
-              >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                <TableCard
+                  title="Recent Puja Requests"
+                  count={`${filteredBookings.length} total`}
+                />
+                <div className="flex items-center gap-2 bg-[#0d1829] border border-white/5 rounded-xl px-3 py-1.5 self-start">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Filter:</span>
+                  <select
+                    value={pujaStatusFilter}
+                    onChange={(e) => setPujaStatusFilter(e.target.value)}
+                    className="bg-transparent border-none text-[11px] font-bold text-blue-400 focus:outline-none cursor-pointer uppercase"
+                  >
+                    <option value="all">ALL</option>
+                    <option value="pending">PENDING</option>
+                    <option value="accepted">ACCEPTED</option>
+                    <option value="completed">COMPLETED</option>
+                    <option value="declined">DECLINED</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-[#0d1829] to-[#080f1c] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs min-w-[400px]">
                     <thead className="bg-[#05080f]/60 border-b border-white/[0.03]">
@@ -1207,15 +1514,24 @@ const CustomerCareDashboard = () => {
                       {loading ? (
                         <LoadingRow cols={5} />
                       ) : (
-                        bookings.slice(0, 6).map((b) => (
-                          <tr
-                            key={b.id}
-                            className="hover:bg-blue-500/[0.03] transition-colors"
-                          >
-                            <td className="px-4 md:px-5 py-4">
+                        [...filteredBookings]
+                          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                          .slice(0, 10)
+                          .map((b) => (
+                            <tr
+                              key={b.id}
+                              className="hover:bg-blue-500/[0.03] transition-colors"
+                            >
+                            <td 
+                              className="px-4 md:px-5 py-4 cursor-pointer"
+                              onClick={() => setSelectedBooking(b)}
+                            >
                               <IdBadge id={b.id} />
                             </td>
-                            <td className="px-4 md:px-5 py-4">
+                            <td 
+                              className="px-4 md:px-5 py-4 cursor-pointer"
+                              onClick={() => setSelectedBooking(b)}
+                            >
                               <p className="font-semibold text-slate-200">
                                 {b.puja_name}
                               </p>
@@ -1245,7 +1561,7 @@ const CustomerCareDashboard = () => {
                     </tbody>
                   </table>
                 </div>
-              </TableCard>
+              </div>
             </>
           )}
 
@@ -1278,10 +1594,16 @@ const CustomerCareDashboard = () => {
                           key={puja.id}
                           className="hover:bg-blue-500/[0.03] transition-colors"
                         >
-                          <td className="px-4 md:px-5 py-4">
+                          <td 
+                            className="px-4 md:px-5 py-4 cursor-pointer"
+                            onClick={() => setSelectedBooking(puja)}
+                          >
                             <IdBadge id={puja.id} />
                           </td>
-                          <td className="px-4 md:px-5 py-4">
+                          <td 
+                            className="px-4 md:px-5 py-4 cursor-pointer"
+                            onClick={() => setSelectedBooking(puja)}
+                          >
                             <p className="font-semibold text-slate-200">
                               {puja.puja_name}
                             </p>
@@ -1338,12 +1660,16 @@ const CustomerCareDashboard = () => {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 md:px-5 py-4">
+                          <td 
+                            className="px-4 md:px-5 py-4"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <div className="flex items-center justify-center gap-2 flex-wrap">
                               {puja.status === "pending" && (
                                 <>
                                   <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setSelectedBookingId(puja.id);
                                       setAssignModalOpen(true);
                                     }}
@@ -1352,9 +1678,10 @@ const CustomerCareDashboard = () => {
                                     Assign
                                   </button>
                                   <button
-                                    onClick={() =>
-                                      updateStatus(puja.id, "declined")
-                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      updateStatus(puja.id, "declined");
+                                    }}
                                     className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition"
                                   >
                                     Reject
@@ -1363,9 +1690,10 @@ const CustomerCareDashboard = () => {
                               )}
                               {puja.status === "accepted" && (
                                 <button
-                                  onClick={() =>
-                                    updateStatus(puja.id, "completed")
-                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCompleteConfirmId(puja.id);
+                                  }}
                                   className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
                                 >
                                   Mark as Completed
@@ -1958,6 +2286,46 @@ const CustomerCareDashboard = () => {
           </div>
         </div>
       )}
+      {/* Detail Modal */}
+      {selectedBooking && (
+        <BookingDetailDrawer
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+        />
+      )}
+
+      {/* ── Completion Confirmation Modal ── */}
+      {completeConfirmId && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-white/5 shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+              <CheckCheck size={32} className="text-emerald-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Mark as Completed?</h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to mark this puja as completed? This will update the status for both the User and the Pandit.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCompleteConfirmId(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  updateStatus(completeConfirmId, "completed");
+                  setCompleteConfirmId(null);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/20"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes toastSlideIn { from { opacity:0; transform:translateX(60px) scale(0.95); } to { opacity:1; transform:translateX(0) scale(1); } }
         @keyframes badgePop     { 0%{transform:scale(0)} 70%{transform:scale(1.3)} 100%{transform:scale(1)} }

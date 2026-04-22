@@ -1176,7 +1176,6 @@ const ContributionCard = ({ option, selected, onToggle }) => (
   </div>
 );
 
-export default OnlineRitualPaymentDetails;
 
 export const HourDropdown = ({
   value,
@@ -1184,14 +1183,11 @@ export const HourDropdown = ({
   inputBaseClass,
   labelClass,
 }) => {
-  // 7 AM se 5 PM tak ke hours generate karne ke liye
   const generateHours = () => {
     const hours = [];
     for (let i = 7; i <= 17; i++) {
       const period = i < 12 ? "AM" : "PM";
-      const displayHour = i <= 12 ? i : i - 12; // 13 becomes 1 PM
-
-      // Select value format: "07:00 AM", "01:00 PM", etc.
+      const displayHour = i <= 12 ? i : i - 12;
       const timeString = `${displayHour < 10 ? "0" + displayHour : displayHour}:00 ${period}`;
       hours.push(timeString);
     }
@@ -1221,3 +1217,5 @@ export const HourDropdown = ({
     </div>
   );
 };
+
+export default OnlineRitualPaymentDetails;

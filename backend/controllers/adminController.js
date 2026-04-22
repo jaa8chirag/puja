@@ -218,7 +218,11 @@ export const getDashboardStats = async (req, res) => {
     s.puja_name,
 
     p.name AS pandit_name,
-    p.phone AS pandit_phone
+    p.phone AS pandit_phone,
+    (SELECT GROUP_CONCAT(ct.name SEPARATOR ', ') 
+     FROM service_contributions sc 
+     JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
+     WHERE sc.puja_request_id = pr.id) as contribution_names
 
   FROM puja_requests pr
 
@@ -723,7 +727,11 @@ export const getPanditBookingHistory = async (req, res) => {
         pr.status,
         pr.total_price,
         s.puja_name, 
-        u.name as customer_name
+        u.name as customer_name,
+        (SELECT GROUP_CONCAT(ct.name SEPARATOR ', ') 
+         FROM service_contributions sc 
+         JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
+         WHERE sc.puja_request_id = pr.id) as contribution_names
        FROM puja_requests pr
        LEFT JOIN services s ON pr.service_id = s.id
        LEFT JOIN users u ON pr.user_id = u.id
@@ -1213,7 +1221,11 @@ export const getAllBookings = async (req, res) => {
         u.phone AS user_phone,
         s.puja_name,
         s.puja_type,
-        COALESCE(p.name, 'Not Assigned') AS pandit_name
+        COALESCE(p.name, 'Not Assigned') AS pandit_name,
+        (SELECT GROUP_CONCAT(ct.name SEPARATOR ', ') 
+         FROM service_contributions sc 
+         JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
+         WHERE sc.puja_request_id = pr.id) as contribution_names
       FROM puja_requests pr
       LEFT JOIN users u ON pr.user_id = u.id
       LEFT JOIN services s ON pr.service_id = s.id
@@ -1252,7 +1264,11 @@ export const getBookingById = async (req, res) => {
         u.phone,
         s.puja_name,
         s.puja_type,
-        p.name AS pandit_name
+        p.name AS pandit_name,
+        (SELECT GROUP_CONCAT(ct.name SEPARATOR ', ') 
+         FROM service_contributions sc 
+         JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
+         WHERE sc.puja_request_id = pr.id) as contribution_names
       FROM puja_requests pr
       LEFT JOIN users u ON pr.user_id = u.id
       LEFT JOIN services s ON pr.service_id = s.id
@@ -2131,6 +2147,12 @@ export const updateBookingStatus = async (req, res) => {
     );
 
     if (status === 'completed') {
+      // ✅ Sync with request_assignments so Pandit also sees it as completed
+      await db.query(
+        "UPDATE request_assignments SET status = 'completed', updated_at = NOW() WHERE request_id = ?",
+        [id],
+      );
+
       import('../utils/referralUtil.js').then(({ processReferralReward }) => {
         processReferralReward(id);
       }).catch(console.error);

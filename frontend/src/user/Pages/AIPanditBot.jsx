@@ -287,8 +287,12 @@ export default function AIPanditBot() {
           {/* Header */}
           <div className="bg-gradient-to-r from-[#78350f] to-[#b45309] px-4 md:px-6 py-4 md:py-5 text-white flex justify-between items-center shadow-lg flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl md:text-2xl shadow-inner shadow-black/20 text-amber-800">
-                🪔
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white/20 overflow-hidden shadow-inner flex-shrink-0">
+                <img
+                  src="https://www.creativehatti.com/wp-content/uploads/2022/12/Pandit-ji-vector-mascot-logo-template-23-small.jpg"
+                  alt="Pandit Ji"
+                  className="w-full h-full object-cover scale-125"
+                />
               </div>
               <div>
                 <h2 className="font-bold text-lg md:text-xl leading-none">

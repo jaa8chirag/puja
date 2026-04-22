@@ -221,7 +221,7 @@ const SignUp = () => {
                                             className="w-full px-4 py-3.5 outline-none text-sm text-gray-700 bg-[#FFFCF5]/50"
                                             placeholder="00000 00000"
                                             value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                                         />
                                     </div>
                                 </div>

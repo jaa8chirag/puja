@@ -123,7 +123,7 @@ const SignIn = () => {
                       placeholder="9876543210"
                       value={phoneNumber}
                       onChange={(e) =>
-                        setPhoneNumber(e.target.value.replace(/\D/g, ""))
+                        setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
                       }
                     />
                   </div>

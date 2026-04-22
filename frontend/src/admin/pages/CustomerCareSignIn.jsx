@@ -14,7 +14,11 @@ const CustomerCareSignIn = () => {
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.name === 'phone') {
+      value = value.replace(/\D/g, "").slice(0, 10);
+    }
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   // Step 1: Send OTP (Login only)

@@ -543,8 +543,18 @@ const MyBookings = () => {
                         ID: <span className="text-orange-600">{b.bookingId}</span>
                       </p>
                       <div className="flex flex-col items-end gap-2 shrink-0 mt-1">
-                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" : b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" : b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" : "bg-blue-100 text-blue-600 border border-blue-200"}`}>
-                          {b.assignment_status}
+                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                          (b.assignment_status === "pending" && b.pandit_name) ? "bg-blue-100 text-blue-600 border border-blue-200" :
+                          b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" : 
+                          b.assignment_status === "accepted" ? "bg-indigo-100 text-indigo-600 border border-indigo-200" :
+                          b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" : 
+                          b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" : 
+                          "bg-blue-100 text-blue-600 border border-blue-200"
+                        }`}>
+                          {b.assignment_status === "pending" && b.pandit_name ? "Pandit Assigned" :
+                           b.assignment_status === "pending" ? "Finding Pandit" : 
+                           b.assignment_status === "accepted" ? "In Progress" :
+                           b.assignment_status}
                         </div>
                         <CancelButton booking={b} isExpired={isEventExpired} isCompleted={isCompleted} size="sm" />
                         {b.payment_status === "partially_paid" && (
@@ -565,8 +575,18 @@ const MyBookings = () => {
                     <p className="mb-3 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
                       ID: <span className="ml-1 text-orange-600">{b.bookingId}</span>
                     </p>
-                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" : b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" : b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" : "bg-blue-100 text-blue-600 border border-blue-200"}`}>
-                      {b.assignment_status}
+                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      (b.assignment_status === "pending" && b.pandit_name) ? "bg-blue-100 text-blue-600 border border-blue-200" :
+                      b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" : 
+                      b.assignment_status === "accepted" ? "bg-indigo-100 text-indigo-600 border border-indigo-200" :
+                      b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" : 
+                      b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" : 
+                      "bg-blue-100 text-blue-600 border border-blue-200"
+                    }`}>
+                      {b.assignment_status === "pending" && b.pandit_name ? "Pandit Assigned" :
+                       b.assignment_status === "pending" ? "Finding Pandit" : 
+                       b.assignment_status === "accepted" ? "In Progress" :
+                       b.assignment_status}
                     </div>
                     <div className="space-y-3 flex flex-col items-end mt-5">
                       <CancelButton booking={b} isExpired={isEventExpired} isCompleted={isCompleted} size="md" />

@@ -47,7 +47,9 @@ export const handleRazorpayPayment = async ({
       currency: order.currency,
       name: "Sri Vedic Puja",
       description: "Puja Booking Payment",
-      image: "/img/download2.png",
+      image: window.location.hostname === "localhost" 
+        ? "https://cdn-icons-png.flaticon.com/512/2913/2913520.png" 
+        : window.location.origin + "/img/download2.png",
       order_id: order.id,
       handler: async function (response) {
         // 3. Verify Payment on Backend

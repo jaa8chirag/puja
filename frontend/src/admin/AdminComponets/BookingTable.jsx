@@ -329,6 +329,24 @@ const BookingDetailDrawer = ({ booking, onClose }) => {
                   <IndianRupee size={11} /> {booking.donations}
                 </span>
               </div>
+              {/* ✅ Contributions (Specific names) */}
+              {booking.contribution_names && (
+                <div className="mt-3 pt-3 border-t border-slate-800">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Selected Contributions
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {booking.contribution_names.split(", ").map((name, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 text-[9px] font-semibold border border-rose-500/20"
+                      >
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -349,6 +367,7 @@ const Bookings = () => {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [completeConfirmId, setCompleteConfirmId] = useState(null); // For confirmation modal
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   useEffect(() => {
@@ -403,6 +422,38 @@ const Bookings = () => {
           booking={selectedBooking}
           onClose={() => setSelectedBooking(null)}
         />
+      )}
+
+      {/* ── Completion Confirmation Modal ── */}
+      {completeConfirmId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+              <BookOpen size={32} className="text-emerald-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Mark as Completed?</h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to mark this puja as completed? This will update the status for both the User and the Pandit.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCompleteConfirmId(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  handleStatusUpdate(e, completeConfirmId, "completed");
+                  setCompleteConfirmId(null);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/20"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Header ── */}
@@ -662,17 +713,13 @@ const Bookings = () => {
                           )}
                           {b.status === "accepted" && (
                             <button
-                              onClick={(e) =>
-                                handleStatusUpdate(e, b.id, "completed")
-                              }
-                              disabled={
-                                updatingStatusId === `${b.id}-completed`
-                              }
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition disabled:opacity-40"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCompleteConfirmId(b.id);
+                              }}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
                             >
-                              {updatingStatusId === `${b.id}-completed`
-                                ? "..."
-                                : "Mark as Completed"}
+                              Complete
                             </button>
                           )}
                           {b.status === "completed" && (

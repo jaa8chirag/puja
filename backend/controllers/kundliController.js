@@ -568,6 +568,45 @@ function detectDoshas(planets, lagnaRashi, lagnaIdx) {
       });
     }
   }
+  
+  // ── 9. KAAL SARP DOSH ──────────────────────────────────────
+  {
+    const nodes = ['Rahu', 'Ketu'];
+    const otherPlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+    
+    const rahuLon = planets.Rahu?.longitude || 0;
+    const ketuLon = planets.Ketu?.longitude || 0;
+    
+    // Check if all other planets are between Rahu and Ketu
+    const checkBetween = (lon, start, end) => {
+      const s = normalizeDeg(start);
+      const e = normalizeDeg(end);
+      if (s < e) return lon > s && lon < e;
+      return lon > s || lon < e;
+    };
+
+    const allOneSide1 = otherPlanets.every(p => checkBetween(planets[p]?.longitude || 0, rahuLon, ketuLon));
+    const allOneSide2 = otherPlanets.every(p => checkBetween(planets[p]?.longitude || 0, ketuLon, rahuLon));
+
+    if (allOneSide1 || allOneSide2) {
+      doshas.push({
+        name         : 'Kaal Sarp Dosh',
+        present      : true,
+        type         : 'FULL',
+        severity     : 'HIGH',
+        trigger      : 'All planets hemmed between Rahu and Ketu',
+        impact       : 'Life may feel like a constant struggle with sudden ups and downs. Hard work might not yield immediate results, and there could be mental restlessness or fear of the unknown.',
+        classicRef   : 'Vedic Astrology tradition — Kaal Sarp occurs when all seven main planets are situated between the axis of Rahu and Ketu.',
+        remedy       : [
+          'Perform Kaal Sarp Dosh Nivaran Puja at Trimbakeshwar or any Shiva temple',
+          'Recite "Om Namah Shivaya" and "Mahamrityunjaya Mantra" daily',
+          'Donate silver snakes (Naag-Naagin pair) in flowing water or a temple',
+          'Worship Lord Shiva and perform Rudrabhishek',
+          'Feed birds and help the needy on Wednesdays and Saturdays',
+        ],
+      });
+    }
+  }
 
   return doshas;
 }

@@ -124,7 +124,7 @@ const PartnerSignIn = () => {
                     className="w-full px-4 py-4 bg-transparent outline-none text-gray-700 font-bold text-lg"
                     placeholder="9876543210"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   />
                 </div>
               </div>

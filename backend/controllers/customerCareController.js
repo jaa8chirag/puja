@@ -137,10 +137,10 @@ export const CusomterLoginRequest = async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ message: "Account not found." });
 
-    // Security Check: Agar Pandit login page hai aur user 'user' hai, toh block karein
+    // Security Check: Role match hona chahiye
     if (role && rows[0].role !== role) {
       return res.status(403).json({
-        message: `Access denied. You are registered as a ${rows[0].role}.`,
+        message: "Access denied. You are not authorized to login here.",
       });
     }
 
@@ -232,6 +232,7 @@ export const getAllPujaRequests = async (req, res) => {
         b.samagrikit,
         b.devotee_name,
         b.total_price,
+        b.donations,
 
         s.puja_name,
         s.puja_type,
@@ -240,7 +241,12 @@ export const getAllPujaRequests = async (req, res) => {
         u.phone AS user_phone,
 
         pu.name AS pandit_name,
-        ra.price AS pandit_price
+        ra.price AS pandit_price,
+
+        (SELECT GROUP_CONCAT(ct.name SEPARATOR ', ') 
+         FROM service_contributions sc 
+         JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
+         WHERE sc.puja_request_id = b.id) as contribution_names
 
       FROM puja_requests b
 
@@ -387,6 +393,13 @@ export const updatePujaStatus = async (req, res) => {
         "UPDATE puja_requests SET status = ?, completed_at = NOW() WHERE id = ?",
         [status, id],
       );
+      
+      // ✅ Sync with request_assignments so Pandit also sees it as completed
+      await db.query(
+        "UPDATE request_assignments SET status = 'completed', updated_at = NOW() WHERE request_id = ?",
+        [id],
+      );
+
       import('../utils/referralUtil.js').then(({ processReferralReward }) => {
         processReferralReward(id);
       }).catch(console.error);
