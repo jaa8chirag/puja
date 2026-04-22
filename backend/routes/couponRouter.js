@@ -18,6 +18,6 @@ router.delete("/delete/:id", verifyToken, adminOnly, adminDeleteCoupon);
 
 // User Routes
 router.post("/validate", verifyToken, validateCoupon);
-router.get("/public-coupons", verifyToken, getPublicCoupons);
+router.get("/public-coupons", getPublicCoupons);
 
 export default router;
