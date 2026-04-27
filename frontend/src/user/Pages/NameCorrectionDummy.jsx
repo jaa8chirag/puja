@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const NAME_CORRECTION_URL = `${API_BASE_URL}/name/name-correction`;
@@ -91,35 +92,49 @@ export default function NameCorrectionDummy() {
           </div>
         </div>
 
-        {/* Limit Reached — full block, form ke upar */}
+        {/* Limit Reached — Premium UI */}
         {limitReached ? (
-          <div className="bg-white border border-orange-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm text-center">
-            <div className="text-5xl mb-4">🔒</div>
-            <h2 className="text-orange-700 font-black text-2xl mb-2">
-              Service Limit Reached
-            </h2>
-            <p className="text-amber-700 text-sm mb-1">
-              You have already used the Name Correction service.
-            </p>
-            <p className="text-amber-500 text-sm mb-6">
-              Please contact our expert to use the service again.
-            </p>
+          <div className="relative bg-white border border-orange-200 rounded-[2rem] p-8 md:p-12 mb-8 shadow-[0_20px_50px_rgba(217,119,6,0.1)] text-center overflow-hidden">
+            {/* Background Decorative element */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50" />
 
-            <a
-              href="https://wa.me/91XXXXXXXXXX"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm"
-            >
-              📱 Contact on WhatsApp
-            </a>
+            <div className="relative z-10">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-50 rounded-full mb-6 text-4xl">
+                ✨
+              </div>
 
-            <button
-              onClick={() => setLimitReached(false)}
-              className="block mx-auto mt-4 text-amber-400 hover:text-amber-600 text-xs underline transition-colors"
-            >
-              Back to Main Page
-            </button>
+              <h2 className="text-[#7c2d00] font-black text-3xl mb-3" style={{ fontFamily: "'Georgia', serif" }}>
+                Exclusive Service Limit
+              </h2>
+
+              <div className="max-w-md mx-auto">
+                <p className="text-amber-800 font-medium text-lg leading-relaxed mb-2">
+                  You've successfully used our Name Correction once!
+                </p>
+                <p className="text-orange-600/70 text-sm mb-8">
+                  To maintain the accuracy and quality of our sacred analysis, repeat requests require guidance from our expert numerologists.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href="https://wa.me/919771157571"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center gap-3 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-green-200 active:scale-95"
+                >
+                  <FaWhatsapp size={22} className="group-hover:rotate-12 transition-transform" />
+                  <span>Talk to Our Expert</span>
+                </a>
+              </div>
+
+              <button
+                onClick={() => setLimitReached(false)}
+                className="mt-8 text-amber-500 hover:text-amber-700 text-[13px] font-bold uppercase tracking-widest transition-colors"
+              >
+                ← Return to Page
+              </button>
+            </div>
           </div>
         ) : (
           /* Form */

@@ -127,6 +127,16 @@ const HomePujaBooking = () => {
     ? basePrice + getPrice("Samagri Kit")
     : basePrice;
 
+  const buildImageUrl = (url) => {
+    if (!url) return `${API_BASE_URL}/uploads/default.jpg`;
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("uploads/")) return `${API_BASE_URL}/${url}`;
+    if (url.startsWith("/uploads/")) return `${API_BASE_URL}${url}`;
+    return `${API_BASE_URL}/uploads/${url}`;
+  };
+
+  const hasImage = service?.image_url;
+
   // console.log("services-----", service);
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-6 font-sans text-gray-800 pb-28 md:pb-6">
@@ -144,15 +154,9 @@ const HomePujaBooking = () => {
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
               {/* Hero Image - Fixed 16:9 landscape ratio */}
               <div className="relative w-full aspect-[16/7]">
-                {service?.image_url ? (
+                {hasImage ? (
                   <img
-                    src={`${API_BASE_URL}${
-                      service.image_url.startsWith("uploads/")
-                        ? `/${service.image_url}`
-                        : service.image_url.startsWith("/uploads/")
-                        ? service.image_url
-                        : `/uploads/${service.image_url}`
-                    }`}
+                    src={buildImageUrl(service.image_url)}
                     className="absolute inset-0 w-full h-full object-cover"
                     alt="Puja"
                   />

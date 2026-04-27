@@ -53,7 +53,16 @@ export default function HomePuja() {
     getSevices();
   }, []);
 
-  const filteredServices = services.filter((service) => {
+  const buildImageUrl = (url) => {
+    if (!url) return `${API_BASE_URL}/uploads/default.jpg`;
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("uploads/")) return `${API_BASE_URL}/${url}`;
+    if (url.startsWith("/uploads/")) return `${API_BASE_URL}${url}`;
+    return `${API_BASE_URL}/uploads/${url}`;
+  };
+
+  const filteredServices = (services || []).filter((service) => {
+    if (!service) return false;
     const name = service.title || service.puja_name || "";
     return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -146,12 +155,7 @@ export default function HomePuja() {
                 {/* Image - Fixed 16:9 landscape ratio */}
                 <div className="relative w-full aspect-[16/7] overflow-hidden">
                   <img
-                    src={`${API_BASE_URL}${service.image_url.startsWith("uploads/")
-                        ? `/${service.image_url}`
-                        : service.image_url.startsWith("/uploads/")
-                          ? service.image_url
-                          : `/uploads/${service.image_url}`
-                      }`}
+                    src={buildImageUrl(service.image_url)}
                     alt={service.puja_name}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                   />
