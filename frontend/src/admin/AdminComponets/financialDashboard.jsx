@@ -764,6 +764,13 @@ const PanditsTab = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Payout Modal States
+  const [payModal, setPayModal] = useState({ show: false, pandit: null });
+  const [payAmount, setPayAmount] = useState("");
+  const [payMode, setPayMode] = useState("bank");
+  const [payRemarks, setPayRemarks] = useState("");
+  const [paying, setPaying] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -777,6 +784,33 @@ const PanditsTab = () => {
       )
       .finally(() => setLoading(false));
   }, [page]);
+
+  const handlePay = async () => {
+    if (!payAmount) return;
+    setPaying(true);
+    try {
+      const res = await API.post("/pandit-payout", {
+        pandit_id: payModal.pandit.pandit_id,
+        amount: Number(payAmount),
+        payment_mode: payMode,
+        remarks: payRemarks,
+      });
+      if (res.data.success) {
+         setPayModal({ show: false, pandit: null });
+         setPayAmount("");
+         setPayRemarks("");
+         // Refetch to get updated balances
+         setLoading(true);
+         const res2 = await API.get(`/pandit-earnings?page=${page}&limit=10`);
+         setPanditsData(res2.data.data || []);
+         setPagination(res2.data.pagination || null);
+         setLoading(false);
+      }
+    } catch (err) {
+      alert("Error paying pandit: " + (err.response?.data?.message || err.message));
+      setPaying(false);
+    }
+  };
 
   const data = panditsData;
 
@@ -804,8 +838,11 @@ const PanditsTab = () => {
                       "Phone",
                       "Completed Pujas",
                       "Total Earned",
+                      "Total Paid",
+                      "Balance",
+                      "Action",
                     ].map((h) => (
-                      <th key={h} className="pb-3 pr-6 font-bold">
+                      <th key={h} className="pb-3 pr-6 font-bold whitespace-nowrap">
                         {h}
                       </th>
                     ))}
@@ -841,8 +878,22 @@ const PanditsTab = () => {
                           {p.completed_pujas}
                         </span>
                       </td>
-                      <td className="py-3.5 font-black text-orange-400">
+                      <td className="py-3.5 pr-6 font-black text-orange-400">
                         {fmt(p.total_earned)}
+                      </td>
+                      <td className="py-3.5 pr-6 font-black text-emerald-400">
+                        {fmt(p.total_paid || 0)}
+                      </td>
+                      <td className="py-3.5 pr-6 font-black text-rose-400">
+                        {fmt(p.balance || 0)}
+                      </td>
+                      <td className="py-3.5">
+                        <button
+                           onClick={() => setPayModal({ show: true, pandit: p })}
+                           className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border border-emerald-500/20 whitespace-nowrap"
+                        >
+                          Pay
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -891,6 +942,85 @@ const PanditsTab = () => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {payModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#141828] border border-white/10 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <span className="text-emerald-400">💸</span> Pay Pandit
+            </h3>
+            <div className="p-3 bg-white/5 rounded-xl border border-white/10 flex justify-between items-center">
+              <div>
+                <p className="text-[10px] uppercase text-white/40 font-bold tracking-wider">Pandit</p>
+                <p className="text-sm text-white font-bold capitalize">{payModal.pandit?.pandit_name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase text-rose-400/80 font-bold tracking-wider">Balance Due</p>
+                <p className="text-sm text-rose-400 font-bold">{fmt(payModal.pandit?.balance || 0)}</p>
+              </div>
+            </div>
+
+            {/* Payment details section */}
+            <div className="p-3 bg-orange-500/5 rounded-xl border border-orange-500/10 space-y-2">
+              <p className="text-[10px] uppercase text-orange-400 font-black tracking-widest border-b border-orange-500/10 pb-1 mb-2">Payout Method Details</p>
+              {payModal.pandit?.payment_method === 'bank' ? (
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <p className="text-white/30">Bank</p>
+                    <p className="text-white/80 font-semibold">{payModal.pandit.bank_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/30">A/C Holder</p>
+                    <p className="text-white/80 font-semibold">{payModal.pandit.account_holder_name || 'N/A'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-white/30">A/C Number</p>
+                    <p className="text-white/80 font-mono font-semibold">{payModal.pandit.bank_account_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/30">IFSC</p>
+                    <p className="text-white/80 font-mono font-semibold">{payModal.pandit.ifsc_code || 'N/A'}</p>
+                  </div>
+                </div>
+              ) : payModal.pandit?.payment_method === 'upi' ? (
+                <div className="text-[11px]">
+                  <p className="text-white/30">UPI ID</p>
+                  <p className="text-emerald-400 font-mono font-bold text-sm">{payModal.pandit.upi_id || 'N/A'}</p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-white/30 italic text-center">No bank/UPI details found for this Pandit.</p>
+              )}
+            </div>
+            
+            <div className="space-y-4 pt-2">
+               <div>
+                  <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Amount (₹)</label>
+                  <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-mono" placeholder="e.g. 5000" />
+               </div>
+               <div>
+                  <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Payment Mode</label>
+                  <select value={payMode} onChange={e => setPayMode(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all">
+                    <option value="bank" className="bg-[#1a1f35]">Bank Transfer</option>
+                    <option value="upi" className="bg-[#1a1f35]">UPI</option>
+                    <option value="cash" className="bg-[#1a1f35]">Cash</option>
+                  </select>
+               </div>
+               <div>
+                  <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Remarks (Optional)</label>
+                  <input type="text" value={payRemarks} onChange={e => setPayRemarks(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" placeholder="e.g. For Jan bookings" />
+               </div>
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t border-white/10 mt-2">
+              <button onClick={() => setPayModal({ show: false, pandit: null })} className="flex-1 py-2.5 rounded-xl text-white/50 hover:bg-white/5 font-bold transition-all text-sm border border-transparent hover:border-white/10">Cancel</button>
+              <button onClick={handlePay} disabled={paying || !payAmount} className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white font-bold transition-all hover:bg-emerald-400 disabled:opacity-50 text-sm shadow-lg shadow-emerald-500/20">
+                {paying ? "Processing..." : "Confirm Pay"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

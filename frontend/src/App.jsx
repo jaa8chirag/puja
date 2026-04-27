@@ -1,4 +1,6 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 import UserLayout from "./user/Layout/UserLayout";
 import NavbarOnlyLayout from "./user/Layout/NavbarOnlyLayout";
 import { ProtectedLayout } from "./user/Layout/ProtectedLayout";
@@ -69,6 +71,55 @@ import NameCorrectionDummy from "./user/Pages/NameCorrectionDummy";
 import HomeOnlineRitual from "./user/Pages/HomeOnlineRitual";
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Helper function to check if token is valid and not expired
+    const isTokenValid = (t) => {
+      if (!t) return false;
+      try {
+        const decoded = jwtDecode(t);
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp && decoded.exp < currentTime) {
+          return false;
+        }
+        return decoded;
+      } catch (error) {
+        return false;
+      }
+    };
+
+    const adminToken = localStorage.getItem("adminToken");
+    const token = localStorage.getItem("token");
+
+    const decodedAdmin = isTokenValid(adminToken);
+    if (adminToken && !decodedAdmin) {
+      localStorage.removeItem("adminToken");
+    } else if (decodedAdmin) {
+      if (!location.pathname.startsWith("/admin/dashboard") && !location.pathname.startsWith("/admin/nameCorrect")) {
+        navigate("/admin/dashboard", { replace: true });
+      }
+      return;
+    }
+
+    const decodedToken = isTokenValid(token);
+    if (token && !decodedToken) {
+      localStorage.removeItem("token");
+    } else if (decodedToken) {
+      const role = decodedToken?.role || "user";
+
+      if (role === "pandit" && !location.pathname.startsWith("/partner/dashboard")) {
+        navigate("/partner/dashboard", { replace: true });
+      } else if (role === "customerCare" && !location.pathname.startsWith("/customerCare/dashboard")) {
+        navigate("/customerCare/dashboard", { replace: true });
+      } else if (role === "user") {
+        const authRoutes = ["/signin", "/signup", "/partnerSignIn", "/partnerSignUp", "/customerCare/signIn", "/admin/login"];
+        if (authRoutes.includes(location.pathname)) {
+          navigate("/", { replace: true });
+        }
+      }
+    }
+  }, [location.pathname, navigate]);
 
   const hideFloatingMenu = [
     "/signin",
@@ -212,8 +263,10 @@ function App() {
 
         {/* admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/nameCorrect" element={<NameCorrection />} />
+        <Route element={<ProtectedLayout allowedRoles={["admin"]} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/nameCorrect" element={<NameCorrection />} />
+        </Route>
 
         {/* ================= 404 ================= */}
         <Route path="*" element={<NotFound />} />

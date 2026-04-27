@@ -63,6 +63,7 @@ import {
   updatePersonalInfo,
   deletePersonalInfo,
   updatePersonalInfoStatus,
+  addPanditPayout,
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -184,6 +185,7 @@ router.get("/transactions", verifyToken, adminOnly, getRecentTransactions); // ?
 
 // ── Pandit Performance
 router.get("/pandit-earnings", verifyToken, adminOnly, getPanditEarnings);
+router.post("/pandit-payout", verifyToken, adminOnly, addPanditPayout);
 
 // ── Custom Date Range Report
 router.get("/date-range", verifyToken, adminOnly, getRevenueByDateRange); // ?from=2026-02-01&to=2026-03-03

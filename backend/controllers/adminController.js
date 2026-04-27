@@ -1639,21 +1639,36 @@ export const getPanditEarnings = async (req, res) => {
         u.name        AS pandit_name,
         u.phone,
         COUNT(pr.id)                     AS completed_pujas,
-        COALESCE(SUM(pr.total_price), 0) AS total_earned
+        COALESCE(SUM(pr.total_price), 0) AS total_earned,
+        COALESCE((SELECT SUM(amount) FROM pandit_payouts WHERE pandit_id = u.id), 0) AS total_paid,
+        ppd.payment_method,
+        ppd.account_holder_name,
+        ppd.bank_name,
+        ppd.bank_account_number,
+        ppd.ifsc_code,
+        ppd.upi_id
       FROM users u
       LEFT JOIN puja_requests pr
         ON pr.pandit_id = u.id AND pr.status = 'completed'
+      LEFT JOIN partner_payment_details ppd
+        ON ppd.user_id = u.id AND ppd.is_active = 1
       WHERE u.role = 'pandit'
-      GROUP BY u.id, u.name, u.phone
+      GROUP BY u.id, u.name, u.phone, ppd.id
       ORDER BY total_earned DESC
       LIMIT ? OFFSET ?
     `,
       [limit, offset],
     );
 
+    const dataWithBalance = rows.map(r => ({
+      ...r,
+      total_paid: Number(r.total_paid),
+      balance: Number(r.total_earned) - Number(r.total_paid)
+    }));
+
     res.json({
       success: true,
-      data: rows,
+      data: dataWithBalance,
       pagination: {
         page,
         limit,
@@ -2642,5 +2657,21 @@ export const updatePersonalInfoStatus = async (req, res) => {
   } catch (error) {
     console.error("❌ updatePersonalInfoStatus Error:", error);
     return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const addPanditPayout = async (req, res) => {
+  try {
+    const { pandit_id, amount, payment_mode, transaction_id, remarks } = req.body;
+    if (!pandit_id || !amount) {
+      return res.status(400).json({ success: false, message: "Pandit ID and amount are required" });
+    }
+    await db.query(
+      "INSERT INTO pandit_payouts (pandit_id, amount, payment_mode, transaction_id, remarks) VALUES (?, ?, ?, ?, ?)",
+      [pandit_id, amount, payment_mode || "bank", transaction_id || "", remarks || ""]
+    );
+    res.json({ success: true, message: "Payout recorded successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };

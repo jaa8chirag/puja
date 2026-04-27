@@ -118,7 +118,7 @@ const Navbar = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `font-semibold text-[15px] transition-colors ${isActive
+                  `font-bold text-[17px] transition-colors ${isActive
                     ? "text-orange-600"
                     : "text-black hover:text-orange-600"
                   }`
@@ -134,7 +134,7 @@ const Navbar = () => {
               onMouseEnter={() => setPindDanOpen(true)}
               onMouseLeave={() => setPindDanOpen(false)}
             >
-              <div className="flex items-center gap-1 font-semibold text-[15px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
+              <div className="flex items-center gap-1 font-bold text-[17px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
                 Pind-Dan/Pitra-Dosh
                 <ChevronDown
                   size={14}
@@ -196,7 +196,7 @@ const Navbar = () => {
               onMouseEnter={() => setDropdownOpen(true)}
               onMouseLeave={() => setDropdownOpen(false)}
             >
-              <div className="flex items-center gap-1 font-semibold text-[15px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
+              <div className="flex items-center gap-1 font-bold text-[17px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
                 Gallery
                 <ChevronDown
                   size={14}

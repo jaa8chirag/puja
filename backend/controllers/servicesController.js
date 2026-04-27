@@ -2,8 +2,14 @@ import db from "../config/db.js";
 import pool from "../config/db.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
+import Razorpay from "razorpay";
 
 dotenv.config();
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 export const getServicesByType = async (req, res) => {
   try {
@@ -167,6 +173,34 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
     if (razorpay_signature !== expectedSign) {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
+
+    // --- SECURITY FIX: Prevent Price Manipulation Loophole ---
+    try {
+      const order = await razorpay.orders.fetch(razorpay_order_id);
+      const actualPaidAmount = order.amount / 100;
+
+      // 1. Paid amount must match Razorpay's actual charge
+      if (Number(paid_amount) > actualPaidAmount + 1) {
+        return res.status(400).json({ success: false, message: "Payment amount manipulated!" });
+      }
+
+      // 2. Basic Sanity Check on Total Price
+      const [priceRows] = await connection.query("SELECT MAX(CASE WHEN pricing_type = 'standard' THEN price END) AS base_price FROM service_prices WHERE service_id = ?", [puja_id]);
+      const basePrice = Number(priceRows[0]?.base_price || 0);
+      const absoluteMinimumPrice = basePrice * 0.70; // Assumes max 30% discount
+
+      if (Number(total_price) < absoluteMinimumPrice) {
+         return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
+      }
+
+      // 3. Enforce Minimum 25% Advance
+      if (actualPaidAmount < (Number(total_price) * 0.25) - 2) {
+         return res.status(400).json({ success: false, message: "Minimum 25% advance required." });
+      }
+    } catch (rzpErr) {
+      return res.status(400).json({ success: false, message: "Error validating Razorpay order" });
+    }
+    // ---------------------------------------------------------
 
     const userId = req.user.id;
     if (req.body.useReferralDiscount) {
@@ -437,6 +471,34 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
 
+    // --- SECURITY FIX: Prevent Price Manipulation Loophole ---
+    try {
+      const order = await razorpay.orders.fetch(razorpay_order_id);
+      const actualPaidAmount = order.amount / 100;
+
+      // 1. Paid amount must match Razorpay's actual charge
+      if (Number(paid_amount) > actualPaidAmount + 1) {
+        return res.status(400).json({ success: false, message: "Payment amount manipulated!" });
+      }
+
+      // 2. Basic Sanity Check on Total Price
+      const [priceRows] = await connection.query("SELECT MAX(CASE WHEN pricing_type = 'standard' THEN price END) AS base_price FROM service_prices WHERE service_id = ?", [puja_id]);
+      const basePrice = Number(priceRows[0]?.base_price || 0);
+      const absoluteMinimumPrice = basePrice * 0.70; // Assumes max 30% discount
+
+      if (Number(total_price) < absoluteMinimumPrice) {
+         return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
+      }
+
+      // 3. Enforce Minimum 25% Advance
+      if (actualPaidAmount < (Number(total_price) * 0.25) - 2) {
+         return res.status(400).json({ success: false, message: "Minimum 25% advance required." });
+      }
+    } catch (rzpErr) {
+      return res.status(400).json({ success: false, message: "Error validating Razorpay order" });
+    }
+    // ---------------------------------------------------------
+
     const userId = req.user.id;
     if (req.body.useReferralDiscount) {
       const [uRows] = await connection.query("SELECT pending_referral_discounts FROM users WHERE id = ?", [userId]);
@@ -607,6 +669,34 @@ export const bookingDetails = async (req, res) => {
     if (razorpay_signature !== expectedSign) {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
+
+    // --- SECURITY FIX: Prevent Price Manipulation Loophole ---
+    try {
+      const order = await razorpay.orders.fetch(razorpay_order_id);
+      const actualPaidAmount = order.amount / 100;
+
+      // 1. Paid amount must match Razorpay's actual charge
+      if (Number(paid_amount) > actualPaidAmount + 1) {
+        return res.status(400).json({ success: false, message: "Payment amount manipulated!" });
+      }
+
+      // 2. Basic Sanity Check on Total Price
+      const [priceRows] = await connection.query("SELECT MAX(CASE WHEN pricing_type = ? THEN price END) AS base_price FROM service_prices WHERE service_id = ?", [ticket_type || 'standard', puja_id]);
+      const basePrice = Number(priceRows[0]?.base_price || 0);
+      const absoluteMinimumPrice = basePrice * 0.70; // Assumes max 30% discount
+
+      if (Number(total_price) < absoluteMinimumPrice) {
+         return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
+      }
+
+      // 3. Enforce Minimum 25% Advance
+      if (actualPaidAmount < (Number(total_price) * 0.25) - 2) {
+         return res.status(400).json({ success: false, message: "Minimum 25% advance required." });
+      }
+    } catch (rzpErr) {
+      return res.status(400).json({ success: false, message: "Error validating Razorpay order" });
+    }
+    // ---------------------------------------------------------
 
     const userId = req.user.id;
     if (req.body.useReferralDiscount) {
