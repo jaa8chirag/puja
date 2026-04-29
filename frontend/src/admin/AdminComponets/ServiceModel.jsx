@@ -26,6 +26,7 @@ import {
 import RichTextEditor from "../../Components/RichTextEditor";
 
 const ServiceModal = ({ close, editData, refresh }) => {
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     puja_name: "",
     puja_type: "home_puja",
@@ -68,41 +69,86 @@ const ServiceModal = ({ close, editData, refresh }) => {
   };
 
   useEffect(() => {
-    if (editData) {
-      let formattedDateTime = "";
-      if (editData.dateOfStart) {
-        formattedDateTime = editData.dateOfStart
-          .replace(" ", "T")
-          .substring(0, 16);
-      }
+    const initializeData = async () => {
+      if (!editData) return;
+      
+      setLoading(true);
+      let data = editData;
+      
+      try {
+        // Always fetch fresh by ID to get full details (description, benefits, etc.)
+        if (editData.id) {
+          const response = await API.get(`/services/${editData.id}`);
+          if (response.data.success) {
+            data = response.data.service;
+          }
+        }
 
-      setForm({
-        puja_name: editData.puja_name || "",
-        puja_type: editData.puja_type || "home_puja",
-        description: editData.description || "",
-        status: editData.status || "",
-        address: editData.address || "",
-        about: editData.about || "",
-        dateOfStart: formattedDateTime,
-        priority: editData.priority || 0,
-        is_featured: editData.is_featured || 0,
-        prices:
-          editData.prices?.length > 0
-            ? editData.prices
-            : [{ pricing_type: "standard", price: "" }],
-      });
+        console.log("Modal Final Data:", data);
+        
+        const basePujaName = data.puja_name || data.name || data.title || "";
+        const basePujaType = data.puja_type || "home_puja";
+        const baseDescription = data.description || "";
+        
+        let formattedDateTime = "";
+        if (data.dateOfStart) {
+          try {
+            const d = new Date(data.dateOfStart);
+            if (!isNaN(d.getTime())) {
+              formattedDateTime = d.toISOString().substring(0, 16);
+            }
+          } catch (e) {
+            console.error("Date formatting error:", e);
+          }
+        }
 
-      if (editData.image_url) {
-        const baseUrl = import.meta.env.VITE_BACKEND_URL;
-        const imageUrl = editData.image_url.startsWith("uploads/")
-          ? `/${editData.image_url}`
-          : editData.image_url.startsWith("/uploads/")
-          ? editData.image_url
-          : `/uploads/${editData.image_url}`;
-        setPreview(`${baseUrl}${imageUrl}`);
+        let basePrices = [];
+        if (data.prices && Array.isArray(data.prices) && data.prices.length > 0) {
+          basePrices = data.prices.map(p => ({
+            price_id: p.price_id,
+            pricing_type: p.pricing_type,
+            price: p.price ? parseFloat(p.price) : ""
+          }));
+        } else {
+          const singlePrice = data.price || data.base_price;
+          if (singlePrice) {
+            basePrices = [{ pricing_type: data.pricing_type || "standard", price: parseFloat(singlePrice) }];
+          } else {
+            basePrices = [{ pricing_type: "standard", price: "" }];
+          }
+        }
+
+        setForm({
+          puja_name: basePujaName,
+          puja_type: basePujaType,
+          description: baseDescription,
+          status: data.status || "active",
+          address: data.address || "",
+          about: data.about || "",
+          dateOfStart: formattedDateTime,
+          priority: data.priority || 0,
+          is_featured: data.is_featured || 0,
+          prices: basePrices,
+        });
+
+        if (data.image_url) {
+          const baseUrl = import.meta.env.VITE_BACKEND_URL;
+          const imageUrl = data.image_url.startsWith("uploads/")
+            ? `/${data.image_url}`
+            : data.image_url.startsWith("/uploads/")
+            ? data.image_url
+            : `/uploads/${data.image_url}`;
+          setPreview(`${baseUrl}${imageUrl}`);
+        }
+        await loadBenefits(data.id);
+      } catch (err) {
+        console.error("Initialization Error:", err);
+      } finally {
+        setLoading(false);
       }
-      loadBenefits(editData.id);
-    }
+    };
+
+    initializeData();
   }, [editData]);
 
   const loadBenefits = async (serviceId) => {
@@ -127,8 +173,8 @@ const ServiceModal = ({ close, editData, refresh }) => {
         );
         formData.append(key, JSON.stringify(validPrices));
       } else if (key === "status") {
-        // ✅ Featured OFF hai to status empty bhejo
-        formData.append("status", form.is_featured === 1 ? form.status : "");
+        // Keep existing status if not featured, or use form.status if featured
+        formData.append("status", form.status || (editData?.status || "active"));
       } else {
         formData.append(key, form[key]);
       }
@@ -252,27 +298,36 @@ const ServiceModal = ({ close, editData, refresh }) => {
           onSubmit={handleSubmit}
           className="overflow-y-auto flex-1 px-8 py-6 space-y-6 scrollbar-hide"
         >
-          {/* Row 1: Service Name + Featured Toggle */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Service Name */}
-            <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
-                Service Name
-              </label>
-              <div className="relative">
-                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="text"
-                  required
-                  value={form.puja_name}
-                  onChange={(e) =>
-                    setForm({ ...form, puja_name: e.target.value })
-                  }
-                  className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
-                  placeholder="e.g. Navratri Special Puja"
-                />
-              </div>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">
+                Fetching Service Details...
+              </p>
             </div>
+          ) : (
+            <>
+              {/* Row 1: Service Name + Featured Toggle */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Service Name */}
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase mb-1.5 block px-1">
+                    Service Name
+                  </label>
+                  <div className="relative">
+                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                      type="text"
+                      required
+                      value={form.puja_name}
+                      onChange={(e) =>
+                        setForm({ ...form, puja_name: e.target.value })
+                      }
+                      className="w-full pl-11 pr-4 py-3 bg-[#0b1120] border border-slate-700 rounded-2xl text-sm text-white focus:border-orange-500 outline-none"
+                      placeholder="e.g. Navratri Special Puja"
+                    />
+                  </div>
+                </div>
 
             {/* Featured Toggle + Status */}
             <div className="space-y-3">
@@ -626,6 +681,8 @@ const ServiceModal = ({ close, editData, refresh }) => {
               Images uploaded in any other ratio will be cropped automatically. Use exact 16:7 for best results.
             </p>
           </div>
+            </>
+          )}
         </form>
 
         {/* Footer Actions */}

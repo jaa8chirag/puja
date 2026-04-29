@@ -923,22 +923,8 @@ export const getAllServices = async (req, res) => {
     rows.forEach((row) => {
       if (!serviceMap[row.id]) {
         serviceMap[row.id] = {
-          id: row.id,
-          puja_name: row.puja_name,
-          puja_type: row.puja_type,
-          description: row.description,
-          image_url: row.image_url,
-          created_at: row.created_at,
-          status: row.status,
-          priority: row.priority,
-          is_featured: row.is_featured,
-          price_id: row.price_id,
-          pricing_type: row.pricing_type,
-          price: row.price,
-          about: row.about,
-          address: row.address,
-          dateOfStart: row.dateOfStart,
-          prices: [],
+          ...row, // Copy all database fields
+          prices: [], // Initialize prices array
         };
       }
       if (row.price_id) {
@@ -2069,10 +2055,10 @@ export const adminUpdateBlog = async (req, res) => {
     const image_url = req.file ? req.file.filename : existing.image_url;
     const slug = title
       ? title
-          .toLowerCase()
-          .replace(/[^\w\s-]/g, "")
-          .replace(/\s+/g, "-")
-          .slice(0, 120)
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .slice(0, 120)
       : existing.slug;
 
     await pool.query(

@@ -35,11 +35,10 @@ const getAIResponse = async (prompt) => {
 // ── User State Map ─────────────────────────────────────────
 const userStates = new Map();
 
-// ── Smart Pandit System Prompt ─────────────────────────────
 const PANDIT_PROMPT = `You are 'Smart Pandit Ji', the knowledgeable Vedic Pandit of 'Sri Vedic Puja Kendra'.
 1. Always start every reply with "🙏 Om Namah Shivay".
-2. LANGUAGE DETECTION: Detect the user's language. If the user asks in English, reply in English. If the user asks in Hinglish or Hindi, reply in HINGLISH (Hindi using English script).
-3. Be extremely concise. Use point-to-point format.
+2. LANGUAGE MATCHING: Strictly use the same language as the user. If the user asks in English, reply in English. If the user asks in Hindi (Devanagari), reply in Hindi. If the user asks in Hinglish (Hindi in English script), reply in Hinglish.
+3. Be extremely concise. Provide a one-line answer or a very short point-to-point response.
 4. If user mentions any problem (Job, Health, Marriage, Money, Family, career, etc.), write 'TRIGGER_KUNDLI' in your reply.
 DO NOT ask for details yourself, just say 'TRIGGER_KUNDLI'.`;
 
@@ -99,11 +98,26 @@ const buildPujaCards = (doshas, allServices) => {
 
   activeDoshas.forEach((dosha) => {
     const matched = matchPujaForDosha(dosha.name, allServices);
-    if (matched.length === 0) return;
+    let service;
+    
+    if (matched.length > 0) {
+      service = matched[0];
+    } else {
+      // ── Fallback: If no direct match, look for a "Consultation" or "Generic" Puja ──
+      service = allServices.find(s => 
+        (s.puja_name || s.name || "").toLowerCase().includes("consultation") ||
+        (s.puja_name || s.name || "").toLowerCase().includes("generic") ||
+        (s.puja_name || s.name || "").toLowerCase().includes("dosha nivaran")
+      ) || {
+        puja_name: "Special Dosha Nivaran Puja",
+        id: "generic-puja",
+        puja_type: "home_puja",
+        price: "Consultation Required"
+      };
+    }
 
-    const service = matched[0];
-    const id = service.id || service._id;
-    if (addedIds.has(id)) return;
+    const id = service.id || service._id || "generic-puja";
+    if (addedIds.has(id) && id !== "generic-puja") return;
     addedIds.add(id);
 
     const typeMap = {
@@ -131,11 +145,11 @@ const buildPujaCards = (doshas, allServices) => {
       doshaName: dosha.name,
       severity: dosha.severity,
       urgency: urgencyMap[dosha.severity]?.label || "",
-      reason: reasonMap[dosha.name] || "For overall spiritual growth",
-      pujaName: service.puja_name || service.name || service.title,
+      reason: reasonMap[dosha.name] || "For resolving celestial imbalances",
+      pujaName: service.puja_name || service.name || service.title || "Special Dosha Puja",
       pujaId: id,
-      price: service.price || service.amount || "",
-      bookingUrl: `${process.env.FRONTEND_URL}/${routePrefix}/${id}`,
+      price: service.price || service.amount || "Variable",
+      bookingUrl: id === "generic-puja" ? `${process.env.FRONTEND_URL}/contact-us` : `${process.env.FRONTEND_URL}/${routePrefix}/${id}`,
     });
   });
 
@@ -265,7 +279,7 @@ async function handleCollection(socket, text, state) {
     const analysisPrompt = `Aap 'Smart Pandit Ji' hain, ek anubhavi Vedic Jyotishi. 
 Is Kundli data ka nikarsh nikaalein: ${JSON.stringify(rawData)}.
 Report bilkul POINT-TO-POINT honi chahiye.
-IMPORTANT: Use the same language as the user (English or Hinglish).
+IMPORTANT: Use the same language as the user (English, Hindi, or Hinglish).
 Sirf mukhya baatein batayein (strictly 1 line each):
 1. Vyaktitv (Personality)
 2. Sabse Shubh Grah (Best Planet)

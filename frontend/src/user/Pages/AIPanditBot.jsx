@@ -154,9 +154,9 @@ export default function AIPanditBot() {
 
           {/* One-line reason */}
           <div
-            style={{ fontSize: "12px", color: "#b45309", fontWeight: "600", marginBottom: "8px", fontStyle: "italic" }}
+            style={{ fontSize: "12px", color: "#b45309", fontWeight: "600", marginBottom: "8px" }}
           >
-            Purpose: {card.reason}
+            {card.reason}
           </div>
 
           {/* Puja name */}

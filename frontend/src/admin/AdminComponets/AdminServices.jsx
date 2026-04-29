@@ -827,6 +827,7 @@ const AdminServices = () => {
 
       {openModal && (
         <ServiceModal
+          key={editData?.id || "new"}
           close={() => setOpenModal(false)}
           editData={editData}
           refresh={fetchServices}
