@@ -20,6 +20,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 import { LotusIcon } from "../Components/Icons";
+import HTMLContent from "../../Components/HTMLContent";
 // const SERVICE_ID = 48; // Online Pind Dan service ID
 
 const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
@@ -158,10 +159,10 @@ const OnlineRitual = () => {
   const benefits =
     service?.benefits && service.benefits.length > 0
       ? service.benefits.map((b, i) => ({
-          icon: getBenefitIcon(b.name, i),
-          title: b.name,
-          desc: b.description || "Divine blessing",
-        }))
+        icon: getBenefitIcon(b.name, i),
+        title: b.name,
+        desc: b.description || "Divine blessing",
+      }))
       : FALLBACK_BENEFITS;
 
   if (loading) {
@@ -206,11 +207,6 @@ const OnlineRitual = () => {
                 {/* Overlay - hidden on mobile */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent hidden md:block" />
                 <div className="absolute bottom-6 left-6 hidden md:block">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="bg-orange-500/90 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                      Sacred Ritual
-                    </span>
-                  </div>
                   <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                     {service?.puja_name}
                   </h1>
@@ -222,11 +218,6 @@ const OnlineRitual = () => {
 
               {/* Mobile Title - visible only on mobile */}
               <div className="p-4 md:hidden border-t border-orange-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="bg-orange-500/90 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                    Sacred Ritual
-                  </span>
-                </div>
                 <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
                   {service?.puja_name}
                 </h1>
@@ -245,11 +236,10 @@ const OnlineRitual = () => {
                   <button
                     key={tab}
                     onClick={() => scrollToSection(tab)}
-                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${
-                      activeTab === tab
+                    className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
                         ? "text-orange-600 bg-orange-50/50"
                         : "text-gray-400"
-                    }`}
+                      }`}
                   >
                     {tab}
                     {activeTab === tab && (
@@ -313,13 +303,11 @@ const OnlineRitual = () => {
                     <Info size={20} /> About The Ritual
                   </div>
                   <div>
-                    <p
-                      className={`text-[15px] text-gray-600 leading-relaxed text-justify transition-all ${
-                        !aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""
-                      }`}
-                    >
-                      {service?.description}
-                    </p>
+                    <HTMLContent
+                      content={service?.description}
+                      className={`text-[15px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none" : ""
+                        }`}
+                    />
                     <button
                       onClick={() => setAboutExpanded(!aboutExpanded)}
                       className="mt-2 text-orange-600 font-bold text-[13px] uppercase tracking-wider flex items-center gap-1 md:hidden"
@@ -507,9 +495,8 @@ const FAQItem = ({ q, a }) => {
         />
       </div>
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          open ? "max-h-96 mt-3 opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-96 mt-3 opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <p className="text-[14px] text-gray-500 leading-relaxed font-medium">
           {a}

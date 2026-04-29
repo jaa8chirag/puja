@@ -110,29 +110,21 @@ export default function KathaPuja() {
                 {/* Content */}
                 <div className="p-5 md:p-4 flex flex-col flex-1">
                   <div className="mb-4 md:mb-2">
-                    <div className="flex items-center justify-between gap-3 mb-1">
-                      <h3 className="flex-1 min-w-0 text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
-                        {service.title || service.puja_name}
-                      </h3>
-                      <button className="shrink-0 px-2 py-1 md:px-4 md:py-2 rounded-xl text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500">
+                    <h3 className="text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors mb-2">
+                      {service.title || service.puja_name}
+                    </h3>
+
+                    <div className="flex items-center justify-between gap-4">
+                      {service.description && (
+                        <p className="text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-2 flex-1">
+                          {stripHtml(service.description)}
+                        </p>
+                      )}
+
+                      <button className="shrink-0 px-4 py-2 rounded-xl text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500 whitespace-nowrap self-end">
                         Book Now
                       </button>
                     </div>
-
-                    <div className="flex items-center text-gray-400 text-[10px] md:text-xs font-medium gap-2">
-                      <div className="flex items-center gap-1 bg-orange-50 px-2 py-0.5 rounded">
-                        <Calendar size={10} className="text-orange-500" />
-                        <span className="text-orange-700">Available Daily</span>
-                      </div>
-                      <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                      <span>At Home</span>
-                    </div>
-
-                    {service.description && (
-                      <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-2">
-                        {stripHtml(service.description)}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
