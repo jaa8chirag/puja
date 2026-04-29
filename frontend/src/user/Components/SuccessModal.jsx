@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle, X, Sparkles, Calendar, ArrowRight } from 'lucide-react';
 
-const SuccessModal = ({ isOpen, onClose, message, title = "Jai Shree Ram!" }) => {
+const SuccessModal = ({ isOpen, onClose, message, title = "Booking Successful!" }) => {
   if (!isOpen) return null;
 
   return (
@@ -40,7 +40,7 @@ const SuccessModal = ({ isOpen, onClose, message, title = "Jai Shree Ram!" }) =>
           
           <div className="bg-orange-50 rounded-2xl p-4 mb-8 w-full border border-orange-100/50">
             <p className="text-orange-900 font-semibold text-[15px] leading-relaxed">
-              {message || "Aapki puja safaltapurvak book ho gayi hai. Hamare Pandit Ji jald hi aapse sampark karenge."}
+              {message || "Your booking has been successfully confirmed. Our Pandit Ji will contact you shortly."}
             </p>
           </div>
 
