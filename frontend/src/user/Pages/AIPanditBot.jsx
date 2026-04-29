@@ -147,9 +147,16 @@ export default function AIPanditBot() {
 
           {/* Urgency line */}
           <div
-            style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px" }}
+            style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px" }}
           >
             {card.urgency}
+          </div>
+
+          {/* One-line reason */}
+          <div
+            style={{ fontSize: "12px", color: "#b45309", fontWeight: "600", marginBottom: "8px", fontStyle: "italic" }}
+          >
+            Purpose: {card.reason}
           </div>
 
           {/* Puja name */}

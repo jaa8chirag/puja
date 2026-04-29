@@ -28,6 +28,7 @@ import {
 import CouponSelector from "../Components/CouponSelector";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
+import SuccessModal from "../Components/SuccessModal";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -102,6 +103,7 @@ const HomePujaPaymentDetails = () => {
   const [advancePercentage, setAdvancePercentage] = useState(25);
   const [pendingRewards, setPendingRewards] = useState(0);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -261,8 +263,9 @@ const HomePujaPaymentDetails = () => {
             },
           );
           const data = await response.json();
-          if (data.success) navigate("/my-booking");
-          else alert("Error: " + data.message);
+          if (data.success) {
+            setShowSuccess(true);
+          } else alert("Error: " + data.message);
         },
         onError: (error) => {
           alert("Payment failed: " + error);
@@ -394,9 +397,9 @@ const HomePujaPaymentDetails = () => {
   const couponDiscount = appliedCoupon
     ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
-  
-  const referralDiscount = useReferralDiscount 
-    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100) 
+
+  const referralDiscount = useReferralDiscount
+    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100)
     : 0;
 
   const discountAmount = couponDiscount + referralDiscount;
@@ -428,6 +431,16 @@ const HomePujaPaymentDetails = () => {
           </div>
         </div>
       )}
+
+      <SuccessModal
+        isOpen={showSuccess}
+        onClose={() => {
+          setShowSuccess(false);
+          navigate("/my-booking");
+        }}
+        title="Puja Booked!"
+        message="Aapki puja safaltapurvak book ho gayi hai."
+      />
 
       {/* pb-28 on mobile so sticky CTA doesn't overlap */}
       <div className="min-h-screen bg-[#FFF4E1] font-sans text-[#2D2D2D] antialiased pb-28 md:pb-12">
@@ -846,19 +859,17 @@ const HomePujaPaymentDetails = () => {
                               {pendingRewards} Available
                             </span>
                           </div>
-                          
-                          <div 
+
+                          <div
                             onClick={handleReferralToggle}
-                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-                              useReferralDiscount 
-                                ? "border-orange-500 bg-orange-50" 
-                                : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                            }`}
+                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${useReferralDiscount
+                              ? "border-orange-500 bg-orange-50"
+                              : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                              }`}
                           >
                             <div className="flex items-center gap-2">
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                              }`}>
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                                }`}>
                                 {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
                               </div>
                               <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
@@ -939,22 +950,22 @@ const HomePujaPaymentDetails = () => {
         }}
       >
         <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+              Total Amount{" "}
+              <ChevronRight size={11} className="text-orange-400" />
+            </p>
             <div className="flex flex-col">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                Total Amount{" "}
-                <ChevronRight size={11} className="text-orange-400" />
+              {discountAmount > 0 && (
+                <span className="text-[10px] text-green-600 font-bold line-through opacity-70">
+                  ₹{grandTotal + discountAmount}
+                </span>
+              )}
+              <p className="text-xl font-black text-orange-600 leading-tight">
+                ₹{(paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)).toLocaleString("en-IN")}
               </p>
-              <div className="flex flex-col">
-                {discountAmount > 0 && (
-                  <span className="text-[10px] text-green-600 font-bold line-through opacity-70">
-                    ₹{grandTotal + discountAmount}
-                  </span>
-                )}
-                <p className="text-xl font-black text-orange-600 leading-tight">
-                  ₹{(paymentOption === "full" ? grandTotal : Math.round(grandTotal * advancePercentage / 100)).toLocaleString("en-IN")}
-                </p>
-              </div>
             </div>
+          </div>
           <button
             id="mobile-pay-btn"
             onClick={handlePayment}
@@ -1083,7 +1094,7 @@ const MobileSummaryInline = ({
             "Helps in temple upkeep, rituals, and serving the community."}
         </p>
       </div>
-      
+
       {/* 🎟️ Mobile Referral Reward Section */}
       {pendingRewards > 0 && (
         <div className="py-3 border-y border-dashed border-orange-100">
@@ -1096,19 +1107,17 @@ const MobileSummaryInline = ({
               {pendingRewards} Available
             </span>
           </div>
-          
-          <div 
+
+          <div
             onClick={handleReferralToggle}
-            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-              useReferralDiscount 
-                ? "border-orange-500 bg-orange-50" 
-                : "border-gray-100 bg-gray-50 hover:border-orange-200"
-            }`}
+            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${useReferralDiscount
+              ? "border-orange-500 bg-orange-50"
+              : "border-gray-100 bg-gray-50 hover:border-orange-200"
+              }`}
           >
             <div className="flex items-center gap-2">
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-              }`}>
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                }`}>
                 {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
               </div>
               <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>

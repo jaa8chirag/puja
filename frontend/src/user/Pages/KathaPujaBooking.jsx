@@ -147,12 +147,25 @@ const KathaPujaBooking = () => {
                     <Sparkles className="text-orange-200" size={60} />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <div className="absolute bottom-6 left-6">
-                  <h1 className="text-3xl md:text-4xl font-serif font-bold text-white leading-tight">
+                {/* Overlay - hidden on mobile */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent hidden md:block" />
+                <div className="absolute bottom-6 left-6 hidden md:block">
+                  <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                     {service?.puja_name}
                   </h1>
                   <span className="text-white text-[13px] font-bold uppercase tracking-wider">
+                    Certified Vedic Ritual
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Title - visible only on mobile */}
+              <div className="p-4 md:hidden border-t border-orange-100">
+                <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
+                  {service?.puja_name}
+                </h1>
+                <div className="flex items-center mt-1">
+                  <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider">
                     Certified Vedic Ritual
                   </span>
                 </div>

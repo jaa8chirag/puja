@@ -494,33 +494,59 @@ function DoshaCard({ d, matchedPuja }) {
 
       {matchedPuja && (
         <div className="mt-3 pt-3 border-t border-current/20">
-          <a
-            href={matchedPuja.bookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={e => e.stopPropagation()}
-            className="group block w-full rounded-2xl overflow-hidden shadow-md"
+          <div 
+            className={`group block w-full rounded-2xl overflow-hidden shadow-md relative ${matchedPuja.isDummy ? 'opacity-75 cursor-default' : 'cursor-pointer'}`}
           >
             <div className="relative w-full h-40 overflow-hidden"
-              style={{ background: 'linear-gradient(135deg,#f97316,#b45309)' }}>
-              {matchedPuja.imageUrl && (
+              style={{ background: matchedPuja.isDummy ? 'linear-gradient(135deg,#9ca3af,#4b5563)' : 'linear-gradient(135deg,#f97316,#b45309)' }}>
+              {matchedPuja.imageUrl ? (
                 <img
                   src={matchedPuja.imageUrl}
                   alt={matchedPuja.pujaName}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Sparkles size={48} className="text-white/20" />
+                </div>
               )}
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.02) 30%, rgba(0,0,0,0.6) 100%)' }} />
+              
+              {matchedPuja.isDummy && (
+                <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                  Placeholder
+                </div>
+              )}
+
               <div className="absolute bottom-3 left-4 right-4">
                 <p className="text-white font-bold text-base leading-snug drop-shadow-lg">{matchedPuja.pujaName}</p>
-                <p className="text-amber-200 text-xs mt-0.5 font-medium">Expert Pandit · Vedic Vidhi</p>
+                <p className="text-amber-200 text-xs mt-0.5 font-medium">
+                  {matchedPuja.isDummy ? 'Available Soon' : 'Expert Pandit · Vedic Vidhi'}
+                </p>
               </div>
             </div>
-            <div className="w-full py-3 text-center font-bold text-white text-sm flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
-              🛕 Book Puja
-            </div>
-          </a>
+
+            {matchedPuja.isDummy ? (
+              <div className="w-full py-3 text-center font-bold text-white text-sm bg-gray-600">
+                Puja Coming Soon
+              </div>
+            ) : (
+              <a
+                href={matchedPuja.bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 text-center font-bold text-white text-sm flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
+              >
+                🛕 Book Puja
+              </a>
+            )}
+          </div>
+          {matchedPuja.isDummy && (
+            <p className="text-[10px] mt-2 opacity-60 italic text-center">
+              Admin: Create a puja with name matching "{d.name}" to replace this.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -590,6 +616,16 @@ export default function KundliPortal() {
           pujaId: id,
           imageUrl: buildImageUrl(svc.image_url),
           bookingUrl: `${window.location.origin}/home-Puja/${id}`,
+          isDummy: false,
+        };
+      } else {
+        // Dummy/Placeholder Puja
+        map[d.name] = {
+          pujaName: `${d.name} Shanti Puja`,
+          pujaId: null,
+          imageUrl: null,
+          bookingUrl: '#',
+          isDummy: true,
         };
       }
     });

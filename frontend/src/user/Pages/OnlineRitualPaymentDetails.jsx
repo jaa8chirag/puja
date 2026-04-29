@@ -29,6 +29,7 @@ import CouponSelector from "../Components/CouponSelector";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
+import SuccessModal from "../Components/SuccessModal";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const PaymentOptionSelector = ({ paymentOption, setPaymentOption, grandTotal, advancePercentage }) => {
@@ -104,6 +105,7 @@ const OnlineRitualPaymentDetails = () => {
   const [advancePercentage, setAdvancePercentage] = useState(25);
   const [pendingRewards, setPendingRewards] = useState(0);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -266,8 +268,9 @@ const OnlineRitualPaymentDetails = () => {
             },
           );
           const data = await response.json();
-          if (data.success) navigate("/my-booking");
-          else alert("Error: " + data.message);
+          if (data.success) {
+            setShowSuccess(true);
+          } else alert("Error: " + data.message);
         },
         onError: (error) => {
           alert("Payment failed: " + error);
@@ -437,6 +440,16 @@ const OnlineRitualPaymentDetails = () => {
           </div>
         </div>
       )}
+
+      <SuccessModal 
+        isOpen={showSuccess} 
+        onClose={() => {
+          setShowSuccess(false);
+          navigate("/my-booking");
+        }}
+        title="Puja Booked!"
+        message="Aapki puja safaltapurvak book ho gayi hai."
+      />
 
       <div className="min-h-screen bg-[#FFF4E1] font-sans text-[#2D2D2D] antialiased pb-28 md:pb-12">
         <div className="max-w-6xl mx-auto px-4 py-6 md:py-12">

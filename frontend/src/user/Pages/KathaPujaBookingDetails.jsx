@@ -29,6 +29,7 @@ import CouponSelector from "../Components/CouponSelector";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
+import SuccessModal from "../Components/SuccessModal";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -107,6 +108,7 @@ const KathaPujaPaymentDetails = () => {
   const [advancePercentage, setAdvancePercentage] = useState(25);
   const [pendingRewards, setPendingRewards] = useState(0);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -259,8 +261,9 @@ const KathaPujaPaymentDetails = () => {
             },
           );
           const data = await response.json();
-          if (data.success) navigate("/my-booking");
-          else alert("Error: " + data.message);
+          if (data.success) {
+            setShowSuccess(true);
+          } else alert("Error: " + data.message);
         },
         onError: (error) => {
           alert("Payment failed: " + error);
@@ -399,8 +402,8 @@ const KathaPujaPaymentDetails = () => {
     ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
 
-  const referralDiscount = useReferralDiscount 
-    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100) 
+  const referralDiscount = useReferralDiscount
+    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100)
     : 0;
 
   const discountAmount = couponDiscount + referralDiscount;
@@ -432,6 +435,16 @@ const KathaPujaPaymentDetails = () => {
           </div>
         </div>
       )}
+
+      <SuccessModal
+        isOpen={showSuccess}
+        onClose={() => {
+          setShowSuccess(false);
+          navigate("/my-booking");
+        }}
+        title="Puja Booked!"
+        message="Aapki puja safaltapurvak book ho gayi hai."
+      />
 
       <div className="min-h-screen bg-[#FFF4E1] font-sans text-[#2D2D2D] antialiased pb-28 md:pb-12">
         <div className="max-w-6xl mx-auto px-4 py-6 md:py-12">
@@ -826,44 +839,42 @@ const KathaPujaPaymentDetails = () => {
                       </p>
                     </div>
 
-                      {/* 🎟️ Referral Reward Section */}
-                      {pendingRewards > 0 && (
-                        <div className="py-3 border-y border-dashed border-orange-100 my-2">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <Sparkles size={14} className="text-orange-500" />
-                              <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Reward</span>
-                            </div>
-                            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                              {pendingRewards} Available
-                            </span>
+                    {/* 🎟️ Referral Reward Section */}
+                    {pendingRewards > 0 && (
+                      <div className="py-3 border-y border-dashed border-orange-100 my-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Sparkles size={14} className="text-orange-500" />
+                            <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Reward</span>
                           </div>
-                          
-                          <div 
-                            onClick={handleReferralToggle}
-                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-                              useReferralDiscount 
-                                ? "border-orange-500 bg-orange-50" 
-                                : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                              }`}>
-                                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
-                              </div>
-                              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
-                            </div>
-                            {useReferralDiscount && (
-                              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
-                            )}
-                          </div>
+                          <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                            {pendingRewards} Available
+                          </span>
                         </div>
-                      )}
 
-                      {/* 🎟️ Premium Coupon Section */}
-                      <div className="py-2 border-y border-dashed border-orange-100 my-2">
+                        <div
+                          onClick={handleReferralToggle}
+                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${useReferralDiscount
+                            ? "border-orange-500 bg-orange-50"
+                            : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                            }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                              }`}>
+                              {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+                            </div>
+                            <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+                          </div>
+                          {useReferralDiscount && (
+                            <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 🎟️ Premium Coupon Section */}
+                    <div className="py-2 border-y border-dashed border-orange-100 my-2">
                       <CouponSelector
                         couponInput={couponInput}
                         setCouponInput={setCouponInput}
@@ -1061,7 +1072,7 @@ const MobileSummaryInline = ({
             "Helps in temple upkeep, rituals, and serving the community."}
         </p>
       </div>
-      
+
       {/* 🎟️ Mobile Referral Reward Section */}
       {pendingRewards > 0 && (
         <div className="py-3 border-y border-dashed border-orange-100">
@@ -1074,19 +1085,17 @@ const MobileSummaryInline = ({
               {pendingRewards} Available
             </span>
           </div>
-          
-          <div 
+
+          <div
             onClick={handleReferralToggle}
-            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-              useReferralDiscount 
-                ? "border-orange-500 bg-orange-50" 
-                : "border-gray-100 bg-gray-50 hover:border-orange-200"
-            }`}
+            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${useReferralDiscount
+              ? "border-orange-500 bg-orange-50"
+              : "border-gray-100 bg-gray-50 hover:border-orange-200"
+              }`}
           >
             <div className="flex items-center gap-2">
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-              }`}>
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                }`}>
                 {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
               </div>
               <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>

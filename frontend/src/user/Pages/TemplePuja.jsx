@@ -168,7 +168,7 @@ export default function TemplePuja() {
                       {service.title || service.puja_name}
                     </h3>
 
-                    <p className="text-gray-700 text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
+                    <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4">
                       {stripHtml(service.about)}
                     </p>
 

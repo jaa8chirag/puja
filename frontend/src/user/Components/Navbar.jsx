@@ -180,7 +180,7 @@ const Navbar = () => {
               <NavLink
                 to="/my-booking"
                 className={({ isActive }) =>
-                  `font-semibold text-[15px] transition-colors ${isActive
+                  `font-bold text-[17px] transition-colors ${isActive
                     ? "text-orange-600"
                     : "text-black hover:text-orange-600"
                   }`

@@ -38,8 +38,9 @@ const userStates = new Map();
 // ── Smart Pandit System Prompt ─────────────────────────────
 const PANDIT_PROMPT = `You are 'Smart Pandit Ji', the knowledgeable Vedic Pandit of 'Sri Vedic Puja Kendra'.
 1. Always start every reply with "🙏 Om Namah Shivay".
-2. Reply concisely in HINDI (with Devnagari script). Use point-to-point format where possible.
-3. If user mentions any problem (Job, Health, Marriage, Money, Family, career, etc.), write 'TRIGGER_KUNDLI' in your reply.
+2. LANGUAGE DETECTION: Detect the user's language. If the user asks in English, reply in English. If the user asks in Hinglish or Hindi, reply in HINGLISH (Hindi using English script).
+3. Be extremely concise. Use point-to-point format.
+4. If user mentions any problem (Job, Health, Marriage, Money, Family, career, etc.), write 'TRIGGER_KUNDLI' in your reply.
 DO NOT ask for details yourself, just say 'TRIGGER_KUNDLI'.`;
 
 // ── Fetch Puja Services ────────────────────────────────────
@@ -113,10 +114,24 @@ const buildPujaCards = (doshas, allServices) => {
     };
     const routePrefix = typeMap[service.puja_type] || "home-Puja";
 
+    const reasonMap = {
+      "Mangal Dosha": "Marriage delays and relationship hurdles",
+      "Pitra Dosha": "Ancestral peace and family growth",
+      "Shani Sade Sati": "Career stability and mental peace",
+      "Guru Chandal Yoga": "Financial wisdom and education success",
+      "Shapit Yoga": "Removing generational obstacles",
+      "Surya Grahan Dosha": "Confidence and social reputation",
+      "Chandra Grahan Dosha": "Emotional balance and health",
+      "Vish Yoga": "Mental strength and removing negativity",
+      "Angarak Yoga": "Anger management and avoiding accidents",
+      "Kaal Sarp Dosh": "Success in all tasks and mental peace",
+    };
+
     cards.push({
       doshaName: dosha.name,
       severity: dosha.severity,
       urgency: urgencyMap[dosha.severity]?.label || "",
+      reason: reasonMap[dosha.name] || "For overall spiritual growth",
       pujaName: service.puja_name || service.name || service.title,
       pujaId: id,
       price: service.price || service.amount || "",
@@ -249,12 +264,13 @@ async function handleCollection(socket, text, state) {
 
     const analysisPrompt = `Aap 'Smart Pandit Ji' hain, ek anubhavi Vedic Jyotishi. 
 Is Kundli data ka nikarsh nikaalein: ${JSON.stringify(rawData)}.
-Report bilkul POINT-TO-POINT aur HINDI mein honi chahiye. 
-Sirf mukhya baatein batayein:
-1. Vyaktitv aur Lagna (Sirf 1-2 points)
-2. Sabse Shubh Grah (Sirf 1 point)
-3. Mukhya Dosh ya Chunauti (Sirf 1-2 points)
-4. Upay (Remedies) (Point-to-point)
+Report bilkul POINT-TO-POINT honi chahiye.
+IMPORTANT: Use the same language as the user (English or Hinglish).
+Sirf mukhya baatein batayein (strictly 1 line each):
+1. Vyaktitv (Personality)
+2. Sabse Shubh Grah (Best Planet)
+3. Mukhya Dosh (Major Dosha)
+4. Upay (Remedy)
 Faltu vistar aur lambe paragraphs na likhein. Seedha aur sateek javab dein.`;
 
     let finalReport = "";

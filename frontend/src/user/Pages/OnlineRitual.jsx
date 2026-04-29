@@ -203,19 +203,37 @@ const OnlineRitual = () => {
                     <Sparkles className="text-orange-200" size={60} />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                <div className="absolute bottom-6 left-6">
+                {/* Overlay - hidden on mobile */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent hidden md:block" />
+                <div className="absolute bottom-6 left-6 hidden md:block">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="bg-orange-500/90 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                       Sacred Ritual
                     </span>
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-serif font-bold text-white leading-tight">
+                  <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                     {service?.puja_name}
                   </h1>
                   <p className="text-white/80 text-[13px] font-semibold mt-1 uppercase tracking-wider">
                     Certified Vedic Ritual
                   </p>
+                </div>
+              </div>
+
+              {/* Mobile Title - visible only on mobile */}
+              <div className="p-4 md:hidden border-t border-orange-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="bg-orange-500/90 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                    Sacred Ritual
+                  </span>
+                </div>
+                <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
+                  {service?.puja_name}
+                </h1>
+                <div className="flex items-center mt-1">
+                  <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider">
+                    Certified Vedic Ritual
+                  </span>
                 </div>
               </div>
             </div>

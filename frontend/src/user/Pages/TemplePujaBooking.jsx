@@ -46,6 +46,7 @@ import { jwtDecode } from "jwt-decode";
 import HowItProcess from "../Components/HowItProcess";
 import HTMLContent from "../../Components/HTMLContent";
 import SEO from "../Components/SEO";
+import SuccessModal from "../Components/SuccessModal";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 import { LotusIcon } from "../Components/Icons";
@@ -556,6 +557,7 @@ const TemplePujaBooking = () => {
   const [couponError, setCouponError] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [publicCoupons, setPublicCoupons] = useState([]);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -797,7 +799,7 @@ const TemplePujaBooking = () => {
                   }),
                 });
               }
-              navigate("/my-booking");
+              setShowSuccess(true);
             } else {
               alert("Error: " + result.message);
             }
@@ -1066,6 +1068,15 @@ const TemplePujaBooking = () => {
         description={`Book ${service?.puja_name || "Temple Puja"} at ${service?.address || "your favorite temple"}. Join sacred rituals and seek divine blessings.`}
         keywords={`${service?.puja_name}, Online Temple Puja, Mandir Rituals, Book Puja at Temple`}
       />
+      <SuccessModal 
+        isOpen={showSuccess} 
+        onClose={() => {
+          setShowSuccess(false);
+          navigate("/my-booking");
+        }}
+        title="Puja Booked!"
+        message="Aapki puja safaltapurvak book ho gayi hai."
+      />
       <MemberSelectModal
         isOpen={modalOpen}
         onClose={handleCloseModal}
@@ -1104,12 +1115,25 @@ const TemplePujaBooking = () => {
                       <Sparkles className="text-orange-200" size={60} />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <div className="absolute bottom-6 left-6">
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-white leading-tight">
+                  {/* Overlay - hidden on mobile */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent hidden md:block" />
+                  <div className="absolute bottom-6 left-6 hidden md:block">
+                    <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                       {service?.puja_name}
                     </h1>
                     <span className="text-white text-[13px] font-bold uppercase tracking-wider">
+                      Certified Temple Ritual
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mobile Title - visible only on mobile */}
+                <div className="p-4 md:hidden border-t border-orange-100">
+                  <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
+                    {service?.puja_name}
+                  </h1>
+                  <div className="flex items-center mt-1">
+                    <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider">
                       Certified Temple Ritual
                     </span>
                   </div>
@@ -1177,18 +1201,8 @@ const TemplePujaBooking = () => {
                     <div>
                       <HTMLContent
                         content={service?.description}
-                        className={`text-[16px] text-gray-600 leading-relaxed text-justify transition-all ${!aboutExpanded ? "line-clamp-4 md:line-clamp-none overflow-hidden" : ""}`}
+                        className="text-[16px] text-gray-600 leading-relaxed text-justify transition-all"
                       />
-                      <button
-                        onClick={() => setAboutExpanded(!aboutExpanded)}
-                        className="mt-2 text-orange-600 font-bold text-[13px] uppercase tracking-wider flex items-center gap-1 md:hidden"
-                      >
-                        {aboutExpanded ? "Read Less" : "Read More"}
-                        <ChevronRight
-                          size={14}
-                          className={`transition-transform ${aboutExpanded ? "rotate-90" : ""}`}
-                        />
-                      </button>
                     </div>
                   </section>
                 </div>

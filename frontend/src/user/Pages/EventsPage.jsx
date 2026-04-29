@@ -82,7 +82,7 @@ const EventsPage = () => {
                 </div>
 
                 <p className="text-gray-600 text-sm leading-6 line-clamp-6">
-                  {stripHtml(event.description)}
+                  {stripHtml(event.description)}...
                 </p>
               </div>
             </div>

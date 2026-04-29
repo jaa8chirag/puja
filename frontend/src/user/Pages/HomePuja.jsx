@@ -196,7 +196,7 @@ export default function HomePuja() {
                     </div>
 
                     {service.description && (
-                      <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-3">
+                      <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-2">
                         {stripHtml(service.description)}
                       </p>
                     )}

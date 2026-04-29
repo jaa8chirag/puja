@@ -77,7 +77,7 @@ const AartiPage = () => {
                 </div>
 
                 <p className="text-gray-600 text-sm leading-6 line-clamp-6">
-                  {stripHtml(aarti.description)}
+                  {stripHtml(aarti.description)}...
                 </p>
               </div>
             </div>
