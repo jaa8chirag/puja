@@ -175,22 +175,21 @@ export default function HomePuja() {
 
                 {/* Content */}
                 <div className="p-5 md:p-4 flex flex-col flex-1">
-                  <div className="mb-4 md:mb-2">
-                    <h3 className="text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors mb-2">
-                      {service.title || service.puja_name}
-                    </h3>
-
-                    <div className="flex items-center justify-between gap-4">
-                      {service.description && (
-                        <p className="text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-2 flex-1">
-                          {stripHtml(service.description)}
-                        </p>
-                      )}
-
-                      <button className="shrink-0 px-4 py-2 rounded-xl text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500 whitespace-nowrap self-end">
+                  <div className="mb-4 md:mb-2 flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
+                        {service.title || service.puja_name}
+                      </h3>
+                      <button className="shrink-0 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500 whitespace-nowrap">
                         Book Now
                       </button>
                     </div>
+
+                    {service.description && (
+                      <p className="text-gray-500 text-[13px] md:text-[14px] leading-relaxed line-clamp-3">
+                        {stripHtml(service.description)}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
