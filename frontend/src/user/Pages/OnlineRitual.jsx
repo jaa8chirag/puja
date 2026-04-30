@@ -210,9 +210,7 @@ const OnlineRitual = () => {
                   <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                     {service?.puja_name}
                   </h1>
-                  <p className="text-white/80 text-[13px] font-semibold mt-1 uppercase tracking-wider">
-                    Certified Vedic Ritual
-                  </p>
+
                 </div>
               </div>
 
@@ -221,11 +219,7 @@ const OnlineRitual = () => {
                 <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
                   {service?.puja_name}
                 </h1>
-                <div className="flex items-center mt-1">
-                  <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider">
-                    Certified Vedic Ritual
-                  </span>
-                </div>
+
               </div>
             </div>
 
@@ -331,7 +325,7 @@ const OnlineRitual = () => {
                   <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {benefits.map((benefit, index) => (
                       <BenefitCard
                         key={index}
@@ -464,8 +458,8 @@ const OnlineRitual = () => {
 // ── HELPER COMPONENTS ──
 const BenefitCard = ({ icon, title, desc }) => (
   <div className="flex items-center gap-2 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm">
-    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 32 })}
+    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 28 })}
     </div>
     <div className="flex flex-col min-w-0">
       <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-tight truncate md:whitespace-normal">

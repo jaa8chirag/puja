@@ -84,6 +84,7 @@ const Users = () => {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
   const [toast, setToast] = useState(null);
+  const [filterRole, setFilterRole] = useState("all");
   const limit = 10;
 
   const [newUser, setNewUser] = useState({
@@ -101,7 +102,11 @@ const Users = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await API.get(`/users?page=${page}&limit=${limit}`);
+      let url = `/users?page=${page}&limit=${limit}`;
+      if (filterRole !== "all") {
+        url += `&role=${filterRole}`;
+      }
+      const res = await API.get(url);
       setUsers(res.data.users);
       setTotalPages(res.data.totalPages);
       setTotal(res.data.total || 0);
@@ -114,13 +119,15 @@ const Users = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [page]);
+  }, [page, filterRole]);
 
-  const filteredUsers = users.filter((u) =>
-    `${u.name} ${u.email} ${u.phone}`
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch = `${u.name} ${u.email} ${u.phone}`
       .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
+      .includes(search.toLowerCase());
+    const matchesRole = filterRole === "all" || u.role === filterRole;
+    return matchesSearch && matchesRole;
+  });
 
   const deleteUser = async (id) => {
     if (!window.confirm("Are you sure?")) return;
@@ -210,12 +217,33 @@ const Users = () => {
             Manage all registered users
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-600 active:scale-95 transition-all shadow-lg shadow-orange-900/20"
-        >
-          <Plus size={16} /> Add User
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative group">
+            <select
+              value={filterRole}
+              onChange={(e) => {
+                setFilterRole(e.target.value);
+                setPage(1);
+              }}
+              className="appearance-none bg-[#131e32] border border-slate-700 text-slate-300 text-[11px] px-4 pr-10 py-2.5 rounded-xl outline-none focus:border-orange-500 transition-all cursor-pointer font-bold"
+            >
+              <option value="all">All Permissions</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="pandit">Pandit</option>
+              <option value="customerCare">Customer Care</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-focus-within:text-orange-500 transition-colors">
+              <Shield size={12} />
+            </div>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-600 active:scale-95 transition-all shadow-lg shadow-orange-900/20"
+          >
+            <Plus size={16} /> Add User
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

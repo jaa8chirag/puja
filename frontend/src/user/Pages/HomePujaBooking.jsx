@@ -171,11 +171,7 @@ const HomePujaBooking = () => {
                   <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                     {service?.puja_name}
                   </h1>
-                  <div className="flex items-center">
-                    <span className="text-white text-[13px] font-bold uppercase tracking-wider">
-                      Certified Vedic Ritual
-                    </span>
-                  </div>
+
                 </div>
               </div>
 
@@ -184,11 +180,7 @@ const HomePujaBooking = () => {
                 <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
                   {service?.puja_name}
                 </h1>
-                <div className="flex items-center mt-1">
-                  <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider">
-                    Certified Vedic Ritual
-                  </span>
-                </div>
+
               </div>
             </div>
 
@@ -359,7 +351,7 @@ const HomePujaBooking = () => {
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
                   {/* grid-cols-2 lagane se mobile par 2 boxes side by side aayenge */}
-                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {/* Dynamic Benefits from Backend */}
                     {service?.benefits && service.benefits.length > 0 ? (
                       service.benefits.map((benefit, index) => (
@@ -569,8 +561,8 @@ const HomePujaBooking = () => {
 const BenefitSmall = ({ icon, title, desc }) => (
   <div className="flex items-center gap-2 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm">
     {/* Icon: Mobile (hidden), Desktop (md:flex) */}
-    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 32 })}
+    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 28 })}
     </div>
 
     <div className="flex flex-col min-w-0">

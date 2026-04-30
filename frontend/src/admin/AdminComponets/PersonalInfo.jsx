@@ -582,7 +582,7 @@ const PersonalInfo = () => {
           >
             <FileUp size={24} className="text-slate-500 mx-auto mb-2" />
             <p className="text-slate-400 text-xs">
-              {pdfFile ? pdfFile.name : "Nai PDF yahan drop karo ya click karo"}
+              {pdfFile ? pdfFile.name : "Drop a new PDF here or click to upload."}
             </p>
             {pdfFile && (
               <p className="text-slate-500 text-xs mt-1">

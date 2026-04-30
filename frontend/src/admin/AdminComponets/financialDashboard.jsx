@@ -235,7 +235,7 @@ const OverviewTab = () => {
               sub="To be collected"
               accent="rose"
             />
-             <KpiCard
+            <KpiCard
               loading={summary.loading}
               icon="🙏"
               label="Total Donations"
@@ -262,7 +262,7 @@ const OverviewTab = () => {
               sub="Live from today"
               accent="yellow"
             />
-             <KpiCard
+            <KpiCard
               loading={summary.loading}
               icon="📦"
               label="Total Bookings"
@@ -661,15 +661,15 @@ const TransactionsTab = () => {
                 <thead>
                   <tr className="text-left text-[10px] text-white/30 border-b border-white/5 uppercase tracking-wider">
                     {[
-                        "Booking ID",
-                        "User",
-                        "Puja / Type",
-                        "Total",
-                        "Paid",
-                        "Balance",
-                        "Payment Status",
-                        "Date",
-                      ].map((h) => (
+                      "Booking ID",
+                      "User",
+                      "Puja / Type",
+                      "Total",
+                      "Paid",
+                      "Balance",
+                      "Payment Status",
+                      "Date",
+                    ].map((h) => (
                       <th
                         key={h}
                         className="pb-3 pr-4 font-bold whitespace-nowrap"
@@ -720,13 +720,12 @@ const TransactionsTab = () => {
                         {fmt(t.total_price - t.paid_amount)}
                       </td>
                       <td className="py-3.5 pr-4">
-                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
-                            t.payment_status === 'fully_paid' 
-                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                            : "bg-orange-500/15 text-orange-400 border-orange-500/30"
-                         }`}>
-                           {t.payment_status?.replace('_', ' ') || 'Pending'}
-                         </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${t.payment_status === 'fully_paid'
+                          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                          : "bg-orange-500/15 text-orange-400 border-orange-500/30"
+                          }`}>
+                          {t.payment_status?.replace('_', ' ') || 'Pending'}
+                        </span>
                       </td>
                       <td className="py-3.5 text-white/30 text-xs whitespace-nowrap">
                         {t.created_at
@@ -796,15 +795,15 @@ const PanditsTab = () => {
         remarks: payRemarks,
       });
       if (res.data.success) {
-         setPayModal({ show: false, pandit: null });
-         setPayAmount("");
-         setPayRemarks("");
-         // Refetch to get updated balances
-         setLoading(true);
-         const res2 = await API.get(`/pandit-earnings?page=${page}&limit=10`);
-         setPanditsData(res2.data.data || []);
-         setPagination(res2.data.pagination || null);
-         setLoading(false);
+        setPayModal({ show: false, pandit: null });
+        setPayAmount("");
+        setPayRemarks("");
+        // Refetch to get updated balances
+        setLoading(true);
+        const res2 = await API.get(`/pandit-earnings?page=${page}&limit=10`);
+        setPanditsData(res2.data.data || []);
+        setPagination(res2.data.pagination || null);
+        setLoading(false);
       }
     } catch (err) {
       alert("Error paying pandit: " + (err.response?.data?.message || err.message));
@@ -889,8 +888,8 @@ const PanditsTab = () => {
                       </td>
                       <td className="py-3.5">
                         <button
-                           onClick={() => setPayModal({ show: true, pandit: p })}
-                           className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border border-emerald-500/20 whitespace-nowrap"
+                          onClick={() => setPayModal({ show: true, pandit: p })}
+                          className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border border-emerald-500/20 whitespace-nowrap"
                         >
                           Pay
                         </button>
@@ -994,24 +993,24 @@ const PanditsTab = () => {
                 <p className="text-[11px] text-white/30 italic text-center">No bank/UPI details found for this Pandit.</p>
               )}
             </div>
-            
+
             <div className="space-y-4 pt-2">
-               <div>
-                  <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Amount (₹)</label>
-                  <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-mono" placeholder="e.g. 5000" />
-               </div>
-               <div>
-                  <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Payment Mode</label>
-                  <select value={payMode} onChange={e => setPayMode(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all">
-                    <option value="bank" className="bg-[#1a1f35]">Bank Transfer</option>
-                    <option value="upi" className="bg-[#1a1f35]">UPI</option>
-                    <option value="cash" className="bg-[#1a1f35]">Cash</option>
-                  </select>
-               </div>
-               <div>
-                  <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Remarks (Optional)</label>
-                  <input type="text" value={payRemarks} onChange={e => setPayRemarks(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" placeholder="e.g. For Jan bookings" />
-               </div>
+              <div>
+                <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Amount (₹)</label>
+                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-mono" placeholder="e.g. 5000" />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Payment Mode</label>
+                <select value={payMode} onChange={e => setPayMode(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all">
+                  <option value="bank" className="bg-[#1a1f35]">Bank Transfer</option>
+                  <option value="upi" className="bg-[#1a1f35]">UPI</option>
+                  <option value="cash" className="bg-[#1a1f35]">Cash</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider block mb-1.5">Remarks (Optional)</label>
+                <input type="text" value={payRemarks} onChange={e => setPayRemarks(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" placeholder="e.g. For Jan bookings" />
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4 border-t border-white/10 mt-2">
@@ -1169,24 +1168,40 @@ const DonationsTab = () => {
 // ══════════════════════════════════════════════════════════
 const SettingsTab = () => {
   const [advancePercent, setAdvancePercent] = useState("");
+  const [referrerPercent, setReferrerPercent] = useState("");
+  const [friendPercent, setFriendPercent] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
   const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
-    // Fetch current setting
+    // Fetch current settings
     fetch(`${API_BASE_URL}/settings/advance_payment_percentage`)
       .then(res => res.json())
       .then(data => {
         if (data.success) setAdvancePercent(data.value);
       })
       .catch(err => console.error(err));
+
+    fetch(`${API_BASE_URL}/settings/referral_reward_referrer`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setReferrerPercent(data.value);
+      })
+      .catch(err => console.error(err));
+
+    fetch(`${API_BASE_URL}/settings/referral_discount_friend`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setFriendPercent(data.value);
+      })
+      .catch(err => console.error(err));
   }, []);
 
-  const handleUpdate = async () => {
-    const numericValue = Number(advancePercent);
-    if (advancePercent === "" || isNaN(numericValue) || numericValue < 0 || numericValue > 100) {
+  const handleUpdate = async (key, value) => {
+    const numericValue = Number(value);
+    if (value === "" || isNaN(numericValue) || numericValue < 0 || numericValue > 100) {
       setMsg("Invalid percentage (0-100)");
       return;
     }
@@ -1199,13 +1214,13 @@ const SettingsTab = () => {
           "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
         },
         body: JSON.stringify({
-          key: "advance_payment_percentage",
+          key: key,
           value: numericValue
         })
       });
       const data = await res.json();
-      if(data.success) {
-        setMsg("✅ Setting updated successfully!");
+      if (data.success) {
+        setMsg(`✅ ${key.replace(/_/g, ' ')} updated successfully!`);
         setTimeout(() => setMsg(""), 3000);
       } else {
         setMsg("❌ " + data.message);
@@ -1220,20 +1235,20 @@ const SettingsTab = () => {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/5 bg-[#141828] p-6 max-w-xl">
-        <SectionTitle title="Payment Settings" />
-        
+        <SectionTitle title="Referral & Finance Settings" />
+
         <div className="space-y-6">
           <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
             <h3 className="text-white font-bold mb-1">Advance Payment Percentage</h3>
             <p className="text-xs text-white/40 mb-4 leading-relaxed">
-              Users will be required to pay this percentage of the total amount at the time of booking. 
-              Applicable to Home Puja, Katha, Online Rituals, and Pind Dan. 
+              Users will be required to pay this percentage of the total amount at the time of booking.
+              Applicable to Home Puja, Katha, Online Rituals, and Pind Dan.
               (Temple Puja remains 100% full payment)
             </p>
-            
+
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
-                <input 
+                <input
                   type="number"
                   value={advancePercent}
                   onChange={(e) => setAdvancePercent(e.target.value)}
@@ -1242,15 +1257,48 @@ const SettingsTab = () => {
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 font-bold">%</span>
               </div>
-              <button 
-                onClick={handleUpdate}
+              <button
+                onClick={() => handleUpdate("advance_payment_percentage", advancePercent)}
                 disabled={loading}
                 className="bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-95"
               >
-                {loading ? "Saving..." : "Save Setting"}
+                {loading ? "Saving..." : "Save"}
               </button>
             </div>
           </div>
+
+          <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
+            <h3 className="text-white font-bold mb-1">Referral Reward Percentage (Referrer)</h3>
+            <p className="text-xs text-white/40 mb-4 leading-relaxed">
+              Percentage discount given to the person who shared the referral code.
+              (This percentage is locked in when they earn the reward)
+            </p>
+
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  value={referrerPercent}
+                  onChange={(e) => setReferrerPercent(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  placeholder="e.g. 10"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 font-bold">%</span>
+              </div>
+              <button
+                onClick={() => handleUpdate("referral_reward_referrer", referrerPercent)}
+                disabled={loading}
+                className="bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-95"
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+
+
+
+
+
 
           {msg && (
             <p className={`text-sm font-bold p-3 rounded-lg ${msg.includes('✅') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
@@ -1261,15 +1309,15 @@ const SettingsTab = () => {
           <div className="p-4 rounded-xl bg-white/5 border border-white/10">
             <h3 className="text-white/80 font-bold text-sm mb-2">Current System Behavior</h3>
             <ul className="space-y-2">
-               <li className="flex items-center gap-2 text-xs text-white/40">
-                 <span className="text-emerald-400">✓</span> Partial payment records in `payments` table
-               </li>
-               <li className="flex items-center gap-2 text-xs text-white/40">
-                 <span className="text-emerald-400">✓</span> Razorpay integration supports partial amounts
-               </li>
-               <li className="flex items-center gap-2 text-xs text-white/40">
-                 <span className="text-emerald-400">✓</span> Financial dashboard reflects Paid vs Balance
-               </li>
+              <li className="flex items-center gap-2 text-xs text-white/40">
+                <span className="text-emerald-400">✓</span> Partial payment records in `payments` table
+              </li>
+              <li className="flex items-center gap-2 text-xs text-white/40">
+                <span className="text-emerald-400">✓</span> Razorpay integration supports partial amounts
+              </li>
+              <li className="flex items-center gap-2 text-xs text-white/40">
+                <span className="text-emerald-400">✓</span> Financial dashboard reflects Paid vs Balance
+              </li>
             </ul>
           </div>
         </div>
@@ -1288,7 +1336,7 @@ export default function FinancialDashboard() {
     { key: "transactions", label: "Transactions", icon: "📋" },
     { key: "pandits", label: "Pandits", icon: "🧘" },
     { key: "donations", label: "Donations", icon: "🙏" },
-    { key: "settings", label: "Settings", icon: "⚙️" },
+    { key: "settings", label: "Payment Settings", icon: "⚙️" },
   ];
 
   return (
@@ -1318,10 +1366,9 @@ export default function FinancialDashboard() {
               key={t.key}
               onClick={() => setActiveTab(t.key)}
               className={`flex items-center gap-1.5 px-3 md:px-5 py-3 text-xs md:text-sm font-semibold border-b-2 transition-all duration-200 whitespace-nowrap flex-shrink-0
-                ${
-                  activeTab === t.key
-                    ? "border-orange-500 text-orange-400"
-                    : "border-transparent text-white/40 hover:text-white/70"
+                ${activeTab === t.key
+                  ? "border-orange-500 text-orange-400"
+                  : "border-transparent text-white/40 hover:text-white/70"
                 }`}
             >
               <span>{t.icon}</span>

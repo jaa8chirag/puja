@@ -64,7 +64,7 @@ export const AdminLoginRequest = async (req, res) => {
     const { phone, role } = req.body;
     // Database mein check karein ki user hai aur uska role 'admin' hai
     const [rows] = await db.query(
-      "SELECT id, role FROM users WHERE phone = ? AND role = ?",
+      "SELECT id, role FROM users WHERE phone = ? AND role = ? AND is_deleted = 0",
       [phone, role],
     );
 
@@ -117,7 +117,7 @@ export const AdminVerifyOtp = async (req, res) => {
     if (isBypass || isValidOtp) {
       // Fetch fresh admin details
       const [rows] = await db.query(
-        "SELECT id, name, phone, email, role FROM users WHERE phone = ? AND role = 'admin'",
+        "SELECT id, name, phone, email, role FROM users WHERE phone = ? AND role = 'admin' AND is_deleted = 0",
         [phone],
       );
 
@@ -310,9 +310,9 @@ export const getAllUsers = async (req, res) => {
     const limit = Number(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    // ✅ Total count — sab roles
+    // ✅ Total count — sab roles (Excluding deleted)
     const [[{ total }]] = await db.execute(
-      `SELECT COUNT(*) as total FROM users WHERE role != 'pandit'`,
+      `SELECT COUNT(*) as total FROM users WHERE role != 'pandit' AND is_deleted = 0`,
     );
 
     // ✅ WHERE role='user' hata diya — sab roles aayenge
@@ -322,7 +322,7 @@ export const getAllUsers = async (req, res) => {
         COUNT(pr.id) as total_bookings
        FROM users u
 LEFT JOIN puja_requests pr ON pr.user_id = u.id
-WHERE u.role != 'pandit'
+WHERE u.role != 'pandit' AND u.is_deleted = 0
 GROUP BY u.id
        ORDER BY u.created_at DESC
        LIMIT ${limit} OFFSET ${offset}`,
@@ -456,7 +456,7 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    await db.execute("DELETE FROM users WHERE id=?", [id]);
+    await db.execute("UPDATE users SET is_deleted = 1 WHERE id=?", [id]);
 
     res.json({ success: true, message: "User deleted successfully" });
   } catch (error) {
@@ -597,7 +597,7 @@ export const getAllPandits = async (req, res) => {
     const search = req.query.search || "";
     const offset = (page - 1) * limit;
 
-    let whereClause = `WHERE u.role='pandit'`;
+    let whereClause = `WHERE u.role='pandit' AND u.is_deleted = 0`;
     const params = [];
 
     if (search) {
@@ -792,7 +792,7 @@ export const deletePandit = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await db.query(`DELETE FROM users WHERE id=? AND role='pandit'`, [id]);
+    await db.query(`UPDATE users SET is_deleted = 1 WHERE id=? AND role='pandit'`, [id]);
 
     res.json({
       success: true,
@@ -814,7 +814,7 @@ export const getServiceById = async (req, res) => {
        FROM services s
        LEFT JOIN service_prices sp ON s.id = sp.service_id
        LEFT JOIN temples t ON s.id = t.service_id
-       WHERE s.id = ?`,
+       WHERE s.id = ? AND s.is_deleted = 0`,
       [id],
     );
 
@@ -844,7 +844,7 @@ export const getAllServices = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    let whereClause = `WHERE 1=1`;
+    let whereClause = `WHERE s.is_deleted = 0`;
     const params = [];
 
     // Category/puja_type filter
@@ -1129,26 +1129,8 @@ export const deleteService = async (req, res) => {
   let connection;
   try {
     const { id } = req.params;
-    connection = await db.getConnection();
-    await connection.beginTransaction();
-
-    // puja_requests mein service_id null karo (history safe rahegi)
-    await connection.query(
-      `UPDATE puja_requests SET service_id = NULL WHERE service_id = ?`,
-      [id],
-    );
-
-    // ab child tables delete karo
-    await connection.query(`DELETE FROM service_prices WHERE service_id = ?`, [
-      id,
-    ]);
-    await connection.query(`DELETE FROM temples WHERE service_id = ?`, [id]);
-
-    // ab main service delete karo
-    await connection.query(`DELETE FROM services WHERE id = ?`, [id]);
-
-    await connection.commit();
-    res.json({ success: true, message: "Service deleted successfully" });
+    await db.query(`UPDATE services SET is_deleted = 1 WHERE id = ?`, [id]);
+    res.json({ success: true, message: "Service deleted successfully (Soft Delete)" });
   } catch (error) {
     if (connection) await connection.rollback();
     console.error("Delete Service Error:", error.message);

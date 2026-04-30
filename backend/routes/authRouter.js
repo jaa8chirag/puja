@@ -19,6 +19,7 @@ import {
   getDefaultAddress,
   updateProfile,
   getProfile,
+  getReferralRewards,
 } from "../controllers/authController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -88,5 +89,8 @@ router.get("/default-address", verifyToken, getDefaultAddress);
 router.post("/add-member", verifyToken, addMember);
 router.get("/get-members", verifyToken, allMembers);
 router.delete("/delete-member/:id", verifyToken, deleteMember);
+
+// -------- REFERRAL REWARDS --------
+router.get("/referral-rewards", verifyToken, getReferralRewards);
 
 export default router;

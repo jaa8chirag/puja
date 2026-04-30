@@ -6,16 +6,17 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const HowItWorks = () => {
   const navigate = useNavigate();
-  const [referralCode, setReferralCode] = useState("VEDIC2024");
+  const tokenLocal = localStorage.getItem("token");
+  const [referralCode, setReferralCode] = useState(tokenLocal ? "SRIVEDIC" : "SRIVEDIC5");
   const [copied, setCopied] = useState(false);
-  const token = localStorage.getItem("token");
+  const [referralPercent, setReferralPercent] = useState(10);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (token) {
+      if (tokenLocal) {
         try {
           const res = await fetch(`${API_BASE_URL}/user/get-profile`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${tokenLocal}` },
           });
           const data = await res.json();
           if (data?.user?.referral_code) {
@@ -26,8 +27,21 @@ const HowItWorks = () => {
         }
       }
     };
+
+    const fetchSettings = async () => {
+      try {
+        const refRes = await fetch(`${API_BASE_URL}/settings/referral_reward_referrer`);
+        const refData = await refRes.json();
+        
+        if (refData.success) setReferralPercent(refData.value);
+      } catch (err) {
+        console.error("Settings fetch error:", err);
+      }
+    };
+
     fetchProfile();
-  }, [token]);
+    fetchSettings();
+  }, [tokenLocal]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralCode);
@@ -39,13 +53,13 @@ const HowItWorks = () => {
     if (navigator.share) {
       navigator.share({
         title: 'Sri Vedic Puja - Refer & Earn',
-        text: `Book your first Vedic Puja with Sri Vedic Puja and get 5% OFF using my referral code: ${referralCode}`,
+        text: `Share your code with friends. Once they complete their first puja, you'll earn ${referralPercent}% off on your next booking! My referral code: ${referralCode}`,
         url: window.location.origin,
       })
       .catch((error) => console.log('Error sharing', error));
     } else {
         copyToClipboard();
-        alert("Referral link copied to clipboard!");
+        alert("Referral code copied to clipboard!");
     }
   };
 
@@ -106,21 +120,20 @@ const HowItWorks = () => {
                 {/* Text Content - More compact */}
                 <div className="flex-grow text-center md:text-left">
                     <h4 className="text-lg font-bold text-[#3b2a1a] flex items-center justify-center md:justify-start gap-2">
-                        Refer a Friend, Get Rewarded! 🙏
+                        Share your code with friends. 🙏
                     </h4>
-                    <p className="text-sm mt-1">
-                        <span className="text-orange-500 font-bold">They get 5% OFF</span>, 
-                        <span className="text-orange-600 font-bold ml-1">You get 10% Credit</span>
+                    <p className="text-[13px] md:text-sm mt-1 text-gray-600 leading-snug">
+                        Once they complete their first puja, you'll earn <span className="text-orange-600 font-black">{referralPercent}% off</span> on your next booking!
                     </p>
                     
                     <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-3">
                         <div className="flex items-center gap-2">
-                            <span className="text-[12px] text-gray-400 font-medium">Your code:</span>
+                            <span className="text-[12px] text-gray-400 font-medium">{tokenLocal ? "Your code:" : "Referral Code:"}</span>
                             <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg font-black text-[13px] tracking-widest border border-orange-100 shadow-sm">
                                 {referralCode}
                             </span>
                         </div>
-                        {token && (
+                        {tokenLocal && (
                             <button 
                                 onClick={() => navigate("/profile")}
                                 className="text-[11px] font-bold text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-300"

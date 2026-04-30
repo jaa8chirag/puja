@@ -600,24 +600,61 @@ const ServiceModal = ({ close, editData, refresh }) => {
                 (b, i) => (
                   <div
                     key={i}
-                    className="p-3 bg-[#0b1120] rounded-xl border border-slate-700 flex justify-between items-center group"
+                    className="p-3 bg-[#0b1120] rounded-xl border border-slate-700 group"
                   >
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{b.name}</h4>
-                      <p className="text-xs text-slate-400">{b.description}</p>
-                    </div>
-                    {editData && (
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                        {/* <Edit
-                          size={14}
-                          className="text-purple-400 cursor-pointer"
-                          onClick={() => setEditingBenefit(b)}
-                        /> */}
-                        <Trash2
-                          size={14}
-                          className="text-red-400 cursor-pointer"
-                          onClick={() => handleDeleteBenefit(b.id)}
+                    {editingBenefit && editingBenefit.id === b.id ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={editingBenefit.name}
+                          onChange={(e) => setEditingBenefit({...editingBenefit, name: e.target.value})}
+                          className="w-full px-3 py-1.5 bg-[#0f172a] border border-purple-500/50 rounded-lg text-sm text-white outline-none"
+                          placeholder="Benefit Name"
                         />
+                        <textarea
+                          value={editingBenefit.description}
+                          onChange={(e) => setEditingBenefit({...editingBenefit, description: e.target.value})}
+                          className="w-full px-3 py-1.5 bg-[#0f172a] border border-purple-500/50 rounded-lg text-xs text-slate-300 outline-none resize-none"
+                          placeholder="Description"
+                          rows={2}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleUpdateBenefit}
+                            className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold rounded-lg transition"
+                          >
+                            Update
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingBenefit(null)}
+                            className="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold rounded-lg transition"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="text-sm font-bold text-white">{b.name}</h4>
+                          <p className="text-xs text-slate-400">{b.description}</p>
+                        </div>
+                        {editData && (
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                            <Edit
+                              size={14}
+                              className="text-purple-400 cursor-pointer hover:text-purple-300"
+                              onClick={() => setEditingBenefit(b)}
+                            />
+                            <Trash2
+                              size={14}
+                              className="text-red-400 cursor-pointer hover:text-red-300"
+                              onClick={() => handleDeleteBenefit(b.id)}
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

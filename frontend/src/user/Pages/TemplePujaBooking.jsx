@@ -255,38 +255,49 @@ const MemberSelectModal = ({
               </select>
             </div>
 
-            {/* Name */}
-            <div>
-              <label className={labelClass}>Full Name *</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleFormChange}
-                placeholder="Enter full name"
-                className={inputClass}
-              />
-            </div>
-
-            {/* DOB */}
-            <div>
-              <label className={labelClass}>Date of Birth</label>
-              <div className="relative">
+            {/* Name & Gotra */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className={labelClass}>Full Name *</label>
                 <input
-                  type="date"
-                  name="dob"
-                  value={form.dob}
+                  name="name"
+                  value={form.name}
                   onChange={handleFormChange}
+                  placeholder="Enter full name"
                   className={inputClass}
                 />
-                <Calendar
-                  size={16}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none"
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>Gotra</label>
+                <input
+                  name="gotra"
+                  value={form.gotra}
+                  onChange={handleFormChange}
+                  placeholder="Bhardwaj"
+                  className={inputClass}
                 />
               </div>
             </div>
 
-            {/* Rashi & Gotra */}
+            {/* DOB & Rashi */}
             <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className={labelClass}>Date of Birth</label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    name="dob"
+                    value={form.dob}
+                    onChange={handleFormChange}
+                    className={inputClass}
+                  />
+                  <Calendar
+                    size={16}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none"
+                  />
+                </div>
+              </div>
+
               {/* Rashi dropdown */}
               <div className="relative">
                 <label className={labelClass}>Rashi</label>
@@ -347,18 +358,6 @@ const MemberSelectModal = ({
                     </div>
                   </>
                 )}
-              </div>
-
-              {/* Gotra */}
-              <div>
-                <label className={labelClass}>Gotra</label>
-                <input
-                  name="gotra"
-                  value={form.gotra}
-                  onChange={handleFormChange}
-                  placeholder="Bhardwaj"
-                  className={inputClass}
-                />
               </div>
             </div>
 
@@ -550,31 +549,38 @@ const TemplePujaBooking = () => {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [pendingTicket, setPendingTicket] = useState(null);
   const [selectedMemberIds, setSelectedMemberIds] = useState([]);
-  const [pendingRewards, setPendingRewards] = useState(0);
+  const [referralRewards, setReferralRewards] = useState([]);
+  const [selectedRewardId, setSelectedRewardId] = useState(null);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
+  const [referralDiscountPercent, setReferralDiscountPercent] = useState(10);
   const [isApplying, setIsApplying] = useState(false);
   const [publicCoupons, setPublicCoupons] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileData = async () => {
       const token = localStorage.getItem("token");
+      if (!token) return;
       try {
-        const res = await fetch(`${API_BASE_URL}/user/get-profile`, {
+        // Fetch Settings
+        const settingsRes = await fetch(`${API_BASE_URL}/settings/referral_reward_referrer`);
+        const settingsData = await settingsRes.json();
+        if (settingsData.success) setReferralDiscountPercent(settingsData.value);
+
+        // Fetch Rewards
+        const rewardsRes = await fetch(`${API_BASE_URL}/user/referral-rewards`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
-        if (data && data.user) {
-          setPendingRewards(data.user.pending_referral_discounts || 0);
-        }
+        const rewardsData = await rewardsRes.json();
+        if (rewardsData.success) setReferralRewards(rewardsData.rewards);
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("Error fetching referral data:", err);
       }
     };
-    fetchProfile();
+    fetchProfileData();
   }, []);
 
   const sections = {
@@ -589,20 +595,24 @@ const TemplePujaBooking = () => {
     const fetchService = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await fetch(`${API_BASE_URL}/puja/temple-puja/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetch(`${API_BASE_URL}/puja/temple-puja/${id}`); // ✅ Public route, no token needed usually
         const data = await response.json();
         if (data.success) setService(data.data[0]);
 
         // Fetch public coupons
-        const publicCouponsRes = await fetch(`${API_BASE_URL}/coupons/public-coupons`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const publicCouponsRes = await fetch(`${API_BASE_URL}/coupons/public-coupons`); // ✅ Usually public
         const publicCouponsData = await publicCouponsRes.json();
         if (publicCouponsData.success) {
           setPublicCoupons(publicCouponsData.data);
         }
+
+        // Fetch dynamic referral percentage
+        fetch(`${API_BASE_URL}/settings/referral_reward_referrer`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) setReferralDiscountPercent(Number(data.value));
+          })
+          .catch(err => console.error("Error fetching referral %:", err));
       } catch (err) {
         console.error(err);
       } finally {
@@ -766,7 +776,7 @@ const TemplePujaBooking = () => {
       razorpay_order_id: razorpayResponse.razorpay_order_id,
       razorpay_payment_id: razorpayResponse.razorpay_payment_id,
       razorpay_signature: razorpayResponse.razorpay_signature,
-      useReferralDiscount: useReferralDiscount,
+      referralRewardId: selectedRewardId,
     };
 
           try {
@@ -1012,8 +1022,11 @@ const TemplePujaBooking = () => {
       ? Math.floor((subtotal * appliedCoupon.discount_percentage) / 100)
       : 0;
 
+    const selectedReward = referralRewards.find(r => r.id === selectedRewardId);
+    const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : referralDiscountPercent;
+
     const referralDiscountAmount = useReferralDiscount 
-      ? Math.floor(((subtotal - couponDiscount) * 10) / 100) 
+      ? Math.floor(((subtotal - couponDiscount) * activeReferralRate) / 100) 
       : 0;
 
     return subtotal - couponDiscount - referralDiscountAmount;
@@ -1027,8 +1040,11 @@ const TemplePujaBooking = () => {
     ? Math.floor((subtotalForRef * appliedCoupon.discount_percentage) / 100)
     : 0;
 
+  const selectedRewardData = referralRewards.find(r => r.id === selectedRewardId);
+  const activeReferralRate = selectedRewardData ? selectedRewardData.discount_percentage : referralDiscountPercent;
+
   const referralDiscountValue = useReferralDiscount 
-    ? Math.floor(((subtotalForRef - couponDiscountValue) * 10) / 100) 
+    ? Math.floor(((subtotalForRef - couponDiscountValue) * activeReferralRate) / 100) 
     : 0;
 
   const discountAmount = couponDiscountValue + referralDiscountValue;
@@ -1121,9 +1137,7 @@ const TemplePujaBooking = () => {
                     <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                       {service?.puja_name}
                     </h1>
-                    <span className="text-white text-[13px] font-bold uppercase tracking-wider">
-                      Certified Temple Ritual
-                    </span>
+
                   </div>
                 </div>
 
@@ -1133,9 +1147,7 @@ const TemplePujaBooking = () => {
                     {service?.puja_name}
                   </h1>
                   <div className="flex items-center mt-1">
-                    <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider">
-                      Certified Temple Ritual
-                    </span>
+
                   </div>
                 </div>
               </div>
@@ -1218,7 +1230,7 @@ const TemplePujaBooking = () => {
                     <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                       <Gem size={20} /> Benefits of {service?.puja_name}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Dynamic Benefits from Backend */}
                       {service?.benefits && service.benefits.length > 0 ? (
                         service.benefits.map((benefit, index) => (
@@ -1363,10 +1375,10 @@ const TemplePujaBooking = () => {
                   getPrice={getPrice}
                   selectedMemberNames={selectedMemberNames}
                   contributionOptions={contributionOptions}
-                  pendingRewards={pendingRewards}
-                  useReferralDiscount={useReferralDiscount}
-                  handleReferralToggle={handleReferralToggle}
-                  referralDiscount={referralDiscountValue}
+                  referralRewards={referralRewards}
+                  selectedRewardId={selectedRewardId}
+                  setSelectedRewardId={setSelectedRewardId}
+                  setUseReferralDiscount={setUseReferralDiscount}
                   couponInput={couponInput}
                   setCouponInput={setCouponInput}
                   appliedCoupon={appliedCoupon}
@@ -1546,38 +1558,61 @@ const TemplePujaBooking = () => {
                   </div>
 
                   {/* 🎟️ Referral Reward Section */}
-                  {pendingRewards > 0 && (
+                  {referralRewards.length > 0 && (
                     <div className="py-3 border-y border-dashed border-orange-100 my-2">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Sparkles size={14} className="text-orange-500" />
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Reward</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Rewards</span>
                         </div>
                         <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                          {pendingRewards} Available
+                          {referralRewards.length} Available
                         </span>
                       </div>
                       
-                      <div 
-                        onClick={handleReferralToggle}
-                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-                          useReferralDiscount 
-                            ? "border-orange-500 bg-orange-50" 
-                            : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                            useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                          }`}>
-                            {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
-                          </div>
-                          <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
+                    {/* Individual Rewards Selection - Desktop */}
+                    {referralRewards.length > 0 && (
+                      <div className="mt-4 p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-2 block">
+                          Select Available Reward
+                        </label>
+                        <div className="space-y-2">
+                          {referralRewards.map((reward) => (
+                            <div 
+                              key={reward.id}
+                              onClick={() => {
+                                if (selectedRewardId === reward.id) {
+                                  setSelectedRewardId(null);
+                                  setUseReferralDiscount(false);
+                                } else {
+                                  setSelectedRewardId(reward.id);
+                                  setUseReferralDiscount(true);
+                                }
+                              }}
+                              className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                selectedRewardId === reward.id 
+                                  ? "bg-orange-500 border-orange-500 shadow-md shadow-orange-200" 
+                                  : "bg-white border-orange-100 hover:border-orange-300"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                  selectedRewardId === reward.id ? "border-white bg-white" : "border-orange-200"
+                                }`}>
+                                  {selectedRewardId === reward.id && <div className="w-2 h-2 rounded-full bg-orange-500" />}
+                                </div>
+                                <span className={`text-xs font-bold ${selectedRewardId === reward.id ? "text-white" : "text-gray-800"}`}>
+                                  {reward.discount_percentage}% Discount Reward
+                                </span>
+                              </div>
+                              {selectedRewardId === reward.id && (
+                                <span className="text-[10px] font-black text-white">SELECTED</span>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                        {useReferralDiscount && (
-                          <span className="text-[10px] font-black text-green-600">-₹{referralDiscountValue}</span>
-                        )}
                       </div>
+                    )}
                     </div>
                   )}
 
@@ -1685,23 +1720,21 @@ const TemplePujaBooking = () => {
    MOBILE INLINE SUMMARY
 ───────────────────────────────────────────── */
 const MobileSummarySection = ({
-  service,
   tickets,
   selectedTicket,
   setSelectedTicket,
   donations,
   setDonations,
-  contributionList,
   calculateTotal,
   selectedContributionsTotal,
   scrollToSection,
   getPrice,
   selectedMemberNames,
   contributionOptions,
-  pendingRewards,
-  useReferralDiscount,
-  handleReferralToggle,
-  referralDiscount,
+  referralRewards,
+  selectedRewardId,
+  setSelectedRewardId,
+  setUseReferralDiscount,
   couponInput,
   setCouponInput,
   appliedCoupon,
@@ -1710,9 +1743,6 @@ const MobileSummarySection = ({
   isApplying,
   couponError,
   publicCoupons,
-  discountAmount,
-  grandTotalBeforeDiscount,
-  finalTotal
 }) => (
   <div className="space-y-5">
     <div>
@@ -1837,38 +1867,53 @@ const MobileSummarySection = ({
         </p>
       </div>
 
-      {/* 🎟️ Mobile Referral Reward Section */}
-      {pendingRewards > 0 && (
+      {/* 🎟️ Individual Rewards Selection - Mobile */}
+      {referralRewards.length > 0 && (
         <div className="py-3 border-y border-dashed border-orange-100">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-2">
               <Sparkles size={14} className="text-orange-500" />
-              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Reward</span>
+              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Rewards</span>
             </div>
             <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-              {pendingRewards} Available
+              {referralRewards.length} Available
             </span>
           </div>
-          
-          <div 
-            onClick={handleReferralToggle}
-            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-              useReferralDiscount 
-                ? "border-orange-500 bg-orange-50" 
-                : "border-gray-100 bg-gray-50 hover:border-orange-200"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-              }`}>
-                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+
+          <div className="space-y-2 mt-3">
+            {referralRewards.map((reward) => (
+              <div 
+                key={reward.id}
+                onClick={() => {
+                  if (selectedRewardId === reward.id) {
+                    setSelectedRewardId(null);
+                    setUseReferralDiscount(false);
+                  } else {
+                    setSelectedRewardId(reward.id);
+                    setUseReferralDiscount(true);
+                  }
+                }}
+                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedRewardId === reward.id 
+                    ? "border-orange-500 bg-orange-50" 
+                    : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                  }`}>
+                    {selectedRewardId === reward.id && <CheckCircle size={10} className="text-white" />}
+                  </div>
+                  <span className={`text-[11px] font-bold ${selectedRewardId === reward.id ? "text-orange-700" : "text-gray-800"}`}>
+                    {reward.discount_percentage}% OFF Reward
+                  </span>
+                </div>
+                {selectedRewardId === reward.id && (
+                  <span className="text-[10px] font-black text-orange-600">SELECTED</span>
+                )}
               </div>
-              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
-            </div>
-            {useReferralDiscount && (
-              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
-            )}
+            ))}
           </div>
         </div>
       )}
@@ -1948,8 +1993,8 @@ const ContributionCard = ({ item, selected, onToggle }) => (
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
   <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
-    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 32 })}
+    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 28 })}
     </div>
     <div className="flex flex-col">
       <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">

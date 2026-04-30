@@ -457,6 +457,8 @@ import {
   XCircle,
   Layers,
   Star,
+  Search,
+  X,
 } from "lucide-react";
 import ServiceModal from "./ServiceModel";
 import { API } from "../../services/adminApi";
@@ -469,6 +471,7 @@ const AdminServices = () => {
   const [openModal, setOpenModal] = useState(false);
   const [editData, setEditData] = useState(null);
   const [category, setCategory] = useState("");
+  const [search, setSearch] = useState("");
 
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -491,6 +494,10 @@ const AdminServices = () => {
   useEffect(() => {
     fetchServices();
   }, [page, category]);
+
+  const filteredServices = services.filter((s) =>
+    s.puja_name?.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const openDeleteModal = (service) => {
     setDeleteTarget({ id: service.id, name: service.puja_name });
@@ -538,6 +545,24 @@ const AdminServices = () => {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 group-focus-within:text-orange-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Search service..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-[#131e32] border border-slate-700 text-slate-300 text-xs pl-9 pr-8 py-2.5 rounded-xl outline-none focus:border-orange-500 transition-all w-full min-w-[200px]"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
           <div className="relative group">
             <select
               value={category}
@@ -589,15 +614,15 @@ const AdminServices = () => {
           </thead>
 
           <tbody className="divide-y divide-slate-800/50">
-            {services.length === 0 ? (
+            {filteredServices.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-20 text-center text-slate-600">
                   <LayoutGrid size={40} className="mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">No services found in this category</p>
+                  <p className="text-sm">No services found</p>
                 </td>
               </tr>
             ) : (
-              services.map((service) => (
+              filteredServices.map((service) => (
                 <tr
                   key={service.id}
                   className="hover:bg-[#1a2744] transition-colors group"
@@ -724,13 +749,13 @@ const AdminServices = () => {
 
       {/* ── Card List — Mobile only ── */}
       <div className="md:hidden flex flex-col gap-3">
-        {services.length === 0 ? (
+        {filteredServices.length === 0 ? (
           <div className="py-20 text-center text-slate-600 bg-[#131e32] rounded-2xl border border-slate-800">
             <LayoutGrid size={40} className="mx-auto mb-3 opacity-20" />
-            <p className="text-sm">No services found in this category</p>
+            <p className="text-sm">No services found</p>
           </div>
         ) : (
-          services.map((service) => (
+          filteredServices.map((service) => (
             <div
               key={service.id}
               className="bg-[#131e32] rounded-2xl border border-slate-800 p-4 flex flex-col gap-3"

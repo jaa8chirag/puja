@@ -485,9 +485,7 @@ const PindDanBooking = () => {
                     <h1 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
                       {service?.puja_name}
                     </h1>
-                    <span className="text-white text-[13px] font-bold uppercase tracking-wider">
-                      Certified Temple Ritual
-                    </span>
+
                   </div>
                 </div>
 
@@ -497,9 +495,7 @@ const PindDanBooking = () => {
                     {service?.puja_name}
                   </h1>
                   <div className="flex items-center mt-1">
-                    <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider">
-                      Certified Temple Ritual
-                    </span>
+
                   </div>
                 </div>
               </div>
@@ -582,7 +578,7 @@ const PindDanBooking = () => {
                     <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                       <Gem size={20} /> Benefits of {service?.puja_name}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Dynamic Benefits from Backend */}
                       {service?.benefits && service.benefits.length > 0 ? (
                         service.benefits.map((benefit, index) => (
@@ -1220,8 +1216,8 @@ const ContributionCard = ({ item, selected, onToggle }) => (
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
   <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
-    <div className="hidden md:flex p-1.5 bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 32 })}
+    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 28 })}
     </div>
     <div className="flex flex-col">
       <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">

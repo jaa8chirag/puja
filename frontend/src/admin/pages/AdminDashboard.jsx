@@ -260,7 +260,6 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Reviews", icon: "gallery" },
     { label: "Coupons", icon: "gallery" },
     { label: "Pages", icon: "services" },
-    { label: "Home Hero", icon: "services" },
     { label: "Gallery", icon: "gallery" },
     { label: "Name Correction", icon: "nameCorrection" },
     { label: "Personal Info", icon: "users" },
@@ -565,7 +564,6 @@ const AdminDashboard = () => {
             {active === "Reviews" && <AdminReviews />}
             {active === "Coupons" && <AdminCoupons />}
             {active === "Pages" && <AdminPages />}
-            {active === "Home Hero" && <AdminPages defaultSlug="home-hero" defaultTitle="Home Hero" heading="Home Hero Cards" subtitle="Manage hero images and text for the home page right section." />}
             {active === "Gallery" && <Gallery />}
             {active === "Name Correction" && <NameCorrectionList />}
             {active === "Personal Info" && <PersonalInfo />}

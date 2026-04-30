@@ -113,12 +113,12 @@ export default function BlogDetail() {
 
               {/* Meta */}
               <div className="flex flex-wrap items-center gap-4 text-xs text-orange-700/60 font-medium pb-5 border-b border-orange-200">
-                {blog.author    && <span className="flex items-center gap-1">✍️ {blog.author}</span>}
-                {blog.date      && <span className="flex items-center gap-1">📅 {blog.date}</span>}
+                {blog.author && <span className="flex items-center gap-1">✍️ {blog.author}</span>}
+                {blog.date && <span className="flex items-center gap-1">📅 {blog.date}</span>}
                 {blog.created_at && !blog.date && (
                   <span className="flex items-center gap-1">📅 {new Date(blog.created_at).toLocaleDateString('hi-IN')}</span>
                 )}
-                {blog.readTime  && <span className="flex items-center gap-1">⏱ {blog.readTime} read</span>}
+                {blog.readTime && <span className="flex items-center gap-1">⏱ {blog.readTime} read</span>}
                 {blog.read_time && !blog.readTime && <span className="flex items-center gap-1">⏱ {blog.read_time}</span>}
                 {blog.views > 0 && <span className="flex items-center gap-1">👁 {blog.views}</span>}
               </div>
@@ -139,6 +139,11 @@ export default function BlogDetail() {
             {/* ── Blog Body ── */}
             <div className="bg-white rounded-2xl border border-orange-200 p-6 md:p-8"
               style={{ boxShadow: '0 2px 16px rgba(180,83,9,0.06)' }}>
+              {blog.excerpt && (
+                <p className="text-lg font-medium text-orange-900/80 mb-6 italic leading-relaxed border-l-4 border-orange-300 pl-4">
+                  {blog.excerpt}
+                </p>
+              )}
               <BlogContent content={blog.content || blog.description || ''} />
             </div>
 
@@ -147,7 +152,7 @@ export default function BlogDetail() {
               <button onClick={() => navigate('/blogs')}
                 className="flex items-center gap-2 text-orange-600/70 hover:text-orange-700 transition-colors text-sm group font-semibold">
                 <span className="group-hover:-translate-x-1 transition-transform inline-block">←</span>
-                Aur Blogs Padhen
+                Read more Blogs
               </button>
               <button
                 onClick={handleCopy}
@@ -155,7 +160,7 @@ export default function BlogDetail() {
                   ${copied
                     ? 'border-green-400 text-green-700 bg-green-50'
                     : 'border-orange-200 text-orange-600/70 hover:border-orange-400 hover:text-orange-700 bg-white hover:bg-orange-50'}`}>
-                {copied ? '✅ Copied!' : '🔗 Link Copy Karen'}
+                {copied ? '✅ Copied!' : '🔗 Copy Link'}
               </button>
             </div>
 
@@ -182,10 +187,10 @@ function BlogContent({ content }) {
 
   if (containsHTML) {
     return (
-      <div 
-        className="quill-content text-sm leading-relaxed" 
+      <div
+        className="quill-content text-sm leading-relaxed"
         style={{ fontFamily: "'Georgia', serif" }}
-        dangerouslySetInnerHTML={{ __html: content }} 
+        dangerouslySetInnerHTML={{ __html: content }}
       />
     );
   }

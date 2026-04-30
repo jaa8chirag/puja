@@ -295,40 +295,52 @@ const ManageSankalp = () => {
                   </select>
                 </div>
 
-                {/* Name */}
-                <div>
-                  <label className={labelClass}>Full Name *</label>
-                  <input
-                    name="name"
-                    required
-                    type="text"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter name"
-                    className={inputClass}
-                  />
-                </div>
-
-                {/* DOB */}
-                <div>
-                  <label className={labelClass}>Date of Birth</label>
-                  <div className="relative">
+                {/* Name & Gotra Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Full Name *</label>
                     <input
-                      name="dob"
-                      type="date"
-                      value={formData.dob}
+                      name="name"
+                      required
+                      type="text"
+                      value={formData.name}
                       onChange={handleChange}
+                      placeholder="Enter name"
                       className={inputClass}
                     />
-                    <Calendar
-                      size={16}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none"
+                  </div>
+                  <div>
+                    <label className={labelClass}>Gotra</label>
+                    <input
+                      name="gotra"
+                      type="text"
+                      value={formData.gotra}
+                      onChange={handleChange}
+                      placeholder="Bhardwaj"
+                      className={inputClass}
                     />
                   </div>
                 </div>
 
-                {/* Rashi & Gotra Grid */}
+                {/* DOB & Rashi Grid */}
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Date of Birth</label>
+                    <div className="relative">
+                      <input
+                        name="dob"
+                        type="date"
+                        value={formData.dob}
+                        onChange={handleChange}
+                        className={inputClass}
+                      />
+                      <Calendar
+                        size={16}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none"
+                      />
+                    </div>
+                  </div>
+
                   <div className="relative">
                     <label className={labelClass}>Rashi</label>
                     <div
@@ -391,18 +403,6 @@ const ManageSankalp = () => {
                         </div>
                       </>
                     )}
-                  </div>
-
-                  <div>
-                    <label className={labelClass}>Gotra</label>
-                    <input
-                      name="gotra"
-                      type="text"
-                      value={formData.gotra}
-                      onChange={handleChange}
-                      placeholder="Bhardwaj"
-                      className={inputClass}
-                    />
                   </div>
                 </div>
 

@@ -22,7 +22,7 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false);
-  const [mobilePindDanOpen, setMobilePindDanOpen] = useState(false); // ✅ NEW
+  const [mobilePindDanOpen, setMobilePindDanOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState(null);
@@ -78,9 +78,9 @@ const Navbar = () => {
 
   const navItems = [
     { to: "/", label: "Home", icon: <Home size={18} /> },
-    { to: "/home-Puja", label: "Home-Puja", icon: <Globe size={18} /> },
-    { to: "/temple-puja", label: "Temple-Puja", icon: <User size={18} /> },
-    { to: "/katha-jaap", label: "Katha-Jaap", icon: <User size={18} /> },
+    { to: "/home-Puja", label: "Home Puja", icon: <Globe size={18} /> },
+    { to: "/temple-puja", label: "Temple Puja", icon: <User size={18} /> },
+    { to: "/katha-jaap", label: "Katha Jaap", icon: <User size={18} /> },
   ];
 
   return (
@@ -90,35 +90,35 @@ const Navbar = () => {
         className={`fixed top-0 inset-x-0 z-[100] transition-all duration-500 backdrop-blur-xl border-b border-white/20 ${scrolled ? "bg-white/30 shadow-lg" : "bg-white/20"
           }`}
       >
-        <div className="max-w-[1360px] mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-[72px]">
+        <div className="max-w-[1360px] mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-6 xl:px-8 h-[72px]">
           {/* LOGO */}
           <div
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer shrink-0"
             onClick={() => navigate("/")}
           >
             <img
               src="/img/download.jpg"
               alt="Logo"
-              className="h-12 w-12 rounded-lg shadow-sm"
+              className="h-9 w-9 lg:h-11 xl:h-12 w-auto rounded-lg shadow-sm object-cover"
             />
-            <div className="flex flex-col text-left">
-              <span className="text-[18px] font-serif font-bold text-[#3b2a1a] leading-tight">
+            <div className="flex flex-col text-left justify-center">
+              <span className="text-[15px] lg:text-[16px] xl:text-[18px] font-serif font-bold text-[#3b2a1a] leading-none mb-0.5 whitespace-nowrap tracking-tight">
                 Sri Vedic Puja
               </span>
-              <span className="text-[9px] font-black text-orange-600 uppercase tracking-widest">
+              <span className="text-[7px] lg:text-[8px] xl:text-[9px] font-black text-orange-600 uppercase tracking-[0.2em] leading-none whitespace-nowrap">
                 Your Faith Partner
               </span>
             </div>
           </div>
 
           {/* Desktop Menu */}
-          <ul className="hidden lg:flex items-center gap-8">
+          <ul className="hidden lg:flex items-center gap-6 xl:gap-8">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `font-bold text-[17px] transition-colors ${isActive
+                  `font-bold text-[15.5px] xl:text-[17px] whitespace-nowrap tracking-tight transition-colors ${isActive
                     ? "text-orange-600"
                     : "text-black hover:text-orange-600"
                   }`
@@ -134,8 +134,8 @@ const Navbar = () => {
               onMouseEnter={() => setPindDanOpen(true)}
               onMouseLeave={() => setPindDanOpen(false)}
             >
-              <div className="flex items-center gap-1 font-bold text-[17px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
-                Pind-Dan/Pitra-Dosh
+              <div className="flex items-center gap-1 font-bold text-[15.5px] xl:text-[17px] whitespace-nowrap tracking-tight cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
+                Pind-Dan
                 <ChevronDown
                   size={14}
                   className={`transition-transform duration-300 ${pindDanOpen ? "rotate-180 text-orange-600" : "text-black"
@@ -175,12 +175,12 @@ const Navbar = () => {
               )}
             </li>
 
-            {/* My-Booking — sirf logged in user ke liye */}
+            {/* My-Booking */}
             {user && (
               <NavLink
                 to="/my-booking"
                 className={({ isActive }) =>
-                  `font-bold text-[17px] transition-colors ${isActive
+                  `font-bold text-[15px] xl:text-[17px] whitespace-nowrap tracking-tight transition-colors ${isActive
                     ? "text-orange-600"
                     : "text-black hover:text-orange-600"
                   }`
@@ -190,13 +190,13 @@ const Navbar = () => {
               </NavLink>
             )}
 
-            {/* ── Gallery Dropdown ── */}
+            {/* Gallery Dropdown */}
             <li
               className="relative group list-none"
               onMouseEnter={() => setDropdownOpen(true)}
               onMouseLeave={() => setDropdownOpen(false)}
             >
-              <div className="flex items-center gap-1 font-bold text-[17px] cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
+              <div className="flex items-center gap-1 font-bold text-[15px] xl:text-[17px] whitespace-nowrap tracking-tight cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
                 Gallery
                 <ChevronDown
                   size={14}
@@ -230,7 +230,7 @@ const Navbar = () => {
           </ul>
 
           {/* Desktop Profile / Auth */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4">
             {user ? (
               <div className="relative" ref={profileRef}>
                 <button
@@ -264,8 +264,7 @@ const Navbar = () => {
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-orange-200 transition-colors"
                       >
-                        <ShieldCheck size={18} className="text-gray-400" />{" "}
-                        Manage Sankalp
+                        <ShieldCheck size={18} className="text-gray-400" /> Manage Sankalp
                       </button>
                       <button
                         onClick={() => {
@@ -274,8 +273,7 @@ const Navbar = () => {
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-orange-200 transition-colors"
                       >
-                        <MapPin size={18} className="text-gray-400" /> Saved
-                        Addresses
+                        <MapPin size={18} className="text-gray-400" /> Saved Addresses
                       </button>
                       <button
                         onClick={() => {
@@ -284,8 +282,7 @@ const Navbar = () => {
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-orange-200 transition-colors"
                       >
-                        <HelpCircle size={18} className="text-gray-400" /> Help
-                        & Support
+                        <HelpCircle size={18} className="text-gray-400" /> Help & Support
                       </button>
                     </div>
                     <div className="border-t border-gray-100">
@@ -300,15 +297,15 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div className="flex gap-3">
+              <div className="flex gap-2 xl:gap-3">
                 <button
                   onClick={() => navigate("/signin")}
-                  className="px-6 py-2 rounded-xl border-2 border-orange-500 text-orange-600 font-bold text-sm hover:bg-orange-500 hover:text-white transition-all"
+                  className="px-4 xl:px-6 py-2 rounded-xl border-2 border-orange-500 text-orange-600 font-bold text-[13px] xl:text-sm hover:bg-orange-500 hover:text-white transition-all whitespace-nowrap"
                 >
                   Sign In
                 </button>
                 <button
-                  className="px-6 py-2 rounded-xl bg-[#2D1B0B] text-white font-bold text-sm shadow-md"
+                  className="px-4 xl:px-6 py-2 rounded-xl bg-[#2D1B0B] text-white font-bold text-[13px] xl:text-sm shadow-md whitespace-nowrap"
                   onClick={() => navigate("/partnerSignIn")}
                 >
                   Partner Login
@@ -366,7 +363,7 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            {/* My Booking — sirf logged in user */}
+            {/* My Booking */}
             {user && (
               <NavLink
                 to="/my-booking"
@@ -377,7 +374,7 @@ const Navbar = () => {
               </NavLink>
             )}
 
-            {/* ── Mobile Pind-Dan Dropdown ── */}
+            {/* Mobile Pind-Dan Dropdown */}
             <div className="pt-1">
               <button
                 onClick={() => setMobilePindDanOpen(!mobilePindDanOpen)}
@@ -404,9 +401,7 @@ const Navbar = () => {
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all"
                   >
-                    <span className="text-slate-400">
-                      <Church size={15} />
-                    </span>
+                    <span className="text-slate-400"><Church size={15} /></span>
                     Temple Ritual
                   </button>
                   <button
@@ -417,16 +412,14 @@ const Navbar = () => {
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all"
                   >
-                    <span className="text-slate-400">
-                      <Globe size={15} />
-                    </span>
+                    <span className="text-slate-400"><Globe size={15} /></span>
                     Online Ritual
                   </button>
                 </div>
               )}
             </div>
 
-            {/* ── Mobile Gallery Dropdown ── */}
+            {/* Mobile Gallery Dropdown */}
             <div className="pt-1">
               <button
                 onClick={() => setMobileGalleryOpen(!mobileGalleryOpen)}
@@ -463,46 +456,32 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* ── Profile section (only when logged in) ── */}
+            {/* Profile section */}
             {user && (
               <>
                 <div className="border-t my-2 pt-2">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 pb-1">
-                    My Account
-                  </p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 pb-1">My Account</p>
                 </div>
                 <button
-                  onClick={() => {
-                    navigate("/profile");
-                    setMenuOpen(false);
-                  }}
+                  onClick={() => { navigate("/profile"); setMenuOpen(false); }}
                   className="w-full flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
                 >
                   <User size={18} /> My Profile
                 </button>
                 <button
-                  onClick={() => {
-                    navigate("/manageSankalp");
-                    setMenuOpen(false);
-                  }}
+                  onClick={() => { navigate("/manageSankalp"); setMenuOpen(false); }}
                   className="w-full flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
                 >
                   <ShieldCheck size={18} /> Manage Sankalp
                 </button>
                 <button
-                  onClick={() => {
-                    navigate("/savedAddresses");
-                    setMenuOpen(false);
-                  }}
+                  onClick={() => { navigate("/savedAddresses"); setMenuOpen(false); }}
                   className="w-full flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
                 >
                   <MapPin size={18} /> Saved Addresses
                 </button>
                 <button
-                  onClick={() => {
-                    navigate("/help");
-                    setMenuOpen(false);
-                  }}
+                  onClick={() => { navigate("/help"); setMenuOpen(false); }}
                   className="w-full flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
                 >
                   <HelpCircle size={18} /> Help & Support
@@ -511,7 +490,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* ── Drawer Bottom Auth Section ── */}
+          {/* Drawer Bottom Auth Section */}
           <div className="p-5 border-t bg-gray-50/80 backdrop-blur-sm">
             {user ? (
               <div className="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-orange-100 text-left">
@@ -520,12 +499,8 @@ const Navbar = () => {
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="overflow-hidden">
-                    <p className="font-extrabold text-[#2D1B0B] truncate text-lg">
-                      {user.name}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate tracking-tight">
-                      {user.email}
-                    </p>
+                    <p className="font-extrabold text-[#2D1B0B] truncate text-lg">{user.name}</p>
+                    <p className="text-xs text-gray-400 truncate tracking-tight">{user.email}</p>
                   </div>
                 </div>
                 <button
@@ -538,29 +513,17 @@ const Navbar = () => {
             ) : (
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => {
-                    navigate("/signin");
-                    setMenuOpen(false);
-                  }}
+                  onClick={() => { navigate("/signin"); setMenuOpen(false); }}
                   className="w-full py-2 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 active:scale-[0.98] transition-all flex items-center justify-center"
                 >
                   Sign In
                 </button>
                 <button
-                  onClick={() => {
-                    navigate("/partnerSignIn");
-                    setMenuOpen(false);
-                  }}
+                  onClick={() => { navigate("/partnerSignIn"); setMenuOpen(false); }}
                   className="w-full py-2 bg-[#2D1B0B] text-white rounded-xl font-bold active:scale-[0.98] transition-all flex items-center justify-center border border-[#2D1B0B]"
                 >
                   Partner Login
                 </button>
-                <div className="mt-2 flex flex-col items-center gap-1">
-                  <div className="h-1 w-8 bg-gray-200 rounded-full mb-1"></div>
-                  <p className="text-[11px] text-gray-400 uppercase tracking-[0.15em] font-bold">
-                    Join our Vedic Community
-                  </p>
-                </div>
               </div>
             )}
           </div>

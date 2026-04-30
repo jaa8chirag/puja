@@ -103,25 +103,27 @@ const OnlineRitualPaymentDetails = () => {
   const token = localStorage.getItem("token");
   const [paymentOption, setPaymentOption] = useState("full");
   const [advancePercentage, setAdvancePercentage] = useState(25);
-  const [pendingRewards, setPendingRewards] = useState(0);
+  const [referralRewards, setReferralRewards] = useState([]);
+  const [selectedRewardId, setSelectedRewardId] = useState(null);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+  const [referralDiscountPercent, setReferralDiscountPercent] = useState(10);
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchReferralData = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/user/get-profile`, {
+        const res = await fetch(`${API_BASE_URL}/user/referral-rewards`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (data && data.user) {
-          setPendingRewards(data.user.pending_referral_discounts || 0);
+        if (data.success) {
+          setReferralRewards(data.rewards);
         }
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("Error fetching rewards:", err);
       }
     };
-    if (token) fetchProfile();
+    if (token) fetchReferralData();
   }, [token]);
 
   // if (token) {
@@ -137,6 +139,12 @@ const OnlineRitualPaymentDetails = () => {
         const data = await res.json();
         if (data.success) {
           setAdvancePercentage(Number(data.value));
+        }
+
+        const refRes = await fetch(`${API_BASE_URL}/settings/referral_reward_referrer`);
+        const refData = await refRes.json();
+        if (refData.success) {
+          setReferralDiscountPercent(Number(refData.value));
         }
       } catch (err) {
         console.error("Error fetching settings:", err);
@@ -254,6 +262,7 @@ const OnlineRitualPaymentDetails = () => {
             paid_amount: amountToPay,
             payment_type: paymentOption,
             useReferralDiscount: useReferralDiscount,
+            referralRewardId: selectedRewardId,
           };
 
           const response = await fetch(
@@ -302,27 +311,31 @@ const OnlineRitualPaymentDetails = () => {
           setContributionOptions2(data2.data);
         }
 
-        const addressRes = await fetch(`${API_BASE_URL}/user/default-address`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const addressData = await addressRes.json();
-        if (addressData) {
-          setFormData((prev) => ({
-            ...prev,
-            location: addressData.address_line1 || "",
-            city: addressData.city || "",
-            state: addressData.state || "",
-            pincode: addressData.pincode || "",
-          }));
+        if (token) {
+          const addressRes = await fetch(`${API_BASE_URL}/user/default-address`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const addressData = await addressRes.json();
+          if (addressData) {
+            setFormData((prev) => ({
+              ...prev,
+              location: addressData.address_line1 || "",
+              city: addressData.city || "",
+              state: addressData.state || "",
+              pincode: addressData.pincode || "",
+            }));
+          }
         }
 
         // Fetch public coupons
-        const publicCouponsRes = await fetch(`${API_BASE_URL}/coupons/public-coupons`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const publicCouponsData = await publicCouponsRes.json();
-        if (publicCouponsData.success) {
-          setPublicCoupons(publicCouponsData.data);
+        if (token) {
+          const publicCouponsRes = await fetch(`${API_BASE_URL}/coupons/public-coupons`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const publicCouponsData = await publicCouponsRes.json();
+          if (publicCouponsData.success) {
+            setPublicCoupons(publicCouponsData.data);
+          }
         }
       } catch (error) {
         console.error("Error booking puja:", error);
@@ -363,7 +376,7 @@ const OnlineRitualPaymentDetails = () => {
       } else {
         setCouponError(data.message);
       }
-    } catch (error) {
+    } catch {
       setCouponError("Failed to validate coupon");
     } finally {
       setIsApplying(false);
@@ -407,8 +420,11 @@ const OnlineRitualPaymentDetails = () => {
     ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
 
+  const selectedReward = referralRewards.find(r => r.id === selectedRewardId);
+  const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : referralDiscountPercent;
+
   const referralDiscount = useReferralDiscount 
-    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100) 
+    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * activeReferralPercent) / 100) 
     : 0;
 
   const discountAmount = couponDiscount + referralDiscount;
@@ -721,9 +737,7 @@ const OnlineRitualPaymentDetails = () => {
               >
                 <MobileSummaryInline
                   puja={puja}
-                  isSamagriSelected={isSamagriSelected}
                   basePrice={basePrice}
-                  samagriPrice={samagriPrice}
                   dharmicTotal={dharmicTotal}
                   grandTotal={grandTotal}
                   donations={donations}
@@ -738,15 +752,14 @@ const OnlineRitualPaymentDetails = () => {
                   removeCoupon={removeCoupon}
                   isApplying={isApplying}
                   couponError={couponError}
-                  discountAmount={discountAmount}
                   publicCoupons={publicCoupons}
                   paymentOption={paymentOption}
                   setPaymentOption={setPaymentOption}
                   advancePercentage={advancePercentage}
-                  pendingRewards={pendingRewards}
-                  useReferralDiscount={useReferralDiscount}
-                  handleReferralToggle={handleReferralToggle}
-                  referralDiscount={referralDiscount}
+                  referralRewards={referralRewards}
+                  selectedRewardId={selectedRewardId}
+                  setSelectedRewardId={setSelectedRewardId}
+                  setUseReferralDiscount={setUseReferralDiscount}
                 />
               </div>
             </div>
@@ -835,39 +848,57 @@ const OnlineRitualPaymentDetails = () => {
                       </p>
                     </div>
 
-                      {/* 🎟️ Referral Reward Section */}
-                      {pendingRewards > 0 && (
+                      {/* Individual Rewards Selection - Desktop */}
+                      {referralRewards.length > 0 && (
                         <div className="py-3 border-y border-dashed border-orange-100 my-2">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <Sparkles size={14} className="text-orange-500" />
-                              <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Reward</span>
+                              <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Rewards</span>
                             </div>
                             <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                              {pendingRewards} Available
+                              {referralRewards.length} Available
                             </span>
                           </div>
-                          
-                          <div 
-                            onClick={handleReferralToggle}
-                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-                              useReferralDiscount 
-                                ? "border-orange-500 bg-orange-50" 
-                                : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                              }`}>
-                                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+
+                          <div className="space-y-2 mt-3">
+                            {referralRewards.map((reward) => (
+                              <div 
+                                key={reward.id}
+                                onClick={() => {
+                                  if (selectedRewardId === reward.id) {
+                                    setSelectedRewardId(null);
+                                    setUseReferralDiscount(false);
+                                  } else {
+                                    setSelectedRewardId(reward.id);
+                                    setUseReferralDiscount(true);
+                                  }
+                                }}
+                                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                                  selectedRewardId === reward.id 
+                                    ? "border-orange-500 bg-orange-50" 
+                                    : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                    selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                                  }`}>
+                                    {selectedRewardId === reward.id && <CheckCircle size={10} className="text-white" />}
+                                  </div>
+                                  <span className={`text-[11px] font-bold ${selectedRewardId === reward.id ? "text-orange-700" : "text-gray-800"}`}>
+                                    {reward.discount_percentage}% OFF Reward
+                                  </span>
+                                </div>
+                                {selectedRewardId === reward.id && (
+                                  <span className="text-[10px] font-black text-orange-600">SELECTED</span>
+                                )}
                               </div>
-                              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
-                            </div>
-                            {useReferralDiscount && (
-                              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
-                            )}
+                            ))}
                           </div>
+                          <p className="text-[9px] text-gray-400 mt-2 italic leading-tight">
+                            * Once used, this specific referral reward will be marked as used in your account.
+                          </p>
                         </div>
                       )}
 
@@ -965,9 +996,7 @@ const OnlineRitualPaymentDetails = () => {
 ───────────────────────────────────────────── */
 const MobileSummaryInline = ({
   puja,
-  isSamagriSelected,
   basePrice,
-  samagriPrice,
   dharmicTotal,
   grandTotal,
   donations,
@@ -982,15 +1011,14 @@ const MobileSummaryInline = ({
   removeCoupon,
   isApplying,
   couponError,
-  discountAmount,
   publicCoupons,
   paymentOption,
   setPaymentOption,
   advancePercentage,
-  pendingRewards,
-  useReferralDiscount,
-  handleReferralToggle,
-  referralDiscount,
+  referralRewards,
+  selectedRewardId,
+  setSelectedRewardId,
+  setUseReferralDiscount,
 }) => (
   <div className="space-y-4">
     <div>
@@ -1073,38 +1101,53 @@ const MobileSummaryInline = ({
         </p>
       </div>
 
-      {/* 🎟️ Mobile Referral Reward Section */}
-      {pendingRewards > 0 && (
+      {/* 🎟️ Individual Rewards Selection - Mobile */}
+      {referralRewards.length > 0 && (
         <div className="py-3 border-y border-dashed border-orange-100">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-2">
               <Sparkles size={14} className="text-orange-500" />
-              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Reward</span>
+              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Rewards</span>
             </div>
             <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-              {pendingRewards} Available
+              {referralRewards.length} Available
             </span>
           </div>
-          
-          <div 
-            onClick={handleReferralToggle}
-            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
-              useReferralDiscount 
-                ? "border-orange-500 bg-orange-50" 
-                : "border-gray-100 bg-gray-50 hover:border-orange-200"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-              }`}>
-                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
+
+          <div className="space-y-2 mt-3">
+            {referralRewards.map((reward) => (
+              <div 
+                key={reward.id}
+                onClick={() => {
+                  if (selectedRewardId === reward.id) {
+                    setSelectedRewardId(null);
+                    setUseReferralDiscount(false);
+                  } else {
+                    setSelectedRewardId(reward.id);
+                    setUseReferralDiscount(true);
+                  }
+                }}
+                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedRewardId === reward.id 
+                    ? "border-orange-500 bg-orange-50" 
+                    : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                  }`}>
+                    {selectedRewardId === reward.id && <CheckCircle size={10} className="text-white" />}
+                  </div>
+                  <span className={`text-[11px] font-bold ${selectedRewardId === reward.id ? "text-orange-700" : "text-gray-800"}`}>
+                    {reward.discount_percentage}% OFF Reward
+                  </span>
+                </div>
+                {selectedRewardId === reward.id && (
+                  <span className="text-[10px] font-black text-orange-600">SELECTED</span>
+                )}
               </div>
-              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
-            </div>
-            {useReferralDiscount && (
-              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
-            )}
+            ))}
           </div>
         </div>
       )}

@@ -189,7 +189,7 @@ export const loginRequest = async (req, res) => {
 
     // Role wise check: Pandit login tabhi hoga jab DB mein role 'pandit' ho
     const [rows] = await db.query(
-      "SELECT id, role FROM users WHERE phone = ?",
+      "SELECT id, role FROM users WHERE phone = ? AND is_deleted = 0",
       [phone],
     );
 
@@ -234,7 +234,7 @@ export const verifyOtp = async (req, res) => {
         session.otp.toString() === otp.toString())
     ) {
       const [rows] = await db.query(
-        "SELECT id, name, phone, email, role FROM users WHERE phone = ?",
+        "SELECT id, name, phone, email, role FROM users WHERE phone = ? AND is_deleted = 0",
         [phone],
       );
 
@@ -574,3 +574,21 @@ export const getDefaultAddress = async (req, res) => {
     });
   }
 };
+
+// =============================
+// GET REFERRAL REWARDS
+// =============================
+export const getReferralRewards = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [rewards] = await db.query(
+      "SELECT id, discount_percentage, status, created_at FROM user_referral_rewards WHERE user_id = ? AND status = 'pending' ORDER BY created_at DESC",
+      [userId]
+    );
+    res.status(200).json({ success: true, rewards });
+  } catch (error) {
+    console.error("Get Referral Rewards Error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch rewards" });
+  }
+};
+

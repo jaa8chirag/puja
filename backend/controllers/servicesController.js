@@ -11,6 +11,37 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// Helper to grant referral reward to the referrer upon friend's first booking
+const processReferrerReward = async (userId, connection) => {
+  try {
+    // 1. Check if user was referred by someone
+    const [userRows] = await connection.query("SELECT referred_by FROM users WHERE id = ?", [userId]);
+    if (userRows.length === 0 || !userRows[0].referred_by) {
+      return; // Not referred by anyone
+    }
+    const referrerId = userRows[0].referred_by;
+
+    // 2. Check if this is their first booking
+    const [bookingRows] = await connection.query("SELECT COUNT(*) as bookingCount FROM puja_requests WHERE user_id = ?", [userId]);
+    if (bookingRows[0].bookingCount === 1) { // Current booking is their 1st
+      // 3. Get reward percentage from settings
+      const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'referral_reward_referrer'");
+      const rewardPercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 10;
+      
+      if (rewardPercentage > 0) {
+        // 4. Grant reward to the referrer
+        await connection.query(
+          "INSERT INTO user_referral_rewards (user_id, discount_percentage) VALUES (?, ?)",
+          [referrerId, rewardPercentage]
+        );
+        console.log(`[Referral Reward] Granted ${rewardPercentage}% reward to referrer ${referrerId} for user ${userId}'s first booking.`);
+      }
+    }
+  } catch (err) {
+    console.error("[Referral Reward Error] Failed to process reward:", err);
+  }
+};
+
 export const getServicesByType = async (req, res) => {
   try {
     const { type } = req.params;
@@ -31,7 +62,7 @@ export const getServicesByType = async (req, res) => {
           MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
       FROM services s
       LEFT JOIN service_prices p ON s.id = p.service_id
-      WHERE s.puja_type = ?
+      WHERE s.puja_type = ? AND s.is_deleted = 0
       GROUP BY s.id
       ORDER BY s.priority DESC, s.id DESC -- Pehle priority phir nayi ID
     `,
@@ -55,7 +86,7 @@ export const getAllServices = async (req, res) => {
   try {
     // Priority DESC lagane se high priority upar aayegi
     const [rows] = await db.query(
-      `SELECT * FROM services ORDER BY priority DESC, created_at DESC`,
+      `SELECT * FROM services WHERE is_deleted = 0 ORDER BY priority DESC, created_at DESC`,
     );
 
     res.status(200).json({
@@ -93,7 +124,7 @@ export const bookPuja = async (req, res) => {
       LEFT JOIN service_prices p 
         ON s.id = p.service_id
 
-      WHERE s.id = ?
+      WHERE s.id = ? AND s.is_deleted = 0
 
       GROUP BY 
         s.id,
@@ -203,11 +234,25 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
     // ---------------------------------------------------------
 
     const userId = req.user.id;
-    if (req.body.useReferralDiscount) {
-      const [uRows] = await connection.query("SELECT pending_referral_discounts FROM users WHERE id = ?", [userId]);
-      if (uRows.length > 0 && uRows[0].pending_referral_discounts > 0) {
-        await connection.query("UPDATE users SET pending_referral_discounts = pending_referral_discounts - 1 WHERE id = ?", [userId]);
+    const { referralRewardId } = req.body;
+    
+    if (referralRewardId) {
+      const [rewardRows] = await connection.query(
+        "SELECT id, discount_percentage FROM user_referral_rewards WHERE id = ? AND user_id = ? AND status = 'pending'",
+        [referralRewardId, userId]
+      );
+      
+      if (rewardRows.length === 0) {
+        return res.status(400).json({ success: false, message: "Invalid or already used referral reward" });
       }
+
+      // Mark reward as used
+      await connection.query(
+        "UPDATE user_referral_rewards SET status = 'used', used_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [referralRewardId]
+      );
+      
+      console.log(`[Referral Reward] Applied reward ID ${referralRewardId} with ${rewardRows[0].discount_percentage}% discount`);
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
@@ -316,6 +361,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       [totalDonationAmount, pujaRequestId],
     );
 
+    await processReferrerReward(userId, connection);
     await connection.commit();
 
     res.status(201).json({
@@ -343,7 +389,7 @@ export const getOnlinePindDanServices = async (req, res) => {
     const query = `
       SELECT * 
       FROM services 
-      WHERE puja_type = 'online_pind_dan'
+      WHERE puja_type = 'online_pind_dan' AND is_deleted = 0
       ORDER BY priority DESC
     `;
 
@@ -386,7 +432,7 @@ export const bookOnlinePindDan = async (req, res) => {
       LEFT JOIN service_prices p 
         ON s.id = p.service_id
 
-      WHERE s.id = ?   -- ✅ change here
+      WHERE s.id = ? AND s.is_deleted = 0   -- ✅ change here
 
       GROUP BY 
         s.id,
@@ -500,11 +546,25 @@ export const onlinePinddanBookingDetails = async (req, res) => {
     // ---------------------------------------------------------
 
     const userId = req.user.id;
-    if (req.body.useReferralDiscount) {
-      const [uRows] = await connection.query("SELECT pending_referral_discounts FROM users WHERE id = ?", [userId]);
-      if (uRows.length > 0 && uRows[0].pending_referral_discounts > 0) {
-        await connection.query("UPDATE users SET pending_referral_discounts = pending_referral_discounts - 1 WHERE id = ?", [userId]);
+    const { referralRewardId } = req.body;
+    
+    if (referralRewardId) {
+      const [rewardRows] = await connection.query(
+        "SELECT id, discount_percentage FROM user_referral_rewards WHERE id = ? AND user_id = ? AND status = 'pending'",
+        [referralRewardId, userId]
+      );
+      
+      if (rewardRows.length === 0) {
+        return res.status(400).json({ success: false, message: "Invalid or already used referral reward" });
       }
+
+      // Mark reward as used
+      await connection.query(
+        "UPDATE user_referral_rewards SET status = 'used', used_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [referralRewardId]
+      );
+      
+      console.log(`[Referral Reward] Applied reward ID ${referralRewardId} with ${rewardRows[0].discount_percentage}% discount`);
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
@@ -613,6 +673,7 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       }
     }
 
+    await processReferrerReward(userId, connection);
     await connection.commit();
 
     res.status(201).json({
@@ -699,11 +760,25 @@ export const bookingDetails = async (req, res) => {
     // ---------------------------------------------------------
 
     const userId = req.user.id;
-    if (req.body.useReferralDiscount) {
-      const [uRows] = await connection.query("SELECT pending_referral_discounts FROM users WHERE id = ?", [userId]);
-      if (uRows.length > 0 && uRows[0].pending_referral_discounts > 0) {
-        await connection.query("UPDATE users SET pending_referral_discounts = pending_referral_discounts - 1 WHERE id = ?", [userId]);
+    const { referralRewardId } = req.body;
+    
+    if (referralRewardId) {
+      const [rewardRows] = await connection.query(
+        "SELECT id, discount_percentage FROM user_referral_rewards WHERE id = ? AND user_id = ? AND status = 'pending'",
+        [referralRewardId, userId]
+      );
+      
+      if (rewardRows.length === 0) {
+        return res.status(400).json({ success: false, message: "Invalid or already used referral reward" });
       }
+
+      // Mark reward as used
+      await connection.query(
+        "UPDATE user_referral_rewards SET status = 'used', used_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [referralRewardId]
+      );
+      
+      console.log(`[Referral Reward] Applied reward ID ${referralRewardId} with ${rewardRows[0].discount_percentage}% discount`);
     }
 
     const formattedDate = date
@@ -791,6 +866,7 @@ export const bookingDetails = async (req, res) => {
       }
     }
 
+    await processReferrerReward(userId, connection);
     await connection.commit();
 
     res.status(201).json({

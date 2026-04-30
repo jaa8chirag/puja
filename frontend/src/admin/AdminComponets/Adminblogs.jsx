@@ -532,8 +532,8 @@ const Adminblogs = () => {
               <div>
                 <label className="text-gray-500 text-xs uppercase tracking-wider mb-1.5 block">
                   Content *{" "}
-                  <span className="normal-case text-gray-600 font-normal">
-                    (## Heading · - Bullet · 1. Number)
+                  <span className="normal-case text-orange-500/70 font-semibold">
+                    (Use toolbar above for formatting)
                   </span>
                 </label>
                 <RichTextEditor

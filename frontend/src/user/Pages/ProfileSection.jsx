@@ -18,7 +18,14 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const ProfileSection = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const decoded = jwtDecode(token);
+
+  // ✅ Securely decode or use fallbacks
+  let decoded = {};
+  try {
+    if (token) decoded = jwtDecode(token);
+  } catch (err) {
+    console.error("Token decoding failed", err);
+  }
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -33,10 +40,19 @@ const ProfileSection = () => {
     referral_code: "",
     pending_referral_discounts: 0,
   });
+  const [referralPercent, setReferralPercent] = useState(10);
+  const [referralRewards, setReferralRewards] = useState([]);
+
+  // Redirect if no token
+  useEffect(() => {
+    if (!token) {
+      navigate("/signin");
+    }
+  }, [token, navigate]);
 
   const copyToClipboard = () => {
-    if (!personalData.referral_code) return;
-    navigator.clipboard.writeText(personalData.referral_code);
+    const codeToCopy = personalData.referral_code || "SRIVEDIC";
+    navigator.clipboard.writeText(codeToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -90,7 +106,29 @@ const ProfileSection = () => {
         setFetchLoading(false);
       }
     };
+    const fetchSettings = async () => {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/settings/referral_reward_referrer`);
+        if (data.success) setReferralPercent(data.value);
+      } catch (err) {
+        console.error("Settings fetch error:", err);
+      }
+    };
+
+    const fetchRewards = async () => {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/user/referral-rewards`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (data.success) setReferralRewards(data.rewards);
+      } catch (err) {
+        console.error("Rewards fetch error:", err);
+      }
+    };
+
     fetchProfile();
+    fetchSettings();
+    fetchRewards();
   }, []);
   // ─── Step 1 Submit: Update personal details ───
   const handlePersonalSubmit = async () => {
@@ -257,21 +295,36 @@ const ProfileSection = () => {
           {/* ── STEP 1: Personal Details ── */}
           {step === 1 && (
             <div className="bg-white rounded-[1.6rem] border border-orange-200 shadow-sm p-7 space-y-4">
-              <div>
-                <label className={labelStyle}>Full Name</label>
-                <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelStyle}>Full Name</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={personalData.name}
+                      onChange={(e) =>
+                        setPersonalData({ ...personalData, name: e.target.value })
+                      }
+                      className={inputStyle}
+                      placeholder="Your full name"
+                    />
+                    <User
+                      size={16}
+                      className="absolute right-4 top-3 text-orange-300"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelStyle}>Gotra</label>
                   <input
                     type="text"
-                    value={personalData.name}
+                    value={personalData.gotra}
                     onChange={(e) =>
-                      setPersonalData({ ...personalData, name: e.target.value })
+                      setPersonalData({ ...personalData, gotra: e.target.value })
                     }
                     className={inputStyle}
-                    placeholder="Your full name"
-                  />
-                  <User
-                    size={16}
-                    className="absolute right-4 top-3 text-orange-300"
+                    placeholder="e.g. Kashyap"
                   />
                 </div>
               </div>
@@ -314,19 +367,6 @@ const ProfileSection = () => {
                 </div>
               </div>
 
-              <div>
-                <label className={labelStyle}>Gotra</label>
-                <input
-                  type="text"
-                  value={personalData.gotra}
-                  onChange={(e) =>
-                    setPersonalData({ ...personalData, gotra: e.target.value })
-                  }
-                  className={inputStyle}
-                  placeholder="e.g. Kashyap"
-                />
-              </div>
-
               <div className="pt-2">
                 <button
                   onClick={handlePersonalSubmit}
@@ -352,9 +392,10 @@ const ProfileSection = () => {
                     <span className="text-xs font-bold text-gray-600">Referral Code</span>
                     <div className="flex items-center gap-2">
                        <span className="text-sm font-black text-orange-600 tracking-wider">
-                        {personalData.referral_code || "GEN-1234"}
+                        {personalData.referral_code || "SRIVEDIC"}
                       </span>
                       <button 
+                        type="button"
                         onClick={copyToClipboard}
                         className="p-1.5 bg-white rounded-lg border border-orange-200 text-orange-500 hover:bg-orange-600 hover:text-white transition-all active:scale-95"
                       >
@@ -363,14 +404,26 @@ const ProfileSection = () => {
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-gray-600">Available 10% Discounts</span>
+                    <span className="text-xs font-bold text-gray-600">Available Rewards</span>
                     <span className="bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      {personalData.pending_referral_discounts} Rewards
+                      {referralRewards.length} Rewards
                     </span>
                   </div>
+
+                  {referralRewards.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {referralRewards.map((reward) => (
+                        <div key={reward.id} className="flex justify-between items-center bg-white p-2 rounded-xl border border-orange-100">
+                          <span className="text-[10px] font-bold text-gray-700">{reward.discount_percentage}% OFF Reward</span>
+                          <span className="text-[9px] text-emerald-500 font-black uppercase">Pending</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <p className="text-[9px] text-gray-400 mt-3 leading-relaxed">
                     * Share your code with friends. Once they complete their first puja, 
-                    you'll earn 10% off on your next booking!
+                    you'll earn a reward (Current: {referralPercent}%) for your next booking!
                   </p>
                 </div>
               </div>

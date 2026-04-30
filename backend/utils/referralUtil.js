@@ -26,13 +26,20 @@ export const processReferralReward = async (pujaRequestId) => {
     console.log(`[Referral Reward] User ${userId} status - referred_by: ${user.referred_by}, is_referral_rewarded: ${user.is_referral_rewarded}`);
 
     if (user.referred_by && !user.is_referral_rewarded) {
-      // Reward the referrer
-      const [updateReferrer] = await db.query("UPDATE users SET pending_referral_discounts = pending_referral_discounts + 1 WHERE id = ?", [user.referred_by]);
+      // Fetch current reward percentage from settings
+      const [settingRows] = await db.query("SELECT setting_value FROM site_settings WHERE setting_key = 'referral_reward_referrer'");
+      const rewardPercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 10;
+
+      // Reward the referrer by inserting a record with the CURRENT percentage
+      await db.query(`
+        INSERT INTO user_referral_rewards (user_id, discount_percentage, earned_from_user_id)
+        VALUES (?, ?, ?)
+      `, [user.referred_by, rewardPercentage, userId]);
       
       // Mark as rewarded
-      const [updateUser] = await db.query("UPDATE users SET is_referral_rewarded = TRUE WHERE id = ?", [userId]);
+      await db.query("UPDATE users SET is_referral_rewarded = TRUE WHERE id = ?", [userId]);
       
-      console.log(`[Referral Reward] SUCCESS: Referral reward (+1) given to referrer ${user.referred_by} for referred user ${userId}`);
+      console.log(`[Referral Reward] SUCCESS: Referral reward (${rewardPercentage}%) given to referrer ${user.referred_by} for referred user ${userId}`);
     } else {
       console.log(`[Referral Reward] SKIPPED: User ${userId} does not meet reward criteria (either not referred or already rewarded).`);
     }

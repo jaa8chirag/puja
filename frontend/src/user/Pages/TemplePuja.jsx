@@ -157,12 +157,7 @@ export default function TemplePuja() {
                 {/* CONTENT */}
                 <div className="p-5 md:p-8 flex flex-col flex-1 text-left">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-3 md:mb-4">
-                      <div className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
-                      <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-600">
-                        Vedic Path
-                      </span>
-                    </div>
+
 
                     <h3 className="text-xl md:text-2xl font-serif mb-2 group-hover:text-orange-600 transition-colors duration-300 leading-tight">
                       {service.title || service.puja_name}

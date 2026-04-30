@@ -128,7 +128,7 @@ const EditModal = ({ page, onClose, onSaved }) => {
       return;
     }
 
-    const newSections = [...sections, { title: "", content: "", img: "" }];
+    const newSections = [{ title: "", content: "", img: "" }, ...sections];
     setSections(newSections);
     
     // Save to database immediately

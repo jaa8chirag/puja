@@ -30,12 +30,14 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
           background: #161b27;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.08) !important;
-          overflow: hidden;
+          overflow: visible !important;
         }
         .ql-toolbar {
           background: rgba(255, 255, 255, 0.02);
           border: none !important;
           border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
         }
         .ql-container {
           border: none !important;
@@ -45,6 +47,7 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
         .ql-editor {
           color: #e5e7eb;
           min-height: 300px;
+          line-height: 1.6;
         }
         .ql-editor.ql-blank::before {
           color: #4b5563 !important;
@@ -62,6 +65,20 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
         .ql-snow .ql-picker-options {
           background-color: #1f2937 !important;
           border-color: #374151 !important;
+          color: #fff !important;
+          z-index: 1000 !important;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        .ql-snow .ql-tooltip {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
+          color: #fff !important;
+          z-index: 1001 !important;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        .ql-snow .ql-tooltip input[type=text] {
+          background: #111827 !important;
+          border: 1px solid #374151 !important;
           color: #fff !important;
         }
       `}</style>

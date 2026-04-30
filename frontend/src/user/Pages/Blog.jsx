@@ -267,7 +267,18 @@ function BlogCard({ blog, imageUrl, onRead }) {
 
       {/* Body */}
       <div className="p-5 flex flex-col flex-1">
-        {/* Date + Read time — image jaisa style */}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          {blog.category && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white">
+              {blog.category}
+            </span>
+          )}
+          {blog.tag && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-50 border border-orange-100 text-orange-600 font-medium">
+              {blog.tag}
+            </span>
+          )}
+        </div>
 
         <h3 className="text-orange-800 font-bold text-[17px] mb-2 leading-snug group-hover:text-orange-700 transition-colors line-clamp-2"
           style={{ fontFamily: "'Georgia', serif" }}>
