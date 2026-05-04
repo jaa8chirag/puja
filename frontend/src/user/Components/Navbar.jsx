@@ -78,7 +78,7 @@ const Navbar = () => {
 
   const navItems = [
     { to: "/", label: "Home", icon: <Home size={18} /> },
-    { to: "/home-Puja", label: "Home Puja", icon: <Globe size={18} /> },
+    { to: "/home-puja", label: "Home Puja", icon: <Globe size={18} /> },
     { to: "/temple-puja", label: "Temple Puja", icon: <User size={18} /> },
     { to: "/katha-jaap", label: "Katha Jaap", icon: <User size={18} /> },
   ];
@@ -99,6 +99,7 @@ const Navbar = () => {
             <img
               src="/img/download.jpg"
               alt="Logo"
+              loading="lazy"
               className="h-9 w-9 lg:h-11 xl:h-12 w-auto rounded-lg shadow-sm object-cover"
             />
             <div className="flex flex-col text-left justify-center">
@@ -135,7 +136,7 @@ const Navbar = () => {
               onMouseLeave={() => setPindDanOpen(false)}
             >
               <div className="flex items-center gap-1 font-bold text-[15.5px] xl:text-[17px] whitespace-nowrap tracking-tight cursor-default text-black hover:text-orange-600 py-2 px-1 transition-colors">
-                Pind-Dan
+                Pind-Dan/Pitra Dosh
                 <ChevronDown
                   size={14}
                   className={`transition-transform duration-300 ${pindDanOpen ? "rotate-180 text-orange-600" : "text-black"
@@ -259,7 +260,7 @@ const Navbar = () => {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/manageSankalp");
+                          navigate("/manage-sankalp");
                           setProfileOpen(false);
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-orange-200 transition-colors"
@@ -268,7 +269,7 @@ const Navbar = () => {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/savedAddresses");
+                          navigate("/saved-addresses");
                           setProfileOpen(false);
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-orange-200 transition-colors"
@@ -306,7 +307,7 @@ const Navbar = () => {
                 </button>
                 <button
                   className="px-4 xl:px-6 py-2 rounded-xl bg-[#2D1B0B] text-white font-bold text-[13px] xl:text-sm shadow-md whitespace-nowrap"
-                  onClick={() => navigate("/partnerSignIn")}
+                  onClick={() => navigate("/partner-signin")}
                 >
                   Partner Login
                 </button>
@@ -469,13 +470,13 @@ const Navbar = () => {
                   <User size={18} /> My Profile
                 </button>
                 <button
-                  onClick={() => { navigate("/manageSankalp"); setMenuOpen(false); }}
+                  onClick={() => { navigate("/manage-sankalp"); setMenuOpen(false); }}
                   className="w-full flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
                 >
                   <ShieldCheck size={18} /> Manage Sankalp
                 </button>
                 <button
-                  onClick={() => { navigate("/savedAddresses"); setMenuOpen(false); }}
+                  onClick={() => { navigate("/saved-addresses"); setMenuOpen(false); }}
                   className="w-full flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
                 >
                   <MapPin size={18} /> Saved Addresses
@@ -519,7 +520,7 @@ const Navbar = () => {
                   Sign In
                 </button>
                 <button
-                  onClick={() => { navigate("/partnerSignIn"); setMenuOpen(false); }}
+                  onClick={() => { navigate("/partner-signin"); setMenuOpen(false); }}
                   className="w-full py-2 bg-[#2D1B0B] text-white rounded-xl font-bold active:scale-[0.98] transition-all flex items-center justify-center border border-[#2D1B0B]"
                 >
                   Partner Login

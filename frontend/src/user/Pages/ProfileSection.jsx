@@ -75,7 +75,7 @@ const ProfileSection = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // ✅ Pehle check karo ki data.user exist karta hai
+        // ✅ Check if data.user exists
         if (data && data.user) {
           setPersonalData({
             name: data.user.name || "",

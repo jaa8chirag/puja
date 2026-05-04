@@ -455,7 +455,7 @@ const HomePujaPaymentDetails = () => {
           navigate("/my-booking");
         }}
         title="Puja Booked!"
-        message="Aapki puja safaltapurvak book ho gayi hai."
+        message="Your puja has been booked successfully."
       />
 
       {/* pb-28 on mobile so sticky CTA doesn't overlap */}
@@ -773,7 +773,10 @@ const HomePujaPaymentDetails = () => {
                   paymentOption={paymentOption}
                   setPaymentOption={setPaymentOption}
                   advancePercentage={advancePercentage}
-                  pendingRewards={pendingRewards}
+                  referralRewards={referralRewards}
+                  selectedRewardId={selectedRewardId}
+                  setSelectedRewardId={setSelectedRewardId}
+                  setUseReferralDiscount={setUseReferralDiscount}
                   useReferralDiscount={useReferralDiscount}
                   handleReferralToggle={handleReferralToggle}
                   referralDiscount={referralDiscount}
@@ -1038,7 +1041,10 @@ const MobileSummaryInline = ({
   paymentOption,
   setPaymentOption,
   advancePercentage,
-  pendingRewards,
+  referralRewards,
+  selectedRewardId,
+  setSelectedRewardId,
+  setUseReferralDiscount,
   useReferralDiscount,
   handleReferralToggle,
   referralDiscount,

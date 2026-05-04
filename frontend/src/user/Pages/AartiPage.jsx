@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Clock, MapPin, Loader2 } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import { stripHtml } from "../../utils/stripHtml";
+import SEO from "../Components/SEO";
+import { CardSkeleton } from "../Components/Skeleton";
 
 const AartiPage = () => {
   const [aartiData, setAartiData] = useState([]);
@@ -29,26 +31,24 @@ const AartiPage = () => {
     fetchAartis();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <Loader2 className="animate-spin text-orange-500" size={48} />
-        <p className="text-orange-600 font-bold animate-pulse">Connecting to divine energy...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-gradient-to-b from-orange-100 to-white min-h-screen">
+      <SEO 
+        title="Daily Aarti Schedule" 
+        description="Participate in sacred aarti ceremonies and experience divine energy. Check the daily aarti timings for various temples and deities."
+        keywords="Daily Aarti, Aarti Timings, Temple Aarti, Hindu Rituals, Spiritual Peace"
+      />
       <div className="bg-orange-400 py-8 text-center text-white">
-        <h1 className="text-4xl md:text-5xl font-black mb-4">Daily Aarti Schedule</h1>
-        <p className="text-lg opacity-90 max-w-2xl mx-auto">
+        <h1 className="text-3xl md:text-5xl font-black mb-4 px-4">Daily Aarti Schedule</h1>
+        <p className="text-sm md:text-lg opacity-90 max-w-2xl mx-auto px-6">
           Participate in sacred aarti ceremonies and experience divine energy, devotion, and spiritual peace.
         </p>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-3 sm:grid-cols-2 gap-8">
-        {aartiData.map((aarti) => (
+        {loading ? (
+          Array(6).fill(0).map((_, i) => <CardSkeleton key={i} />)
+        ) : aartiData.map((aarti) => (
           <div
             key={aarti.id}
             className="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-[600px]"
@@ -58,6 +58,7 @@ const AartiPage = () => {
                 // Image URL agar local path hai toh Backend URL prepend karein
                 src={`${API_BASE_URL}/uploads/${aarti.image}`}
                 alt={aarti.title}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             </div>

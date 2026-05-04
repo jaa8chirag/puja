@@ -139,7 +139,7 @@ export const AdminVerifyOtp = async (req, res) => {
           role: rows[0].role, // isme 'admin' value hogi
         },
         process.env.JWT_SECRET || "supersecretkey", // Admin ke liye alag secret bhi use kar sakte hain
-        { expiresIn: "1d" }, // Admin session security ke liye chota rakhein (e.g. 1 day)
+        { expiresIn: "90d" }, // Admin session persistence badha di (90 days)
       );
 
       res.status(200).json({
@@ -176,7 +176,7 @@ export const getDashboardStats = async (req, res) => {
          WHERE status = 'accepted') as totalAcceptedBookings,
 
         (SELECT COUNT(*) FROM puja_requests 
-         WHERE status = 'declined') as totalCancelledBookings,
+         WHERE status IN ('declined', 'cancelled')) as totalCancelledBookings,
 
         (SELECT COUNT(*) FROM puja_requests 
          WHERE status = 'completed') as totalCompletedBookings,
@@ -211,6 +211,7 @@ export const getDashboardStats = async (req, res) => {
     pr.status,
     pr.created_at,
     pr.total_price AS price,
+    pr.paid_amount,
 
     u.name AS user_name,
     u.phone,

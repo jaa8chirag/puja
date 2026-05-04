@@ -105,7 +105,7 @@ const PartnerSignIn = () => {
             <button className="flex-1 py-3 text-sm font-bold rounded-xl bg-white text-gray-800 shadow-sm transition-all cursor-default">
               Sign In
             </button>
-            <Link to="/partnerSignUp" className="flex-1 py-3 text-sm font-bold text-gray-400 hover:text-gray-600 text-center transition-all">
+            <Link to="/partner-signup" className="flex-1 py-3 text-sm font-bold text-gray-400 hover:text-gray-600 text-center transition-all">
               Register
             </Link>
           </div>

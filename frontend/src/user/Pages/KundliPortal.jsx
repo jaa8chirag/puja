@@ -615,7 +615,7 @@ export default function KundliPortal() {
           pujaName: svc.puja_name || svc.name || svc.title,
           pujaId: id,
           imageUrl: buildImageUrl(svc.image_url),
-          bookingUrl: `${window.location.origin}/home-Puja/${id}`,
+          bookingUrl: `${window.location.origin}/home-puja/${id}`,
           isDummy: false,
         };
       } else {

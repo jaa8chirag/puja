@@ -56,6 +56,7 @@ export const getServicesByType = async (req, res) => {
           s.image_url,
           s.status,
           s.priority, -- Priority select kiya
+          s.is_featured, -- Featured flag
           MAX(CASE WHEN p.pricing_type = 'standard' THEN p.price END) AS standard_price,
           MAX(CASE WHEN p.pricing_type = 'single' THEN p.price END) AS single_price,
           MAX(CASE WHEN p.pricing_type = 'couple' THEN p.price END) AS couple_price,
@@ -907,7 +908,11 @@ export const getUserBookings = async (req, res) => {
         s.puja_type,
 
         COALESCE(ra.status, b.status) AS assignment_status,
-        u.name AS pandit_name
+        u.name AS pandit_name,
+        (SELECT GROUP_CONCAT(ct.name SEPARATOR ', ') 
+         FROM service_contributions sc 
+         JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
+         WHERE sc.puja_request_id = b.id) as contribution_names
 
       FROM puja_requests b
       JOIN services s ON b.service_id = s.id
@@ -990,6 +995,7 @@ export const templePuja = async (req, res) => {
         s.image_url,
         s.status,
         s.priority, -- 1. Priority select ki
+        s.is_featured, -- Featured flag
         s.created_at AS service_created_at,
 
         t.id AS temple_id,

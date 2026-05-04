@@ -119,7 +119,7 @@ export default function AnalyticsDashboard() {
             <ChartNoAxesCombined className="text-orange-500" /> Analytics
           </h1>
           <p className="text-[12px] text-slate-500 font-medium">
-            Manage donation types & pricing
+            Real-time performance metrics & insights
           </p>
         </div>
       </div>

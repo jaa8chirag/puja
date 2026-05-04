@@ -21,6 +21,9 @@ import {
 
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import HTMLContent from "../../Components/HTMLContent";
+import SEO from "../Components/SEO";
+import { CardSkeleton } from "../Components/Skeleton";
+
 const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -50,6 +53,7 @@ const HomePujaBooking = () => {
 
   const [activeTab, setActiveTab] = useState("about");
   const [service, setService] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [aboutExpanded, setAboutExpanded] = useState(false); // NEW
   const [contributionOptions, setContributionOptions] = useState("");
   const sections = {
@@ -81,6 +85,7 @@ const HomePujaBooking = () => {
   useEffect(() => {
     const bookPuja = async (id) => {
       const token = localStorage.getItem("token");
+      setLoading(true);
       try {
         const response = await fetch(`${API_BASE_URL}/puja/bookPuja/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -89,6 +94,8 @@ const HomePujaBooking = () => {
         setService(Array.isArray(data) ? data[0] : data);
       } catch (error) {
         console.log("Error:", error);
+      } finally {
+        setLoading(false);
       }
     };
     if (id) bookPuja(id);
@@ -140,12 +147,17 @@ const HomePujaBooking = () => {
   // console.log("services-----", service);
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-6 font-sans text-gray-800 pb-28 md:pb-6">
+      <SEO 
+        title={`Book ${service?.puja_name || 'Home Puja'}`} 
+        description={`Book verified Pandits for ${service?.puja_name}. Authentic Vedic ceremonies at your doorstep with modern convenience.`}
+        keywords={`${service?.puja_name}, Home Puja Booking, Book Pandit, Vedic Rituals, Sri Vedic Puja`}
+      />
       <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-wider text-orange-700 mb-5 hover:opacity-70 transition-all"
+          className="flex items-center gap-2 text-[11px] md:text-[13px] font-bold uppercase tracking-wider text-orange-700 mb-5 hover:opacity-70 transition-all"
         >
-          <ChevronLeft size={18} /> Back to Selection
+          <ChevronLeft size={16} /> Back to Selection
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -154,9 +166,12 @@ const HomePujaBooking = () => {
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
               {/* Hero Image - Fixed 16:9 landscape ratio */}
               <div className="relative w-full aspect-[16/7]">
-                {hasImage ? (
+                {loading ? (
+                  <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+                ) : hasImage ? (
                   <img
                     src={buildImageUrl(service.image_url)}
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover"
                     alt="Puja"
                   />
@@ -176,12 +191,14 @@ const HomePujaBooking = () => {
               </div>
 
               {/* Mobile Title - visible only on mobile */}
-              <div className="p-4 md:hidden border-t border-orange-100">
-                <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
-                  {service?.puja_name}
-                </h1>
+              {!loading && (
+                <div className="p-4 md:hidden border-t border-orange-100">
+                  <h1 className="text-xl font-serif font-bold text-gray-900 leading-tight">
+                    {service?.puja_name}
+                  </h1>
 
-              </div>
+                </div>
+              )}
             </div>
 
 
@@ -351,7 +368,7 @@ const HomePujaBooking = () => {
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
                   {/* grid-cols-2 lagane se mobile par 2 boxes side by side aayenge */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
                     {/* Dynamic Benefits from Backend */}
                     {service?.benefits && service.benefits.length > 0 ? (
                       service.benefits.map((benefit, index) => (
@@ -509,7 +526,7 @@ const HomePujaBooking = () => {
               <div className="space-y-4">
                 <button
                   onClick={() =>
-                    navigate(`/home-Puja/payment-details/${id}`, {
+                    navigate(`/home-puja/payment-details/${id}`, {
                       state: { isSamagriSelected: samagriEnabled },
                     })
                   }
@@ -543,7 +560,7 @@ const HomePujaBooking = () => {
           </div>
           <button
             onClick={() =>
-              navigate(`/home-Puja/payment-details/${id}`, {
+              navigate(`/home-puja/payment-details/${id}`, {
                 state: { isSamagriSelected: samagriEnabled },
               })
             }
@@ -568,10 +585,10 @@ const BenefitSmall = ({ icon, title, desc }) => (
     <div className="flex flex-col min-w-0">
       {" "}
       {/* min-w-0 prevents text overflow */}
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-tight truncate md:whitespace-normal">
+      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-tight whitespace-normal">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 md:mt-2 leading-tight font-medium line-clamp-1 md:line-clamp-none">
+      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 md:mt-2 leading-tight font-medium">
         {desc}
       </p>
     </div>

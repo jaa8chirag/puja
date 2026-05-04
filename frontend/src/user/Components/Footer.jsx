@@ -71,20 +71,20 @@ const Footer = () => {
 
   const footerLinks = {
     services: [
-      { label: "Home Puja", to: "/home-Puja" },
+      { label: "Home Puja", to: "/home-puja" },
       { label: "Temple Puja", to: "/temple-puja" },
       { label: "Pind Dan", to: "/pind-dan" },
       { label: "Katha/Jaap", to: "/katha-jaap" },
     ],
     support: [
-      { label: "About Us", to: "/aboutUs" },
+      { label: "About Us", to: "/about-us" },
       { label: "Contact Us", to: "/help" },
       { label: "FAQs", to: "/help" },
     ],
     policy: [
-      { label: "Privacy Policy", to: "/privacypolicy" },
-      { label: "Cancellation Policy", to: "/cancellationpolicy" },
-      { label: "Terms and Conditions", to: "/termsandconditions" },
+      { label: "Privacy Policy", to: "/privacy-policy" },
+      { label: "Cancellation Policy", to: "/cancellation-policy" },
+      { label: "Terms and Conditions", to: "/terms-and-conditions" },
       { label: "Disclaimer Policy", to: "/disclaimer" },
     ],
     community: [
@@ -105,6 +105,7 @@ const Footer = () => {
               <img
                 src="/img/download.jpg"
                 alt="Logo"
+                loading="lazy"
                 className="h-8 w-8 rounded-lg shadow-sm"
               />
               <span className="text-lg font-serif font-bold text-[#3b2a1a] whitespace-nowrap">

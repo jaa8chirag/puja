@@ -17,6 +17,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import SEO from "../Components/SEO";
+import { CardSkeleton } from "../Components/Skeleton";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 import { LotusIcon } from "../Components/Icons";
@@ -138,7 +140,7 @@ const OnlineRitual = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   const handleProceed = () => {
-    navigate(`/online-ritual-paymentdetails/${service.id}`, {
+    navigate(`/online-ritual-payment-details/${service.id}`, {
       state: { price: basePrice },
     });
   };
@@ -165,26 +167,20 @@ const OnlineRitual = () => {
       }))
       : FALLBACK_BENEFITS;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FFF4E1] flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-orange-700 font-bold text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-6 font-sans text-gray-800 pb-28 md:pb-6">
+      <SEO 
+        title={`Book Online ${service?.puja_name || 'Ritual'}`} 
+        description={`Book verified Pandits for online ${service?.puja_name}. Traditional Vedic ceremonies via live streaming with modern convenience.`}
+        keywords={`${service?.puja_name}, Online Pind Daan, Pitra Dosh, Online Ritual Booking, Sri Vedic Puja`}
+      />
       <div className="max-w-6xl mx-auto">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-wider text-orange-700 mb-5 hover:opacity-70 transition-all"
+          className="flex items-center gap-2 text-[11px] md:text-[13px] font-bold uppercase tracking-wider text-orange-700 mb-5 hover:opacity-70 transition-all"
         >
-          <ChevronLeft size={18} /> Back to Selection
+          <ChevronLeft size={16} /> Back to Selection
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -193,9 +189,12 @@ const OnlineRitual = () => {
             {/* HERO */}
             <div className="bg-white rounded-2xl overflow-hidden border border-orange-200 shadow-sm">
               <div className="relative w-full aspect-[16/7]">
-                {service?.image_url ? (
+                {loading ? (
+                  <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+                ) : service?.image_url ? (
                   <img
                     src={`${API_BASE_URL}/uploads/${service?.image_url}`}
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover"
                     alt="Pind Dan Puja"
                   />
@@ -215,12 +214,14 @@ const OnlineRitual = () => {
               </div>
 
               {/* Mobile Title - visible only on mobile */}
-              <div className="p-4 md:hidden border-t border-orange-100">
-                <h1 className="text-2xl font-serif font-bold text-gray-900 leading-tight">
-                  {service?.puja_name}
-                </h1>
+              {!loading && (
+                <div className="p-4 md:hidden border-t border-orange-100">
+                  <h1 className="text-xl font-serif font-bold text-gray-900 leading-tight">
+                    {service?.puja_name}
+                  </h1>
 
-              </div>
+                </div>
+              )}
             </div>
 
             {/* STICKY TAB NAV */}
@@ -231,8 +232,8 @@ const OnlineRitual = () => {
                     key={tab}
                     onClick={() => scrollToSection(tab)}
                     className={`flex-1 px-6 py-4 text-[13px] font-black uppercase tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
-                        ? "text-orange-600 bg-orange-50/50"
-                        : "text-gray-400"
+                      ? "text-orange-600 bg-orange-50/50"
+                      : "text-gray-400"
                       }`}
                   >
                     {tab}
@@ -325,7 +326,7 @@ const OnlineRitual = () => {
                   <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                     {benefits.map((benefit, index) => (
                       <BenefitCard
                         key={index}
@@ -462,10 +463,10 @@ const BenefitCard = ({ icon, title, desc }) => (
       {React.cloneElement(icon, { size: 28 })}
     </div>
     <div className="flex flex-col min-w-0">
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-tight truncate md:whitespace-normal">
+      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-tight whitespace-normal">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 leading-tight font-medium line-clamp-1 md:line-clamp-none">
+      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 leading-tight font-medium">
         {desc}
       </p>
     </div>

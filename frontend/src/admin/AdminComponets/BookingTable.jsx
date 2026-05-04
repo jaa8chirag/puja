@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { API } from "../../services/adminApi";
+import { API, refundPayment } from "../../services/adminApi";
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,6 +16,8 @@ import {
   Users,
   Ticket,
   Heart,
+  Printer,
+  Download,
 } from "lucide-react";
 import Pagination from "../../Components/Pagination";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -36,6 +38,10 @@ const STATUS_CONFIG = {
   accepted: {
     cls: "bg-sky-900/30 text-sky-400 border border-sky-800",
     dot: "bg-sky-400",
+  },
+  cancelled: {
+    cls: "bg-rose-900/30 text-rose-400 border border-rose-800",
+    dot: "bg-rose-400",
   },
 };
 
@@ -114,10 +120,17 @@ const BookingDetailDrawer = ({ booking, onClose }) => {
               <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
               {booking.status}
             </span>
-            <span className="inline-flex items-center gap-1 font-black text-emerald-400 text-sm">
-              <IndianRupee size={14} className="text-emerald-500" />
-              {booking.total_price}
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="inline-flex items-center gap-1 font-black text-emerald-400 text-sm">
+                <IndianRupee size={14} className="text-emerald-500" />
+                {booking.total_price}
+              </span>
+              {booking.paid_amount > 0 && (
+                <span className="text-[10px] font-bold text-orange-400">
+                  Paid: ₹{booking.paid_amount}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Puja Info */}
@@ -355,6 +368,159 @@ const BookingDetailDrawer = ({ booking, onClose }) => {
   );
 };
 
+// ─── Invoice Modal ────────────────────────────────────────────────────────────
+
+const InvoiceModal = ({ booking, onClose }) => {
+  if (!booking) return null;
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print:p-0 print:bg-white print:block">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:rounded-none">
+        {/* Modal Header - Hidden on Print */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl print:hidden">
+          <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest">Booking Invoice</h2>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-200"
+            >
+              <Printer size={14} /> Print / PDF
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 transition"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Invoice Content */}
+        <div id="invoice-content" className="flex-1 p-8 sm:p-12 overflow-y-auto print:overflow-visible print:p-0">
+          <div className="flex justify-between items-start mb-10">
+            <div>
+              <img src="/img/download.jpg" alt="Logo" className="h-16 w-auto mb-4" />
+              <h1 className="text-2xl font-black text-gray-900 tracking-tighter">SRI VEDIC PUJA</h1>
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Divine Spiritual Services</p>
+            </div>
+            <div className="text-right">
+              <h2 className="text-4xl font-serif text-gray-200 uppercase tracking-tighter mb-2">INVOICE</h2>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Booking ID</p>
+              <p className="text-sm font-mono font-black text-gray-800">{booking.bookingId}</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Date</p>
+              <p className="text-sm font-bold text-gray-800">{new Date(booking.completed_at || new Date()).toLocaleDateString('en-IN')}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-12 mb-10 border-t border-b border-gray-50 py-8">
+            <div>
+              <h3 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-4">Devotee Information</h3>
+              <p className="text-lg font-black text-gray-800">{booking.user_name}</p>
+              <p className="text-sm text-gray-600 font-medium mt-1 leading-relaxed">{booking.address || "Devotee's Location"}</p>
+              <p className="text-sm text-gray-500 mt-2 font-bold">{booking.user_phone}</p>
+            </div>
+            <div className="text-right">
+              <h3 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-4">Ritual Finalized</h3>
+              <p className="text-lg font-black text-gray-800">{booking.puja_name}</p>
+              <p className="text-sm text-gray-600 font-bold mt-1 uppercase tracking-wider">{booking.puja_type?.replace('_', ' ')}</p>
+              <p className="text-sm text-gray-500 mt-2 font-medium">
+                {new Date(booking.preferred_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} at {booking.preferred_time}
+              </p>
+            </div>
+          </div>
+
+          <table className="w-full mb-10">
+            <thead>
+              <tr className="border-b-2 border-gray-900 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <th className="py-3 text-left">Service Description</th>
+                <th className="py-3 text-right">Gross Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm font-bold text-gray-800">
+              <tr className="border-b border-gray-50">
+                <td className="py-4">
+                  <p>{booking.puja_name} Ritual Fees</p>
+                  <p className="text-[10px] text-gray-400 font-medium">Sacred Vedic Ceremony Service</p>
+                </td>
+                <td className="py-4 text-right">{(booking.total_price - booking.donations - (booking.samagrikit === 1 ? 501 : 0)).toLocaleString()}</td>
+              </tr>
+              {booking.samagrikit === 1 && (
+                <tr className="border-b border-gray-50">
+                  <td className="py-4">
+                    <p>Samagri Kit</p>
+                    <p className="text-[10px] text-gray-400 font-medium">Essential ritual materials and sacred items</p>
+                  </td>
+                  <td className="py-4 text-right">501.00</td>
+                </tr>
+              )}
+              {booking.donations > 0 && (
+                <tr className="border-b border-gray-50">
+                  <td className="py-4">
+                    <p>Donations / Contributions</p>
+                    <p className="text-[10px] text-gray-400 font-medium">{booking.contribution_names || "General Seva"}</p>
+                  </td>
+                  <td className="py-4 text-right">{booking.donations.toLocaleString()}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="flex justify-end">
+            <div className="w-72 space-y-3">
+              <div className="flex justify-between text-sm text-gray-500 font-bold">
+                <span>Gross Total</span>
+                <span>₹{booking.total_price.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-500 font-bold">
+                <span>Tax (GST Exempted)</span>
+                <span>₹0.00</span>
+              </div>
+              <div className="flex justify-between text-lg font-black text-gray-900 border-t-2 border-gray-900 pt-3">
+                <span>NET PAYABLE</span>
+                <span className="text-orange-600">₹{booking.total_price.toLocaleString()}</span>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-dashed border-gray-200 space-y-2">
+                <div className="flex justify-between text-xs text-slate-500 font-bold">
+                  <span>Advance Payment Deduction</span>
+                  <span>- ₹{(booking.paid_amount - (booking.payment_status === 'fully_paid' ? (booking.last_payment_amount || 0) : 0)).toLocaleString()}</span>
+                </div>
+                {booking.payment_status === 'fully_paid' && (
+                  <div className="flex justify-between text-xs text-emerald-600 font-black bg-emerald-50 p-2 rounded-lg">
+                    <span>Final Settlement Received</span>
+                    <span>₹{(booking.last_payment_amount || (booking.total_price - (booking.paid_amount - (booking.last_payment_amount || 0)))).toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-black text-slate-900 mt-2 border-t pt-2">
+                  <span>BALANCE OUTSTANDING</span>
+                  <span className="text-emerald-600">₹0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-20 pt-8 border-t border-gray-100 text-center">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Thank you for choosing Sri Vedic Puja</p>
+            <p className="text-[10px] text-gray-300">This is a computer-generated invoice and does not require a physical signature.</p>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #invoice-content, #invoice-content * { visibility: visible; }
+          #invoice-content { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 // ─── Main Bookings Component ──────────────────────────────────────────────────
 
 const Bookings = () => {
@@ -369,6 +535,8 @@ const Bookings = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [completeConfirmId, setCompleteConfirmId] = useState(null); // For confirmation modal
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [refundConfirm, setRefundConfirm] = useState(null); // { id, paymentId, amount }
+  const [showInvoiceBooking, setShowInvoiceBooking] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -412,7 +580,29 @@ const Bookings = () => {
     }
   };
 
-  const filters = ["pending", "completed", "accepted"];
+  const handleRefund = async () => {
+    if (!refundConfirm) return;
+    setUpdatingStatusId(`refund-${refundConfirm.id}`);
+    try {
+      const res = await refundPayment({
+        paymentId: refundConfirm.paymentId,
+        amount: refundConfirm.amount,
+        bookingId: refundConfirm.id
+      });
+      if (res.data.success) {
+        alert("Refund successful!");
+        setBookings(prev => prev.map(b => b.id === refundConfirm.id ? { ...b, status: 'refunded' } : b));
+      }
+    } catch (err) {
+      console.error("Refund error:", err);
+      alert(err.response?.data?.message || "Refund failed");
+    } finally {
+      setUpdatingStatusId(null);
+      setRefundConfirm(null);
+    }
+  };
+
+  const filters = ["pending", "accepted", "completed", "cancelled", "declined"];
 
   return (
     <>
@@ -421,6 +611,14 @@ const Bookings = () => {
         <BookingDetailDrawer
           booking={selectedBooking}
           onClose={() => setSelectedBooking(null)}
+        />
+      )}
+
+      {/* Invoice Modal */}
+      {showInvoiceBooking && (
+        <InvoiceModal
+          booking={showInvoiceBooking}
+          onClose={() => setShowInvoiceBooking(null)}
         />
       )}
 
@@ -450,6 +648,36 @@ const Bookings = () => {
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/20"
               >
                 Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Refund Confirmation Modal ── */}
+      {refundConfirm && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+              <IndianRupee size={32} className="text-rose-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Process Refund?</h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to refund <span className="text-rose-400 font-black">₹{refundConfirm.amount}</span> for this booking? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRefundConfirm(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRefund}
+                disabled={updatingStatusId === `refund-${refundConfirm.id}`}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-500 transition shadow-lg shadow-rose-900/20 disabled:opacity-50"
+              >
+                {updatingStatusId === `refund-${refundConfirm.id}` ? "Processing..." : "Refund Now"}
               </button>
             </div>
           </div>
@@ -533,11 +761,10 @@ const Bookings = () => {
               setStatusFilter(f);
               setPage(1);
             }}
-            className={`px-4 py-2 text-sm font-bold border-b-2 capitalize transition-all ${
-              f === statusFilter
+            className={`px-4 py-2 text-sm font-bold border-b-2 capitalize transition-all ${f === statusFilter
                 ? "text-orange-500 border-orange-500 bg-orange-500/10"
                 : "text-slate-400 border-transparent hover:text-slate-300 hover:bg-slate-700/50"
-            }`}
+              }`}
           >
             {f}
           </button>
@@ -660,10 +887,17 @@ const Bookings = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <span className="inline-flex items-center gap-0.5 font-black text-emerald-400 text-xs">
-                          <IndianRupee size={11} className="text-emerald-500" />
-                          {b.total_price}
-                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="inline-flex items-center gap-0.5 font-black text-emerald-400 text-xs">
+                            <IndianRupee size={11} className="text-emerald-500" />
+                            {b.total_price}
+                          </span>
+                          {b.paid_amount > 0 && (
+                            <span className="text-[9px] font-bold text-orange-400 mt-0.5">
+                              Paid: ₹{b.paid_amount}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-4 text-center">
                         <span
@@ -739,6 +973,35 @@ const Bookings = () => {
                                 ? "..."
                                 : "Re-accept"}
                             </button>
+                          )}
+                          {(b.status === "cancelled" || b.status === "declined") && b.paid_amount > 0 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRefundConfirm({ id: b.id, paymentId: b.razorpay_payment_id, amount: b.paid_amount });
+                              }}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-500 text-white hover:bg-rose-600 transition shadow-md"
+                            >
+                              Refund ₹{b.paid_amount}
+                            </button>
+                          )}
+                          {b.status === "refunded" && (
+                            <span className="text-[10px] text-slate-500 font-bold italic">Refunded</span>
+                          )}
+                          {b.payment_status === "fully_paid" ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowInvoiceBooking(b);
+                              }}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-700 text-slate-300 border border-slate-600 hover:bg-slate-600 transition flex items-center gap-1.5"
+                            >
+                              <Download size={10} /> Invoice
+                            </button>
+                          ) : (
+                            <span className="text-[9px] text-slate-600 font-bold bg-slate-800/50 px-2 py-1 rounded-lg border border-dashed border-slate-700 opacity-60 cursor-not-allowed">
+                              Pending Payment
+                            </span>
                           )}
                         </div>
                       </td>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { API } from "../../services/adminApi";
-import { CheckCircle2, Star, MapPin, Briefcase } from "lucide-react"; // Naye icons add kiye
+import { CheckCircle2, Star, MapPin, Briefcase } from "lucide-react"; // Added new icons
 
 const PanditCard = ({ pandit }) => {
   const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -17,6 +17,7 @@ const PanditCard = ({ pandit }) => {
         <img
           src={imageUrl}
           alt={pandit.name}
+          loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => {
             e.target.onerror = null;
@@ -53,12 +54,12 @@ const PanditCard = ({ pandit }) => {
               </span>
             ) : null}
 
-            {/* Dot: Dono valid hone par hi dikhega */}
+            {/* Dot: Only visible if both are valid */}
             {hasLocation && hasExperience ? (
               <span className="mx-1 opacity-50">•</span>
             ) : null}
 
-            {/* Show Experience: Agar 0 hai toh null return karega (kuch nahi dikhega) */}
+            {/* Show Experience: Returns null if 0 (shows nothing) */}
             {hasExperience ? (
               <span className="flex items-center gap-1">
                 <Briefcase size={12} className="text-orange-400" />{" "}

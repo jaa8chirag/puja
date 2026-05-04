@@ -139,6 +139,7 @@ const KathaPujaBooking = () => {
                 {service?.image_url ? (
                   <img
                     src={`${API_BASE_URL}/uploads/${service?.image_url}`}
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover"
                     alt="Puja"
                   />
@@ -327,7 +328,7 @@ const KathaPujaBooking = () => {
                   <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                     {/* Dynamic Benefits from Backend */}
                     {service?.benefits && service.benefits.length > 0 ? (
                       service.benefits.map((benefit, index) => (

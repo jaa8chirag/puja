@@ -540,7 +540,7 @@ const AdminServices = () => {
             <SquareChartGantt className="text-orange-500" /> Product & CMS
           </h1>
           <p className="text-[12px] text-slate-500 font-medium">
-            Manage donation types & pricing
+            Manage puja services & categories
           </p>
         </div>
 

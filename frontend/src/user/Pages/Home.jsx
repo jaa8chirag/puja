@@ -17,6 +17,7 @@ import {
   Video,
   ArrowRight,
 } from "lucide-react";
+import { HeroSkeleton } from "../Components/Skeleton";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ export default function Home() {
 
   const [rituals, setRituals] = useState(defaultRituals);
   const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   const duration = 4000;
 
   const buildImageUrl = (img) => {
@@ -64,6 +66,7 @@ export default function Home() {
 
   useEffect(() => {
     const fetchHomeHero = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/pages/home-hero`);
         if (!res.ok) return;
@@ -87,6 +90,8 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Failed to load home hero content:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -129,7 +134,7 @@ export default function Home() {
                 >
                   Find Your Kundli
                 </button>
-                <p className="text-xs text-center text-gray-600">
+                <p className="text-[10px] text-center text-gray-600">
                   Vedic birth chart analysis
                 </p>
               </div>
@@ -137,12 +142,12 @@ export default function Home() {
               <div className="flex flex-col items-center gap-1">
                 <button
                   className="w-full bg-white text-orange-500 font-bold py-3 px-4 sm:px-12 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base whitespace-nowrap"
-                  onClick={() => navigate("/nameCorrection")}
+                  onClick={() => navigate("/name-correction")}
                 >
                   Name correction
                 </button>
-                <p className="text-xs text-center text-gray-600">
-                  Rename it to Free after puja completion
+                <p className="text-[10px] text-center text-gray-600 leading-tight">
+                  Correct your name as per Shastra
                 </p>
               </div>
             </div>
@@ -198,8 +203,10 @@ export default function Home() {
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="relative w-full lg:w-1/2 h-[350px] sm:h-[420px] md:h-[500px] rounded-2xl overflow-hidden bg-zinc-900 group">
-            {rituals.map((item, i) => (
+          <div className="relative w-full lg:w-1/2 h-[300px] sm:h-[420px] md:h-[500px] rounded-2xl overflow-hidden bg-zinc-900 group shadow-2xl">
+            {loading ? (
+              <div className="w-full h-full animate-pulse bg-gray-200/20" />
+            ) : rituals.map((item, i) => (
               <div
                 key={i}
                 className={`absolute inset-0 transition-all duration-[1200ms] ${
@@ -211,6 +218,7 @@ export default function Home() {
                 <img
                   src={item.img}
                   alt={item.title}
+                  loading="lazy"
                   className={`w-full h-full object-cover transition-transform duration-[6000ms] ${
                     i === index ? "scale-110" : "scale-100"
                   }`}
@@ -220,40 +228,44 @@ export default function Home() {
             ))}
 
             {/* Info Card */}
-            <div className="absolute bottom-5 w-fit left-5 right-5 sm:right-auto sm:max-w-[90%] z-40">
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-2xl">
-                <span className="text-orange-400 text-[10px] font-black uppercase tracking-widest">
-                  Ceremony
-                </span>
+            {!loading && (
+              <div className="absolute bottom-5 w-fit left-5 right-5 sm:right-auto sm:max-w-[90%] z-40">
+                <div className="bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-2xl">
+                  <span className="text-orange-400 text-[10px] font-black uppercase tracking-widest">
+                    Ceremony
+                  </span>
 
-                <h3 className="text-lg sm:text-xl md:text-2xl font-serif text-white font-bold mt-1">
-                  {rituals[index].title}
-                </h3>
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-serif text-white font-bold mt-1">
+                    {rituals[index].title}
+                  </h3>
 
-                <p className="text-white/70 text-xs sm:text-sm mt-1">
-                  {rituals[index].desc}
-                </p>
+                  <p className="text-white/70 text-xs sm:text-sm mt-1">
+                    {rituals[index].desc}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Tablet & Desktop slider dots */}
-            <div className="hidden md:flex absolute bottom-5 right-4 z-50 gap-2">
-              {rituals.map((_, i) => (
-                <span
-                  key={i}
-                  onClick={() => setIndex(i)}
-                  className={`
-        h-2 rounded-full cursor-pointer 
-        transition-all duration-500 ease-in-out
-        ${
-          i === index
-            ? "bg-orange-300 w-8" // Active dot: Lambi width (Pill shape)
-            : "bg-white/50 w-2 hover:bg-white/80" // Inactive dot: Choti width (Circle)
-        }
-      `}
-                ></span>
-              ))}
-            </div>
+            {!loading && (
+              <div className="hidden md:flex absolute bottom-5 right-4 z-50 gap-2">
+                {rituals.map((_, i) => (
+                  <span
+                    key={i}
+                    onClick={() => setIndex(i)}
+                    className={`
+                      h-2 rounded-full cursor-pointer 
+                      transition-all duration-500 ease-in-out
+                      ${
+                        i === index
+                          ? "bg-orange-300 w-8" // Active dot: Lambi width (Pill shape)
+                          : "bg-white/50 w-2 hover:bg-white/80" // Inactive dot: Choti width (Circle)
+                      }
+                    `}
+                  ></span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -261,7 +273,7 @@ export default function Home() {
       {/* EXPERIENCE SECTION */}
       <section className="w-full bg-[#FFF4E1] py-12 px-6 pt-20 flex justify-center">
         <div className="max-w-6xl w-full text-center flex flex-col items-center">
-          {/* HEADING - Ab margin-bottom kam kar diya hai */}
+          {/* HEADING - Reduced margin-bottom */}
           <h2 className="text-xl md:text-4xl font-serif font-bold text-[#3b2a1a] mb-4">
             How Would You Like to Experience Puja?
           </h2>
@@ -278,7 +290,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 max-w-4xl mx-auto gap-8 ">
             <div
               className="group p-8 rounded-[20px] bg-[#FFFDF8] border border-orange-200 text-left hover:shadow-2xl hover:border-orange-400 transition-all duration-300 cursor-pointer hover:-translate-y-2"
-              onClick={() => navigate("/home-Puja")}
+              onClick={() => navigate("/home-puja")}
             >
               <div className="w-14 h-14 bg-orange-500 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-200 group-hover:scale-110 transition-transform">
                 <HomeIcon size={28} />

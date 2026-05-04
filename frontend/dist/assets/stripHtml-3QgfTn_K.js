@@ -1,0 +1,1 @@
+function r(e){if(!e)return"";let t="";if(typeof document<"u"){const n=document.createElement("div");n.innerHTML=e,t=n.textContent||n.innerText||""}else t=e.replace(/<[^>]*>/g,"");return t.replace(/[\s\u00A0]+/g," ").trim()}export{r as s};

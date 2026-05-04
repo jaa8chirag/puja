@@ -41,7 +41,11 @@ export default function TrendingPuja() {
   const filteredServices = services
     .filter((service) => {
       const name = service.title || service.puja_name || "";
-      return name.toLowerCase().includes(searchTerm.toLowerCase());
+      // Check for search term AND is_featured status
+      return (
+        name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        Number(service.is_featured) === 1
+      );
     })
     .slice(0, 3);
 
@@ -61,7 +65,7 @@ export default function TrendingPuja() {
           </div>
 
           <button
-            onClick={() => navigate('/home-Puja')}
+            onClick={() => navigate('/home-puja')}
             className="group flex items-center gap-1.5 bg-white hover:bg-orange-600 text-orange-600 hover:text-white border border-orange-300 px-3 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-bold text-[10px] md:text-sm transition-all duration-300 active:scale-95"
           >
             <span>View All</span>
@@ -74,7 +78,7 @@ export default function TrendingPuja() {
           {filteredServices.map((service) => (
             <div
               key={service.id}
-              onClick={() => navigate(`/home-Puja/${service.id}`)}
+              onClick={() => navigate(`/home-puja/${service.id}`)}
               className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-200 cursor-pointer flex flex-col hover:-translate-y-2 active:scale-[0.98]"
             >
               {/* Image */}
@@ -82,6 +86,7 @@ export default function TrendingPuja() {
                 <img
                   src={`${API_BASE_URL}/uploads/${service.image_url}`}
                   alt={service.puja_name}
+                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                 />
                 <div className="absolute top-3 right-3 z-20">

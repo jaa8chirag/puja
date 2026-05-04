@@ -50,8 +50,9 @@ export default function SpecialPujas() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 justify-items-center">
           {services
             .filter(service =>
-              service.puja_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              (service.title && service.title.toLowerCase().includes(searchTerm.toLowerCase()))
+              (service.puja_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (service.title && service.title.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+              Number(service.is_featured) === 1
             )
             .slice(0, 3)
             .map((service) => (
@@ -65,6 +66,7 @@ export default function SpecialPujas() {
                   <img
                     src={`${API_BASE_URL}/uploads/${service.image_url}`}
                     alt={service.puja_name}
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1108]/90 via-transparent to-transparent opacity-60" />

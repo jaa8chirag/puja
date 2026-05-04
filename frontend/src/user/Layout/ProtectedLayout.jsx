@@ -46,7 +46,7 @@ export const ProtectedLayout = ({ allowedRoles }) => {
   // 🔐 If role not allowed → redirect
   if (allowedRoles && !allowedRoles.includes(decoded?.role)) {
     if (decoded?.role === "pandit") return <Navigate to="/partner/dashboard" replace />;
-    if (decoded?.role === "customerCare") return <Navigate to="/customerCare/dashboard" replace />;
+    if (decoded?.role === "customerCare") return <Navigate to="/customer-care/dashboard" replace />;
     return <Navigate to="/" replace />;
   }
 

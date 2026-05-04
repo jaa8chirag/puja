@@ -9,31 +9,31 @@ const PolicySection = () => {
     {
       icon: <Info className="w-6 h-6 text-orange-600" />,
       title: "About Us",
-      to: "/aboutUs",
+      to: "/about-us",
       desc: "Learn about our sacred mission"
     },
     {
       icon: <ShieldCheck className="w-6 h-6 text-orange-600" />,
       title: "Privacy Policy",
-      to: "/privacypolicy",
+      to: "/privacy-policy",
       desc: "How we protect your data"
     },
     {
       icon: <ShieldAlert className="w-6 h-6 text-orange-600" />,
       title: "Cancellation Policy",
-      to: "/cancellationpolicy",
+      to: "/cancellation-policy",
       desc: "Booking changes & refunds"
     },
     {
       icon: <FileText className="w-6 h-6 text-orange-600" />,
       title: "Terms & Conditions",
-      to: "/termsandconditions",
+      to: "/terms-and-conditions",
       desc: "Rules for our services"
     },
     {
       icon: <Ban className="w-6 h-6 text-orange-600" />,
       title: "Discrimination Policy",
-      to: "/discrimination",
+      to: "/discrimination-policy",
       desc: "Our commitment to equality"
     }
   ];

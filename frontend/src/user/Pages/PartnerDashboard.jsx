@@ -319,6 +319,8 @@ const PartnerDashboard = () => {
   const [pendingStatus, setPendingStatus] = useState(null);
   const [profilePaymentMethod, setProfilePaymentMethod] = useState("bank");
   const [showProfileStateList, setShowProfileStateList] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [profileError, setProfileError] = useState("");
   const profileStateRef = useRef(null);
   const navigate = useNavigate();
@@ -338,7 +340,7 @@ const PartnerDashboard = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate("/partnerSignIn");
+      navigate("/partner-signin");
       return;
     }
     fetchMyPujas();
@@ -424,12 +426,39 @@ const PartnerDashboard = () => {
       setProfileError("Kripya Name, City aur State bharen.");
       return;
     }
+    if (profile.pincode && profile.pincode.length !== 6) {
+      setProfileError("Pincode must be 6 digits.");
+      return;
+    }
     setProfileError("");
     setProfileStep(2);
     setEditing(true);
   };
 
   const handleUpdate = async () => {
+    // Basic validation
+    if (profilePaymentMethod === "upi") {
+      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+      if (!profile.upiId || !upiRegex.test(profile.upiId)) {
+        setProfileError("Invalid UPI ID. Example: name@bank");
+        return;
+      }
+    } else if (profilePaymentMethod === "bank") {
+      if (
+        !profile.accountHolderName ||
+        !profile.bankName ||
+        !profile.bankAccountNumber
+      ) {
+        setProfileError("Please fill all bank details.");
+        return;
+      }
+      const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+      if (!profile.ifscCode || !ifscRegex.test(profile.ifscCode)) {
+        setProfileError("Invalid IFSC Code. Format: ABCD0123456");
+        return;
+      }
+    }
+
     try {
       await axios.put(
         `${API_BASE_URL}/partner/update-profile`,
@@ -473,58 +502,103 @@ const PartnerDashboard = () => {
       />
 
       {/* HEADER */}
-      <div className="bg-[#FDFAF4] border-b border-[#EDE8DC] sticky top-0 px-4 sm:px-6 pt-4 pb-4 z-40">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              onClick={() => setShowProfile(true)}
-              className="relative flex-shrink-0 w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center"
-            >
-              <User size={22} className="text-orange-500" />
-              <span
-                className={`absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${isOnline ? "bg-green-500" : "bg-gray-400"}`}
-              />
-            </button>
-            <div className="min-w-0">
-              <p className="text-[15px] sm:text-base font-bold text-[#1a1208] truncate leading-tight">
-                {profile?.name || "Partner"}
-              </p>
-              <p className="text-[12px] text-[#a89880] flex items-center gap-1 truncate font-medium">
-                <MapPin size={12} /> {profile?.city || "India"}
-              </p>
+      <div className="bg-[#FDFAF4] border-b border-[#EDE8DC] sticky top-0 px-4 sm:px-6 pt-3 pb-3 z-40 shadow-sm">
+        <div className="flex items-center justify-between gap-2 w-full">
+          
+          {/* Left: Branding */}
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500 shadow-sm">
+              🕉
             </div>
+            <h1 className="text-[17px] sm:text-xl font-black text-[#1a1208] tracking-tight">
+              Pandit Dashboard
+            </h1>
           </div>
-          <div className="flex items-center gap-4 flex-shrink-0">
-            <div className="flex items-center gap-2">
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
+            {/* Status Toggle */}
+            <div className="flex flex-col items-end sm:flex-row sm:items-center gap-0.5 sm:gap-2">
               <span
-                className={`text-[13px] font-bold ${isOnline ? "text-green-600" : "text-gray-400"}`}
+                className={`text-[9px] sm:text-[11px] font-black uppercase tracking-wider ${isOnline ? "text-green-600" : "text-gray-400"}`}
               >
                 {isOnline ? "Online" : "Offline"}
               </span>
               <button
                 onClick={handleToggleClick}
-                className={`relative w-12 h-6 rounded-full transition-all duration-300 ${isOnline ? "bg-green-500" : "bg-gray-300"}`}
+                className={`relative w-10 h-5 sm:w-11 sm:h-6 rounded-full transition-all duration-300 shadow-inner ${isOnline ? "bg-green-500" : "bg-gray-300"}`}
               >
                 <span
-                  className={`absolute top-1/2 -translate-y-1/2 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${isOnline ? "translate-x-6" : "translate-x-0"}`}
+                  className={`absolute top-1/2 -translate-y-1/2 left-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white rounded-full shadow transition-all duration-300 ${isOnline ? "translate-x-4 sm:translate-x-5" : "translate-x-0"}`}
                 />
               </button>
             </div>
-            <div
-              onClick={() => {
-                localStorage.clear();
-                navigate("/partnerSignIn");
-              }}
-              className="group flex items-center gap-3 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer transition-all duration-300 hover:bg-red-50 hover:border-red-200 shadow-sm active:scale-[0.98]"
-            >
-              <LogOut
-                size={18}
-                className="text-gray-500 group-hover:text-red-600 transition-colors"
-                strokeWidth={2}
-              />
-              <span className="text-[14px] font-bold text-gray-600 group-hover:text-red-600 transition-colors">
-                Logout
-              </span>
+            
+            <div className="w-[1px] h-8 bg-[#EDE8DC] hidden sm:block"></div>
+
+            {/* Clickable Profile (Moved to Right) */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="flex items-center gap-2 min-w-0 p-1 rounded-2xl hover:bg-orange-50/50 transition-all active:scale-95 group border border-transparent hover:border-orange-100/50"
+              >
+                <div className="hidden sm:block min-w-0 flex-1 text-right mr-1">
+                  <p className="text-[14px] font-bold text-[#1a1208] truncate leading-tight group-hover:text-orange-600 transition-colors">
+                    {profile?.name || "Profile"}
+                  </p>
+                  <p className="text-[11px] text-[#a89880] truncate font-medium mt-0.5">
+                    Settings <ChevronDown size={10} className={`inline transition-transform duration-200 ${showProfileDropdown ? "rotate-180" : ""}`} />
+                  </p>
+                </div>
+                <div className="relative flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-orange-100 flex items-center justify-center group-hover:shadow-md transition-all">
+                  <User size={18} className="text-orange-500 sm:w-[20px] sm:h-[20px]" />
+                  <span
+                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#FDFAF4] ${isOnline ? "bg-green-500" : "bg-gray-400"}`}
+                  />
+                </div>
+              </button>
+
+              {/* DROPDOWN MENU */}
+              {showProfileDropdown && (
+                <>
+                  {/* Invisible Overlay for click-outside */}
+                  <div className="fixed inset-0 z-40" onClick={() => setShowProfileDropdown(false)} />
+                  
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#EDE8DC] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <button
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        setShowProfile(true);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors text-left group border-b border-[#EDE8DC]"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+                        <User size={14} className="text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-bold text-[#1a1208]">Profile Settings</p>
+                        <p className="text-[10px] text-gray-400 font-medium">Update details</p>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        setShowLogoutConfirm(true);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left group"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                        <LogOut size={14} className="text-red-600" strokeWidth={2.5} />
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-bold text-red-600">Logout</p>
+                        <p className="text-[10px] text-red-400/70 font-medium">End session</p>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -710,15 +784,15 @@ const PartnerDashboard = () => {
                           Full Name
                         </label>
                         <div
-                          className={`flex bg-[#FBF9F7] border rounded-xl transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
+                          className={`flex h-12 bg-[#FBF9F7] border rounded-xl items-center transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
                         >
                           <User
-                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            className="ml-3 text-gray-300 shrink-0"
                             size={16}
                           />
                           <input
                             disabled={!editing}
-                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                            className="w-full px-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
                             placeholder="Enter name"
                             value={profile.name || ""}
                             onChange={(e) =>
@@ -732,15 +806,15 @@ const PartnerDashboard = () => {
                           Gotra
                         </label>
                         <div
-                          className={`flex bg-[#FBF9F7] border rounded-xl transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
+                          className={`flex h-12 bg-[#FBF9F7] border rounded-xl items-center transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
                         >
                           <Fingerprint
-                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            className="ml-3 text-gray-300 shrink-0"
                             size={16}
                           />
                           <input
                             disabled={!editing}
-                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                            className="w-full px-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
                             placeholder="Optional"
                             value={profile.gotra || ""}
                             onChange={(e) =>
@@ -753,13 +827,13 @@ const PartnerDashboard = () => {
                         <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
                           Mobile
                         </label>
-                        <div className="flex bg-[#F5F0E8] border border-[#EDE8DC] rounded-xl overflow-hidden cursor-not-allowed">
-                          <span className="pl-3 py-3 text-gray-400 font-black text-xs border-r border-[#EDE8DC] pr-2">
+                        <div className="flex h-12 bg-[#F5F0E8] border border-[#EDE8DC] rounded-xl items-center overflow-hidden cursor-not-allowed">
+                          <span className="pl-3 text-gray-400 font-black text-xs border-r border-[#EDE8DC] pr-2 h-full flex items-center">
                             +91
                           </span>
                           <input
                             disabled
-                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] cursor-not-allowed"
+                            className="w-full px-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] cursor-not-allowed"
                             value={profile.phone || ""}
                           />
                         </div>
@@ -769,15 +843,15 @@ const PartnerDashboard = () => {
                           Email
                         </label>
                         <div
-                          className={`flex bg-[#FBF9F7] border rounded-xl transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
+                          className={`flex h-12 bg-[#FBF9F7] border rounded-xl items-center transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
                         >
                           <Mail
-                            className="ml-3 my-auto text-gray-300 shrink-0"
+                            className="ml-3 text-gray-300 shrink-0"
                             size={16}
                           />
                           <input
                             disabled={!editing}
-                            className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                            className="w-full px-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
                             placeholder="acharya@mail.com"
                             value={profile.email || ""}
                             onChange={(e) =>
@@ -818,12 +892,12 @@ const PartnerDashboard = () => {
                           />
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div
                           className="space-y-1 relative"
                           ref={profileStateRef}
                         >
-                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
+                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
                             State
                           </label>
                           <div
@@ -831,10 +905,10 @@ const PartnerDashboard = () => {
                               editing &&
                               setShowProfileStateList(!showProfileStateList)
                             }
-                            className={`flex bg-[#FBF9F7] border rounded-xl py-3 px-3 justify-between items-center transition-all ${editing ? "cursor-pointer border-gray-300 hover:border-orange-400" : "border-[#EDE8DC] cursor-not-allowed"}`}
+                            className={`flex h-12 bg-[#FBF9F7] border rounded-xl px-3 justify-between items-center transition-all ${editing ? "cursor-pointer border-gray-300 hover:border-orange-400" : "border-[#EDE8DC] cursor-not-allowed"}`}
                           >
-                            <span className="text-xs font-bold text-[#3D2B1D] truncate">
-                              {profile.state || "State"}
+                            <span className="text-sm font-bold text-[#3D2B1D] truncate">
+                              {profile.state || "Select State"}
                             </span>
                             <ChevronDown
                               size={14}
@@ -842,7 +916,7 @@ const PartnerDashboard = () => {
                             />
                           </div>
                           {showProfileStateList && (
-                            <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-2xl max-h-44 overflow-y-auto">
+                            <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
                               {INDIAN_STATES.map((s) => (
                                 <div
                                   key={s}
@@ -850,7 +924,7 @@ const PartnerDashboard = () => {
                                     setProfile({ ...profile, state: s });
                                     setShowProfileStateList(false);
                                   }}
-                                  className="px-4 py-2.5 hover:bg-orange-50 cursor-pointer text-xs font-bold text-[#3D2B1D] border-b border-gray-50"
+                                  className="px-4 py-3 hover:bg-orange-50 cursor-pointer text-xs font-bold text-[#3D2B1D] border-b border-gray-50 last:border-0"
                                 >
                                   {s}
                                 </div>
@@ -859,16 +933,16 @@ const PartnerDashboard = () => {
                           )}
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
+                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
                             City
                           </label>
                           <div
-                            className={`bg-[#FBF9F7] border rounded-xl px-3 py-3 ${editing ? "border-gray-300" : "border-[#EDE8DC]"}`}
+                            className={`flex h-12 bg-[#FBF9F7] border rounded-xl px-3 items-center transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
                           >
                             <input
                               disabled={!editing}
-                              className="w-full bg-transparent outline-none text-xs font-bold text-[#3D2B1D] disabled:cursor-not-allowed"
-                              placeholder="City"
+                              className="w-full bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                              placeholder="Enter City"
                               value={profile.city || ""}
                               onChange={(e) =>
                                 setProfile({ ...profile, city: e.target.value })
@@ -877,17 +951,17 @@ const PartnerDashboard = () => {
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">
+                          <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">
                             Pincode
                           </label>
                           <div
-                            className={`bg-[#FBF9F7] border rounded-xl px-3 py-3 ${editing ? "border-gray-300" : "border-[#EDE8DC]"}`}
+                            className={`flex h-12 bg-[#FBF9F7] border rounded-xl px-3 items-center transition-all ${editing ? "border-gray-300 focus-within:border-orange-500" : "border-[#EDE8DC]"}`}
                           >
                             <input
                               disabled={!editing}
                               maxLength={6}
-                              className="w-full bg-transparent outline-none text-xs font-bold text-[#3D2B1D] disabled:cursor-not-allowed"
-                              placeholder="Pin"
+                              className="w-full bg-transparent outline-none text-sm font-bold text-[#3D2B1D] placeholder:font-normal placeholder:text-gray-300 disabled:cursor-not-allowed"
+                              placeholder="6 Digits"
                               value={profile.pincode || ""}
                               onChange={(e) =>
                                 setProfile({
@@ -1083,6 +1157,15 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
+              <div className="flex justify-center border-t border-[#EDE8DC] pt-5 pb-2">
+                <button
+                  onClick={() => setShowLogoutConfirm(true)}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 bg-red-50 text-red-600 font-bold rounded-xl border border-red-100 hover:bg-red-100 transition-all active:scale-95 text-sm"
+                >
+                  <LogOut size={16} strokeWidth={2.5} /> Logout from Account
+                </button>
+              </div>
+
               <div className="flex justify-center pb-2">
                 <div className="flex items-center gap-2 text-[9px] font-black text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100">
                   <ShieldCheck size={12} strokeWidth={3} /> SECURE PROFILE
@@ -1126,6 +1209,40 @@ const PartnerDashboard = () => {
                 className={`flex-1 py-3 rounded-xl font-bold text-[14px] text-white transition shadow-md ${pendingStatus ? "bg-green-500 hover:bg-green-600" : "bg-gray-500 hover:bg-gray-600"}`}
               >
                 {pendingStatus ? "Go Online" : "Go Offline"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOGOUT CONFIRM POPUP */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-[#FDFAF4] w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-[#EDE8DC] text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-200">
+              <LogOut size={32} className="text-red-500" strokeWidth={2} />
+            </div>
+            <h3 className="text-[19px] font-black text-[#1a1208] mb-2">
+              Logout Account?
+            </h3>
+            <p className="text-[13px] text-[#a89880] mb-6">
+              Are you sure you want to log out of your Pandit account?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-3 rounded-xl font-bold text-[14px] bg-[#EDE8DC] text-[#6b5840] hover:bg-[#e3dcce] transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.clear();
+                  navigate("/partner-signin");
+                }}
+                className="flex-1 py-3 rounded-xl font-bold text-[14px] text-white bg-red-500 hover:bg-red-600 transition shadow-md"
+              >
+                Yes, Logout
               </button>
             </div>
           </div>

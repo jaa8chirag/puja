@@ -133,6 +133,7 @@ export default function ReviewSection() {
                     <img
                       src={buildImageUrl(review.avatar) || "/img/review1.jpg"}
                       alt={review.name}
+                      loading="lazy"
                       className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover"
                     />
                     <div>

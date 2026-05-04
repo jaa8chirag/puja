@@ -74,6 +74,11 @@ const RecentBookings = ({ bookings = [] }) => {
                   <span className="text-green-400 font-bold text-[15px]">
                     ₹{Number(b.price).toLocaleString("en-IN")}
                   </span>
+                  {b.paid_amount > 0 && (
+                    <span className="text-orange-400 font-bold text-[10px]">
+                      Paid: ₹{Number(b.paid_amount).toLocaleString("en-IN")}
+                    </span>
+                  )}
                   <span className="text-slate-400 text-xs mt-0.5 truncate max-w-full">
                     {b.pandit_name || ""}
                   </span>

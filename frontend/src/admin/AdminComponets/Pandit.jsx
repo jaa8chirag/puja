@@ -1369,22 +1369,15 @@ const Pandits = () => {
 
       {/* DELETE CONFIRM MODAL */}
       {deleteModal && deleteTarget && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 backdrop-blur-md px-4">
-          <div className="bg-[#131e32] border border-rose-500/20 rounded-[32px] p-8 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="text-center mb-6">
-              <div className="text-5xl mb-4">🗑️</div>
-              <h2 className="text-white font-black text-xl tracking-tight m-0">
-                Pandit Delete Karein?
-              </h2>
-              <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-                "
-                <span className="text-orange-400 font-bold">
-                  {deleteTarget.name}
-                </span>
-                " ka record permanently delete ho jayega. Yeh action undo nahi
-                ho sakta.
-              </p>
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+              <Trash2 size={32} className="text-rose-400" />
             </div>
+            <h3 className="text-lg font-bold text-white mb-2">Delete Pandit?</h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to permanently delete <span className="text-rose-400 font-black">"{deleteTarget.name}"</span>? This action cannot be undone.
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -1392,23 +1385,16 @@ const Pandits = () => {
                   setDeleteTarget(null);
                 }}
                 disabled={deleting}
-                className="flex-1 py-4 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white transition-all active:scale-95"
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="flex-[1.5] py-4 text-[11px] font-black uppercase tracking-widest rounded-2xl text-white transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
-                style={{ background: deleting ? "#7f1d1d" : "#dc2626" }}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-500 transition shadow-lg shadow-rose-900/20 flex items-center justify-center disabled:opacity-50"
               >
-                {deleting ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <>
-                    <Trash2 size={14} /> Yes, Delete it
-                  </>
-                )}
+                {deleting ? "Deleting..." : "Delete Now"}
               </button>
             </div>
           </div>

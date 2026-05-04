@@ -62,3 +62,7 @@ export const adminDeleteCoupon = (id) => COUPON_API.delete(`/delete/${id}`);
 export const getNewsletterSubscribers = () => axios.get(`${API_BASE_URL}/newsletter/all`, {
   headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
 });
+
+export const refundPayment = (data) => axios.post(`${API_BASE_URL}/razorpay/initiate-refund`, data, {
+  headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
+});

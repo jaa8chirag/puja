@@ -112,7 +112,7 @@ const PartnerSignUp = () => {
         if (!formData.name || !formData.phone || !formData.city ||
             !formData.state || !formData.address ||
             !formData.pincode || !formData.document) {
-            setError("Kripya sabhi jankari bharein aur document upload karein.");
+            setError("Please fill all details and upload the document.");
             return;
         }
         setError("");
@@ -125,11 +125,11 @@ const PartnerSignUp = () => {
 
         if (paymentMethod === 'bank') {
             if (!formData.accountHolderName || !formData.bankAccountNumber || !formData.bankName || !formData.ifscCode) {
-                setError("Kripya sabhi bank details bharein.");
+                setError("Please fill all bank details.");
                 return;
             }
             if (formData.bankAccountNumber !== formData.confirmBankAccountNumber) {
-                setError("Bank account number match nahi kar raha. Dobara check karein.");
+                setError("Bank account numbers do not match. Please check again.");
                 return;
             }
             const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
@@ -139,7 +139,7 @@ const PartnerSignUp = () => {
             }
         } else {
             if (!formData.upiId) {
-                setError("Kripya UPI ID darj karein.");
+                setError("Please enter UPI ID.");
                 return;
             }
             if (!formData.upiId.includes('@')) {
@@ -164,7 +164,7 @@ const PartnerSignUp = () => {
             if (res.ok) {
                 setStep(3);
             } else {
-                setError(data.message || "Registration process mein dikkat aayi.");
+                setError(data.message || "Registration process failed.");
             }
         } catch {
             setError("Divine connection interrupted. Try again.");
@@ -236,7 +236,7 @@ const PartnerSignUp = () => {
                     <p className="text-gray-400 text-[9px] md:text-[10px] text-center mt-1 mb-5 uppercase tracking-[0.2em] font-bold">Authorized Acharya Network</p>
 
                     <div className="w-full flex bg-[#F6F3F0] p-1 rounded-xl mb-5">
-                        <Link to="/partnerSignIn" className="flex-1 py-2 text-[10px] font-black text-gray-400 text-center uppercase tracking-widest">Sign In</Link>
+                        <Link to="/partner-signin" className="flex-1 py-2 text-[10px] font-black text-gray-400 text-center uppercase tracking-widest">Sign In</Link>
                         <button className="flex-1 py-2 text-[10px] font-black rounded-lg bg-white text-orange-600 shadow-sm cursor-default uppercase tracking-widest">Register</button>
                     </div>
 
@@ -359,7 +359,7 @@ const PartnerSignUp = () => {
                         <div className="w-full space-y-5">
                             <div className="text-center mb-2">
                                 <h3 className="text-base font-black text-[#3D2B1D]">Payment Details</h3>
-                                <p className="text-[10px] text-gray-400 mt-1">Payments aapke is account mein bheje jaayenge</p>
+                                <p className="text-[10px] text-gray-400 mt-1">Payments will be sent to this account</p>
                             </div>
 
                             <div className="flex bg-[#F6F3F0] p-1 rounded-xl">
@@ -404,7 +404,7 @@ const PartnerSignUp = () => {
                                             )}
                                         </div>
                                         {formData.confirmBankAccountNumber && formData.bankAccountNumber !== formData.confirmBankAccountNumber && (
-                                            <p className="text-[9px] text-red-500 font-bold ml-1 mt-1">Account numbers match nahi kar rahe</p>
+                                            <p className="text-[9px] text-red-500 font-bold ml-1 mt-1">Account numbers do not match</p>
                                         )}
                                     </div>
                                     <div className="space-y-1">
@@ -417,7 +417,7 @@ const PartnerSignUp = () => {
                                     </div>
                                     <div className="flex items-start gap-2 p-3 bg-orange-50 rounded-xl border border-orange-100">
                                         <ShieldCheck size={14} className="text-orange-400 mt-0.5 shrink-0" />
-                                        <p className="text-[9px] text-orange-700 font-bold leading-relaxed">Aapki bank details end-to-end encrypted hain. Sirf payment transfer ke liye use ki jaayengi.</p>
+                                        <p className="text-[9px] text-orange-700 font-bold leading-relaxed">Your bank details are end-to-end encrypted. They will only be used for payment transfers.</p>
                                     </div>
                                 </div>
                             )}
@@ -440,7 +440,7 @@ const PartnerSignUp = () => {
                                     </div>
                                     <div className="flex items-start gap-2 p-3 bg-orange-50 rounded-xl border border-orange-100">
                                         <ShieldCheck size={14} className="text-orange-400 mt-0.5 shrink-0" />
-                                        <p className="text-[9px] text-orange-700 font-bold leading-relaxed">UPI ID verify karke hi payment bheja jaayega. Sahi ID darj karein.</p>
+                                        <p className="text-[9px] text-orange-700 font-bold leading-relaxed">Payment will only be sent after UPI ID verification. Please enter the correct ID.</p>
                                     </div>
                                 </div>
                             )}

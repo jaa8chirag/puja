@@ -40,7 +40,7 @@ const SavedAddresses = () => {
 
   useEffect(() => { fetchAddresses(); }, []);
 
-  // Modal kholne ka logic (Add aur Edit dono ke liye)
+  // Modal opening logic (for both Add and Edit)
   const openModal = (address = null) => {
     if (address) {
       setEditingId(address.id);
@@ -59,7 +59,7 @@ const SavedAddresses = () => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
-    // Data conversion: Backend 1/0 expect karta hai checkbox ke liye
+    // Data conversion: Backend expects 1/0 for checkbox values
     const dataToSend = {
       ...formData,
       is_default: formData.is_default ? 1 : 0

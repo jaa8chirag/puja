@@ -55,6 +55,8 @@ const VerifiedPanditManager = () => {
   const [editingPandit, setEditingPandit] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [toast, setToast] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -124,14 +126,22 @@ const VerifiedPanditManager = () => {
     }
   };
 
-  const deletePandit = async (id) => {
-    if (!window.confirm("Delete this record?")) return;
+  const deletePandit = (pandit) => {
+    setDeleteTarget({ id: pandit.id, name: pandit.name });
+  };
+
+  const confirmDeletePandit = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await API.delete(`/verify-pandit/${id}`);
-      setPandits((prev) => prev.filter((p) => p.id !== id));
+      await API.delete(`/verify-pandit/${deleteTarget.id}`);
+      setPandits((prev) => prev.filter((p) => p.id !== deleteTarget.id));
       showToast("Deleted successfully");
     } catch {
       showToast("Delete failed", "error");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -275,7 +285,7 @@ const VerifiedPanditManager = () => {
                           <Pencil size={14} />
                         </button>
                         <button
-                          onClick={() => deletePandit(p.id)}
+                          onClick={() => deletePandit(p)}
                           className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-500 transition"
                         >
                           <Trash2 size={14} />
@@ -405,6 +415,37 @@ const VerifiedPanditManager = () => {
             </button>
           </div>
         </ModalWrapper>
+      )}
+
+      {/* DELETE CONFIRM MODAL */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+              <Trash2 size={32} className="text-rose-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Delete Record?</h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to permanently delete <span className="text-rose-400 font-black">"{deleteTarget.name}"</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeletePandit}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-500 transition shadow-lg shadow-rose-900/20 flex items-center justify-center disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Delete Now"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

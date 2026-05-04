@@ -162,7 +162,7 @@ export const signupVerify = async (req, res) => {
     const token = jwt.sign(
       { id: newUserId, name, phone, role: role || "user" },
       process.env.JWT_SECRET || "secret",
-      { expiresIn: "7d" },
+      { expiresIn: "90d" },
     );
 
     res.status(201).json({
@@ -255,7 +255,7 @@ export const verifyOtp = async (req, res) => {
           role: rows[0].role,
         },
         process.env.JWT_SECRET || "secret",
-        { expiresIn: "7d" },
+        { expiresIn: "90d" },
       );
 
       res.status(200).json({

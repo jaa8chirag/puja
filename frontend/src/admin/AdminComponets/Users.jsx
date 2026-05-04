@@ -85,6 +85,7 @@ const Users = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [toast, setToast] = useState(null);
   const [filterRole, setFilterRole] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const limit = 10;
 
   const [newUser, setNewUser] = useState({
@@ -129,18 +130,22 @@ const Users = () => {
     return matchesSearch && matchesRole;
   });
 
-  const deleteUser = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
-    console.log("Deleting id:", id, typeof id);
-    setActionLoading(id);
+  const deleteUser = (user) => {
+    setDeleteTarget({ id: user.id, name: user.name });
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!deleteTarget) return;
+    setActionLoading(deleteTarget.id);
     try {
-      await API.delete(`/users/${id}`);
+      await API.delete(`/users/${deleteTarget.id}`);
       showToast("User deleted");
       await fetchUsers();
     } catch {
       showToast("Delete failed", "error");
     } finally {
       setActionLoading(null);
+      setDeleteTarget(null);
     }
   };
 
@@ -388,7 +393,7 @@ const Users = () => {
                           <Pencil size={14} />
                         </button>
                         <button
-                          onClick={() => deleteUser(u.id)}
+                          onClick={() => deleteUser(u)}
                           className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-500 hover:border-rose-500/50 border border-transparent transition-all"
                         >
                           <Trash2 size={14} />
@@ -517,6 +522,37 @@ const Users = () => {
             </button>
           </div>
         </ModalWrapper>
+      )}
+      
+      {/* DELETE CONFIRM MODAL */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+              <Trash2 size={32} className="text-rose-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Delete User?</h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to permanently delete <span className="text-rose-400 font-black">"{deleteTarget.name}"</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={actionLoading === deleteTarget.id}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                disabled={actionLoading === deleteTarget.id}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-500 transition shadow-lg shadow-rose-900/20 flex items-center justify-center disabled:opacity-50"
+              >
+                {actionLoading === deleteTarget.id ? "Deleting..." : "Delete Now"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

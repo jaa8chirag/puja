@@ -55,7 +55,7 @@ const CustomerCareSignIn = () => {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('role', response.data.role);
         setMessage({ type: 'success', text: 'Success! Redirecting...' });
-        window.location.href = '/customerCare/dashboard';
+        window.location.href = '/customer-care/dashboard';
       }
     } catch (error) {
       setMessage({

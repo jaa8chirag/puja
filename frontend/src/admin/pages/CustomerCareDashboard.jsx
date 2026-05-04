@@ -1241,7 +1241,7 @@ const CustomerCareDashboard = () => {
   };
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/customerCare/signIn");
+    navigate("/customer-care/signin");
   };
 
   /* ── Filtered lists ── */

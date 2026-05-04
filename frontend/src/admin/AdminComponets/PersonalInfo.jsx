@@ -548,7 +548,7 @@ const PersonalInfo = () => {
               <FileUp className="text-orange-500" /> Puja Samagri Checklist
             </h1>
             <p className="text-slate-500 text-xs mt-1">
-              PDF replace karo — URL same rahega
+              Replace PDF — URL will remain the same
             </p>
           </div>
         </div>

@@ -269,6 +269,7 @@ export default function AIPanditBot() {
               <img
                 src="https://www.creativehatti.com/wp-content/uploads/2022/12/Pandit-ji-vector-mascot-logo-template-23-small.jpg"
                 alt="Pandit Ji Avatar"
+                loading="lazy"
                 // YAHAN BADLAV KIYE HAIN:
                 // 1. 'scale-125' joda gaya hai image ko 25% zoom karne ke liye.
                 // 2. 'group-hover:scale-135' lagaya hai taaki hover par aur 10% zoom ho.
@@ -298,6 +299,7 @@ export default function AIPanditBot() {
                 <img
                   src="https://www.creativehatti.com/wp-content/uploads/2022/12/Pandit-ji-vector-mascot-logo-template-23-small.jpg"
                   alt="Pandit Ji"
+                  loading="lazy"
                   className="w-full h-full object-cover scale-125"
                 />
               </div>

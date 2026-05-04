@@ -1349,7 +1349,7 @@ export default function FinancialDashboard() {
               🕉️ Financial Dashboard
             </h1>
             <p className="text-[12px] text-slate-500 font-medium">
-              Manage donation types & pricing
+              Revenue, transactions & payment settings
             </p>
           </div>
 

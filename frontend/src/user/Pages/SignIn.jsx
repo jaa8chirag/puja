@@ -81,9 +81,9 @@ const SignIn = () => {
           {/* Header: Logo and Title */}
           <div className="flex items-center gap-3 mb-12">
             <img
-              src="/img/download.jpg"
+              src="/img/download2.png"
               alt="logo"
-              className="w-12 h-12 bg-[#FFB347] p-2 rounded-xl"
+              className="w-12 h-12 rounded-xl"
             />
             <div>
               <h1 className="text-2xl font-serif font-bold text-gray-800">

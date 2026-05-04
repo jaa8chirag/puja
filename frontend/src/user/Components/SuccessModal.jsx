@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, X, Sparkles, Calendar, ArrowRight } from 'lucide-react';
+import { CheckCircle, Sparkles, ArrowRight } from 'lucide-react';
 
 const SuccessModal = ({ isOpen, onClose, message, title = "Booking Successful!" }) => {
   if (!isOpen) return null;
@@ -13,14 +13,6 @@ const SuccessModal = ({ isOpen, onClose, message, title = "Booking Successful!" 
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-orange-50 to-transparent -z-10" />
           <Sparkles className="absolute top-8 left-8 text-orange-300 animate-pulse" size={20} />
           <Sparkles className="absolute top-12 right-12 text-orange-300 animate-pulse delay-700" size={16} />
-
-          {/* Close Button */}
-          <button 
-            onClick={onClose}
-            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-all"
-          >
-            <X size={20} />
-          </button>
 
           {/* Success Icon with Glow */}
           <div className="relative mb-8">

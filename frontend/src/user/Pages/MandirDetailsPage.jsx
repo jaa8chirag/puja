@@ -49,6 +49,7 @@ const MandirDetailsPage = () => {
                         <img 
                             src={`${API_BASE_URL}/uploads/${mandir.image_url_1}`} 
                             alt={mandir.name} 
+                            loading="lazy"
                             className="w-full h-full object-cover" 
                             onError={(e) => {
                                 e.target.onerror = null;

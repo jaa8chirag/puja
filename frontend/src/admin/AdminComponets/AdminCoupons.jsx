@@ -63,13 +63,21 @@ const AdminCoupons = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this coupon?")) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const handleDelete = (coupon) => {
+    setDeleteTarget({ id: coupon.id, code: coupon.code });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await adminDeleteCoupon(id);
+      await adminDeleteCoupon(deleteTarget.id);
       fetchData();
     } catch (err) {
       alert("Failed to delete coupon");
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -211,7 +219,7 @@ const AdminCoupons = () => {
                   </td>
                   <td className="px-6 py-5 text-right">
                     <button 
-                      onClick={() => handleDelete(coupon.id)}
+                      onClick={() => handleDelete(coupon)}
                       className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                     >
                       <Trash2 size={16} />
@@ -342,6 +350,35 @@ const AdminCoupons = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRM MODAL */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+              <Trash2 size={32} className="text-rose-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Delete Coupon?</h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to permanently delete <span className="text-rose-400 font-black">"{deleteTarget.code}"</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-500 transition shadow-lg shadow-rose-900/20 flex items-center justify-center"
+              >
+                Delete Now
+              </button>
+            </div>
           </div>
         </div>
       )}

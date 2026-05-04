@@ -218,7 +218,7 @@ const Adminblogs = () => {
             <View className="text-orange-500" /> Blogs Management
           </h1>
           <p className="text-[12px] text-slate-500 font-medium">
-            Manage donation types & pricing
+            Create, edit & publish blog content
           </p>
         </div>
         <button

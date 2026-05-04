@@ -1,6 +1,7 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import dotenv from "dotenv";
+import db from "../config/db.js";
 
 dotenv.config();
 
@@ -51,6 +52,41 @@ export const verifyPayment = async (req, res) => {
     res.status(400).json({
       success: false,
       message: "Invalid signature sent!",
+    });
+  }
+};
+
+export const initiateRefund = async (req, res) => {
+  const { paymentId, amount, bookingId } = req.body;
+
+  try {
+    const options = {
+      payment_id: paymentId,
+    };
+
+    // If amount is provided, refund that specific amount (in paise)
+    // Else, Razorpay will refund the full amount if amount is not passed
+    if (amount) {
+      options.amount = amount * 100;
+    }
+
+    const refund = await razorpay.payments.refund(paymentId, options);
+
+    // Update booking status in database
+    if (bookingId) {
+      await db.query("UPDATE puja_requests SET status = 'refunded' WHERE id = ?", [bookingId]);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Refund initiated successfully",
+      refund,
+    });
+  } catch (error) {
+    console.error("Razorpay Refund Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.description || "Could not initiate refund",
     });
   }
 };

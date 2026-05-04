@@ -364,19 +364,14 @@ const GodViewHeader = ({ stats, onRefresh }) => {
     }),
   );
   useEffect(() => {
-    const t = setInterval(
-      () =>
-        setTime(
-          new Date().toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          }),
-        ),
-      1000,
+    setTime(
+      new Date().toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
     );
-    return () => clearInterval(t);
-  }, []);
+  }, [stats]);
 
   return (
     <>

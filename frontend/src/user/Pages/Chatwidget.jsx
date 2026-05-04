@@ -1,6 +1,6 @@
 // ============================================
 // src/user/Components/ChatWidget.jsx
-// Sirf "user" role walo ko dikhega
+// Only visible to users with "user" role
 // ============================================
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -51,7 +51,7 @@ export default function ChatWidget() {
     }, []);
 
     const connectSocket = useCallback(() => {
-        if (!token) { setError("Login karein chat ke liye"); return; }
+        if (!token) { setError("Please login to start a chat"); return; }
         if (socketRef.current?.connected) return;
 
         const socket = io(SOCKET_URL, {
@@ -79,7 +79,7 @@ export default function ChatWidget() {
             if (agentName) setAgentName(agentName);
         });
 
-        // ✅ Reconnect pe purane messages restore karo
+        // ✅ Restore old messages on reconnect
         socket.on("user:history", ({ messages: historyMessages }) => {
             if (historyMessages?.length > 0) {
                 setMessages(historyMessages);
@@ -91,7 +91,7 @@ export default function ChatWidget() {
             setStatus("active");
             setMessages((prev) => [
                 ...prev,
-                { id: "sys_" + Date.now(), type: "system", text: `${agentName} ne chat join ki! 👋` },
+                { id: "sys_" + Date.now(), type: "system", text: `${agentName} joined the chat! 👋` },
             ]);
         });
 
@@ -119,8 +119,8 @@ export default function ChatWidget() {
                     id: "sys_close_" + Date.now(),
                     type: "system",
                     text: closedByRole === "agent"
-                        ? `${closedBy} ne chat band ki.`
-                        : "Chat session band ho gayi.",
+                        ? `${closedBy} ended the chat.`
+                        : "Chat session has ended.",
                 },
             ]);
         });
@@ -136,7 +136,7 @@ export default function ChatWidget() {
         }
     };
 
-    // ✅ "waiting" aur "active" dono mein send allow
+    // ✅ Allow sending in both "waiting" and "active" states
     const sendMessage = useCallback(() => {
         if (!inputText.trim() || !sessionId) return;
         if (status !== "active" && status !== "waiting") return;
@@ -178,7 +178,7 @@ export default function ChatWidget() {
             {
                 id: "sys_user_close_" + Date.now(),
                 type: "system",
-                text: "Aapne chat band kar di.",
+                text: "You have ended the chat.",
             },
         ]);
     };
@@ -192,18 +192,18 @@ export default function ChatWidget() {
             {
                 id: "sys_user_cancel_" + Date.now(),
                 type: "system",
-                text: "Aapne chat request cancel kar di.",
+                text: "You have cancelled the chat request.",
             },
         ]);
     };
 
-    // ✅ Input disabled sirf "idle", "connecting", "closed" mein
+    // ✅ Input disabled only in "idle", "connecting", and "closed" modes
     const isInputDisabled = status !== "active" && status !== "waiting";
 
     const inputPlaceholder =
         status === "active" ? "Type a message..." :
-        status === "waiting" ? "Type a message — connecting to an agent..." :
-        status === "connecting" ? "Connecting to agent..." : "Start a conversation...";
+            status === "waiting" ? "Type a message — connecting to an agent..." :
+                status === "connecting" ? "Connecting to agent..." : "Start a conversation...";
 
     return (
         <>
@@ -268,7 +268,7 @@ export default function ChatWidget() {
                     }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>Live Support</span>
-                            {/* ✅ Status indicator header mein */}
+                            {/* ✅ Status indicator in header */}
                             {status === "waiting" && (
                                 <span style={{
                                     fontSize: "10px", background: "rgba(255,255,255,0.2)",
@@ -326,7 +326,7 @@ export default function ChatWidget() {
                         display: "flex", flexDirection: "column", gap: "10px",
                         background: "#fff8f0"
                     }}>
-                        {/* Waiting state — messages nahi hain tab */}
+                        {/* Waiting state — when there are no messages */}
                         {status === "waiting" && messages.length === 0 && (
                             <div style={{
                                 display: "flex", flexDirection: "column", alignItems: "center",
@@ -344,7 +344,7 @@ export default function ChatWidget() {
                             </div>
                         )}
 
-                        {/* Waiting mein messages hain — chhota notice dikhao */}
+                        {/* Waiting with messages — show small notice */}
                         {status === "waiting" && messages.length > 0 && (
                             <div style={{
                                 textAlign: "center", fontSize: "11px", color: "#f97316",
@@ -449,12 +449,12 @@ export default function ChatWidget() {
                                     cursor: "pointer", fontWeight: "600", fontSize: "13px"
                                 }}
                             >
-                                🔄 Nayi Chat Shuru Karein
+                                🔄 Start a New Chat
                             </button>
                         </div>
                     )}
 
-                    {/* Input — ✅ waiting mein bhi enabled */}
+                    {/* Input — enabled in "waiting" mode as well */}
                     {status !== "closed" && (
                         <div style={{
                             padding: "10px 12px", borderTop: "1px solid #fed7aa",

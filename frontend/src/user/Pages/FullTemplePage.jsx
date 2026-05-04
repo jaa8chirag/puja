@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { MapPin, Search, ChevronRight, Sparkles } from 'lucide-react';
+import SEO from "../Components/SEO";
+import { CardSkeleton } from "../Components/Skeleton";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -15,6 +17,7 @@ const FullTemplePage = () => {
 
   useEffect(() => {
     const fetchTemples = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(`${API_BASE_URL}/content/mandir/all`);
         
@@ -53,19 +56,24 @@ const FullTemplePage = () => {
 
   return (
     <div className="bg-[#FFF4E1] min-h-screen font-sans">
+      <SEO 
+        title="Divine Temples of India" 
+        description="Discover the history, timings, and spiritual essence of India's most sacred pilgrimages. Explore ancient temples from Varanasi, Gaya, Ayodhya, and more."
+        keywords="India Temples, Sacred Pilgrimage, Hindu Temples, Temple Timings, Divine Locations"
+      />
       
       {/* HERO SECTION */}
-      <section className="bg-[#FFF4E1] pt-16 pb-24 px-6 relative overflow-hidden">
+      <section className="bg-[#FFF4E1] pt-12 md:pt-16 pb-20 md:pb-24 px-6 relative overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full text-sm font-bold">
-              <Sparkles size={16} /> Explore Divine India
+            <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full text-[10px] md:text-sm font-bold uppercase tracking-widest">
+              <Sparkles size={14} /> Explore Divine India
             </div>
-            <h1 className="text-4xl md:text-6xl font-black text-[#2D2D2D] leading-[1.1]">
+            <h1 className="text-3xl md:text-6xl font-black text-[#2D2D2D] leading-tight">
               Connect with <br />
               <span className="text-orange-600">Divine Temples</span>
             </h1>
-            <p className="text-gray-600 text-lg max-w-md font-medium">
+            <p className="text-gray-600 text-sm md:text-lg max-w-md font-medium">
               Discover the history, timings, and spiritual essence of India's most sacred pilgrimages.
             </p>
           </div>
@@ -94,7 +102,7 @@ const FullTemplePage = () => {
                 <button
                   key={city}
                   onClick={() => setActiveCity(city)}
-                  className={`px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 ${
+                  className={`px-6 py-2.5 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-300 ${
                     activeCity === city 
                     ? 'bg-orange-600 text-white shadow-lg shadow-orange-200 scale-105' 
                     : 'bg-white text-gray-500 border border-gray-200 hover:border-orange-300'
@@ -111,9 +119,8 @@ const FullTemplePage = () => {
       {/* CARDS GRID */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         {loading ? (
-          <div className="flex flex-col items-center py-20 gap-4">
-             <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin"></div>
-             <span className="text-gray-400 font-bold">Fetching divine locations...</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+             {Array(8).fill(0).map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : (
           <>

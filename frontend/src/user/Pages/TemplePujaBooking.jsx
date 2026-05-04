@@ -119,7 +119,7 @@ const MemberSelectModal = ({
 
   const handleAddMember = async () => {
     if (!form.name.trim() || !form.relation) {
-      setFormError("Name aur Relation zaroori hai!");
+      setFormError("Name and Relation are required!");
       return;
     }
     const token = localStorage.getItem("token");
@@ -425,12 +425,11 @@ const MemberSelectModal = ({
                         onClick={() => !isDisabled && onToggleMember(member.id)}
                         disabled={isDisabled}
                         className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-200 text-left
-                          ${
-                            isSelected
-                              ? "border-orange-400 bg-orange-50 shadow-sm"
-                              : isDisabled
-                                ? "border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed"
-                                : "border-orange-100 bg-white hover:border-orange-300 hover:bg-orange-50/50"
+                          ${isSelected
+                            ? "border-orange-400 bg-orange-50 shadow-sm"
+                            : isDisabled
+                              ? "border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed"
+                              : "border-orange-100 bg-white hover:border-orange-300 hover:bg-orange-50/50"
                           }`}
                       >
                         <div
@@ -490,10 +489,9 @@ const MemberSelectModal = ({
                   onClick={onConfirm}
                   disabled={selectedMembers.length === 0}
                   className={`w-full py-3.5 rounded-2xl font-black text-[15px] uppercase tracking-wider transition-all active:scale-[0.98] flex items-center justify-center gap-2
-                    ${
-                      selectedMembers.length > 0
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    ${selectedMembers.length > 0
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                 >
                   <Ticket size={18} />
@@ -717,67 +715,67 @@ const TemplePujaBooking = () => {
         onSuccess: async (razorpayResponse) => {
           setIsBooking(true);
 
-    const selectedDonationObjects = contributionList
-      .filter((item) => donations[item.id])
-      .map((item) => {
-        const dbContribution = contributionOptions.find(
-          (c) => c.name === item.title,
-        );
-        return {
-          contribution_type_id: dbContribution?.id,
-          amount: Number(item.price),
-        };
-      })
-      .filter((d) => d.contribution_type_id);
+          const selectedDonationObjects = contributionList
+            .filter((item) => donations[item.id])
+            .map((item) => {
+              const dbContribution = contributionOptions.find(
+                (c) => c.name === item.title,
+              );
+              return {
+                contribution_type_id: dbContribution?.id,
+                amount: Number(item.price),
+              };
+            })
+            .filter((d) => d.contribution_type_id);
 
-    if (donations["Temple Donation"]) {
-      const templeDonation = contributionOptions.find(
-        (c) => c.name === "Temple Donation",
-      );
-      if (templeDonation) {
-        selectedDonationObjects.push({
-          contribution_type_id: templeDonation.id,
-          amount: Number(templeDonation.price),
-        });
-      }
-    }
-    // const generateOTP = () => {
-    //   return Math.floor(100000 + Math.random() * 900000).toString();
-    // };
-    // const otp = generateOTP();
+          if (donations["Temple Donation"]) {
+            const templeDonation = contributionOptions.find(
+              (c) => c.name === "Temple Donation",
+            );
+            if (templeDonation) {
+              selectedDonationObjects.push({
+                contribution_type_id: templeDonation.id,
+                amount: Number(templeDonation.price),
+              });
+            }
+          }
+          // const generateOTP = () => {
+          //   return Math.floor(100000 + Math.random() * 900000).toString();
+          // };
+          // const otp = generateOTP();
 
-    const bookingData = {
-      bookingId: currentBookingId,
-      // otp,
-      puja_id: id,
-      date: service?.dateOfStart
-        ? new Date(service.dateOfStart).toLocaleDateString("en-CA")
-        : new Date().toISOString().split("T")[0],
-      time: service?.dateOfStart
-        ? new Date(service.dateOfStart).toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "10:00 AM",
-      address: service?.address || "N/A",
-      // city: "default city",
-      city: service?.address?.split(",").at(-2)?.trim() ?? "N/A",
-      // state: service?.address.split(",")[service.address.split(",").length - 1],
-      state: service?.address?.split(",").at(-1) ?? "N/A",
-      devoteeName: token
-        ? jwtDecode(token).name
-        : "Guest User",
-      ticket_type: selectedTicket,
-      member_ids: selectedMemberIds, // ← selected members pass karo
-      donations: selectedDonationObjects,
-      total_price: calculateTotal(),
-      paid_amount: calculateTotal(),
-      payment_type: "full",
-      razorpay_order_id: razorpayResponse.razorpay_order_id,
-      razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-      razorpay_signature: razorpayResponse.razorpay_signature,
-      referralRewardId: selectedRewardId,
-    };
+          const bookingData = {
+            bookingId: currentBookingId,
+            // otp,
+            puja_id: id,
+            date: service?.dateOfStart
+              ? new Date(service.dateOfStart).toLocaleDateString("en-CA")
+              : new Date().toISOString().split("T")[0],
+            time: service?.dateOfStart
+              ? new Date(service.dateOfStart).toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+              : "10:00 AM",
+            address: service?.address || "N/A",
+            // city: "default city",
+            city: service?.address?.split(",").at(-2)?.trim() ?? "N/A",
+            // state: service?.address.split(",")[service.address.split(",").length - 1],
+            state: service?.address?.split(",").at(-1) ?? "N/A",
+            devoteeName: token
+              ? jwtDecode(token).name
+              : "Guest User",
+            ticket_type: selectedTicket,
+            member_ids: selectedMemberIds, // ← selected members pass karo
+            donations: selectedDonationObjects,
+            total_price: calculateTotal(),
+            paid_amount: calculateTotal(),
+            payment_type: "full",
+            razorpay_order_id: razorpayResponse.razorpay_order_id,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature,
+            referralRewardId: selectedRewardId,
+          };
 
           try {
             const response = await fetch(`${API_BASE_URL}/puja/bookingDetails`, {
@@ -1016,7 +1014,7 @@ const TemplePujaBooking = () => {
       0,
     );
     const templeDonation = donations["Temple Donation"] ? getPrice("Temple Donation") : 0;
-      
+
     const subtotal = base + extra + templeDonation;
     const couponDiscount = appliedCoupon
       ? Math.floor((subtotal * appliedCoupon.discount_percentage) / 100)
@@ -1025,16 +1023,16 @@ const TemplePujaBooking = () => {
     const selectedReward = referralRewards.find(r => r.id === selectedRewardId);
     const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : referralDiscountPercent;
 
-    const referralDiscountAmount = useReferralDiscount 
-      ? Math.floor(((subtotal - couponDiscount) * activeReferralRate) / 100) 
+    const referralDiscountAmount = useReferralDiscount
+      ? Math.floor(((subtotal - couponDiscount) * activeReferralRate) / 100)
       : 0;
 
     return subtotal - couponDiscount - referralDiscountAmount;
   };
 
-  const subtotalForRef = (tickets.find((t) => t.label === selectedTicket)?.price || 0) + 
-      contributionList.reduce((acc, item) => (donations[item.id] ? acc + item.price : acc), 0) + 
-      (donations["Temple Donation"] ? Number(getPrice("Temple Donation") || 0) : 0);
+  const subtotalForRef = (tickets.find((t) => t.label === selectedTicket)?.price || 0) +
+    contributionList.reduce((acc, item) => (donations[item.id] ? acc + item.price : acc), 0) +
+    (donations["Temple Donation"] ? Number(getPrice("Temple Donation") || 0) : 0);
 
   const couponDiscountValue = appliedCoupon
     ? Math.floor((subtotalForRef * appliedCoupon.discount_percentage) / 100)
@@ -1043,8 +1041,8 @@ const TemplePujaBooking = () => {
   const selectedRewardData = referralRewards.find(r => r.id === selectedRewardId);
   const activeReferralRate = selectedRewardData ? selectedRewardData.discount_percentage : referralDiscountPercent;
 
-  const referralDiscountValue = useReferralDiscount 
-    ? Math.floor(((subtotalForRef - couponDiscountValue) * activeReferralRate) / 100) 
+  const referralDiscountValue = useReferralDiscount
+    ? Math.floor(((subtotalForRef - couponDiscountValue) * activeReferralRate) / 100)
     : 0;
 
   const discountAmount = couponDiscountValue + referralDiscountValue;
@@ -1079,19 +1077,19 @@ const TemplePujaBooking = () => {
 
   return (
     <>
-      <SEO 
-        title={service?.puja_name || "Temple Puja"} 
+      <SEO
+        title={service?.puja_name || "Temple Puja"}
         description={`Book ${service?.puja_name || "Temple Puja"} at ${service?.address || "your favorite temple"}. Join sacred rituals and seek divine blessings.`}
         keywords={`${service?.puja_name}, Online Temple Puja, Mandir Rituals, Book Puja at Temple`}
       />
-      <SuccessModal 
-        isOpen={showSuccess} 
+      <SuccessModal
+        isOpen={showSuccess}
         onClose={() => {
           setShowSuccess(false);
           navigate("/my-booking");
         }}
         title="Puja Booked!"
-        message="Aapki puja safaltapurvak book ho gayi hai."
+        message="Your puja has been booked successfully."
       />
       <MemberSelectModal
         isOpen={modalOpen}
@@ -1123,6 +1121,7 @@ const TemplePujaBooking = () => {
                   {service?.image_url ? (
                     <img
                       src={`${API_BASE_URL}/uploads/${service?.image_url}`}
+                      loading="lazy"
                       className="absolute inset-0 w-full h-full object-cover"
                       alt="Puja"
                     />
@@ -1165,11 +1164,10 @@ const TemplePujaBooking = () => {
                     <button
                       key={tab}
                       onClick={() => scrollToSection(tab)}
-                      className={`flex-1 px-4 md:px-6 py-4 text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all relative whitespace-nowrap ${
-                        activeTab === tab
+                      className={`flex-1 px-4 md:px-6 py-4 text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
                           ? "text-orange-600 bg-orange-50/50"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       {tab}
                       {activeTab === tab && (
@@ -1230,7 +1228,7 @@ const TemplePujaBooking = () => {
                     <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                       <Gem size={20} /> Benefits of {service?.puja_name}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                       {/* Dynamic Benefits from Backend */}
                       {service?.benefits && service.benefits.length > 0 ? (
                         service.benefits.map((benefit, index) => (
@@ -1434,11 +1432,10 @@ const TemplePujaBooking = () => {
                       <button
                         key={t.label}
                         onClick={() => handleTicketClick(t.label)}
-                        className={`relative flex flex-col items-center py-4 px-2 rounded-2xl border-2 transition-all duration-300 ${
-                          selectedTicket === t.label
+                        className={`relative flex flex-col items-center py-4 px-2 rounded-2xl border-2 transition-all duration-300 ${selectedTicket === t.label
                             ? "border-orange-500 bg-orange-50/30 ring-4 ring-orange-50"
                             : "border-gray-100 bg-white hover:border-orange-200"
-                        }`}
+                          }`}
                       >
                         <div
                           className={`mb-2 p-2.5 rounded-xl ${selectedTicket === t.label ? "bg-orange-500 text-white shadow-md" : "bg-gray-50 text-gray-400"}`}
@@ -1569,56 +1566,54 @@ const TemplePujaBooking = () => {
                           {referralRewards.length} Available
                         </span>
                       </div>
-                      
-                    {/* Individual Rewards Selection - Desktop */}
-                    {referralRewards.length > 0 && (
-                      <div className="mt-4 p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-2 block">
-                          Select Available Reward
-                        </label>
-                        <div className="space-y-2">
-                          {referralRewards.map((reward) => (
-                            <div 
-                              key={reward.id}
-                              onClick={() => {
-                                if (selectedRewardId === reward.id) {
-                                  setSelectedRewardId(null);
-                                  setUseReferralDiscount(false);
-                                } else {
-                                  setSelectedRewardId(reward.id);
-                                  setUseReferralDiscount(true);
-                                }
-                              }}
-                              className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                                selectedRewardId === reward.id 
-                                  ? "bg-orange-500 border-orange-500 shadow-md shadow-orange-200" 
-                                  : "bg-white border-orange-100 hover:border-orange-300"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                  selectedRewardId === reward.id ? "border-white bg-white" : "border-orange-200"
-                                }`}>
-                                  {selectedRewardId === reward.id && <div className="w-2 h-2 rounded-full bg-orange-500" />}
+
+                      {/* Individual Rewards Selection - Desktop */}
+                      {referralRewards.length > 0 && (
+                        <div className="mt-4 p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-2 block">
+                            Select Available Reward
+                          </label>
+                          <div className="space-y-2">
+                            {referralRewards.map((reward) => (
+                              <div
+                                key={reward.id}
+                                onClick={() => {
+                                  if (selectedRewardId === reward.id) {
+                                    setSelectedRewardId(null);
+                                    setUseReferralDiscount(false);
+                                  } else {
+                                    setSelectedRewardId(reward.id);
+                                    setUseReferralDiscount(true);
+                                  }
+                                }}
+                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedRewardId === reward.id
+                                    ? "bg-orange-500 border-orange-500 shadow-md shadow-orange-200"
+                                    : "bg-white border-orange-100 hover:border-orange-300"
+                                  }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedRewardId === reward.id ? "border-white bg-white" : "border-orange-200"
+                                    }`}>
+                                    {selectedRewardId === reward.id && <div className="w-2 h-2 rounded-full bg-orange-500" />}
+                                  </div>
+                                  <span className={`text-xs font-bold ${selectedRewardId === reward.id ? "text-white" : "text-gray-800"}`}>
+                                    {reward.discount_percentage}% Discount Reward
+                                  </span>
                                 </div>
-                                <span className={`text-xs font-bold ${selectedRewardId === reward.id ? "text-white" : "text-gray-800"}`}>
-                                  {reward.discount_percentage}% Discount Reward
-                                </span>
+                                {selectedRewardId === reward.id && (
+                                  <span className="text-[10px] font-black text-white">SELECTED</span>
+                                )}
                               </div>
-                              {selectedRewardId === reward.id && (
-                                <span className="text-[10px] font-black text-white">SELECTED</span>
-                              )}
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                     </div>
                   )}
 
                   {/* 🎫 Coupon Section */}
                   <div className="py-2 border-y border-dashed border-orange-100 my-4 px-1">
-                    <CouponSelector 
+                    <CouponSelector
                       couponInput={couponInput}
                       setCouponInput={setCouponInput}
                       appliedCoupon={appliedCoupon}
@@ -1764,11 +1759,10 @@ const MobileSummarySection = ({
           <button
             key={t.label}
             onClick={() => setSelectedTicket(t.label)}
-            className={`flex flex-col items-center py-2 px-2 rounded-2xl border-2 transition-all ${
-              selectedTicket === t.label
+            className={`flex flex-col items-center py-2 px-2 rounded-2xl border-2 transition-all ${selectedTicket === t.label
                 ? "border-orange-500 bg-orange-50 ring-2 ring-orange-100"
                 : "border-gray-100 bg-white hover:border-orange-200"
-            }`}
+              }`}
           >
             <div
               className={`mb-1.5 p-2 rounded-xl ${selectedTicket === t.label ? "bg-orange-500 text-white" : "bg-gray-50 text-gray-400"}`}
@@ -1882,7 +1876,7 @@ const MobileSummarySection = ({
 
           <div className="space-y-2 mt-3">
             {referralRewards.map((reward) => (
-              <div 
+              <div
                 key={reward.id}
                 onClick={() => {
                   if (selectedRewardId === reward.id) {
@@ -1893,16 +1887,14 @@ const MobileSummarySection = ({
                     setUseReferralDiscount(true);
                   }
                 }}
-                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                  selectedRewardId === reward.id 
-                    ? "border-orange-500 bg-orange-50" 
+                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedRewardId === reward.id
+                    ? "border-orange-500 bg-orange-50"
                     : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                  }`}>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                    }`}>
                     {selectedRewardId === reward.id && <CheckCircle size={10} className="text-white" />}
                   </div>
                   <span className={`text-[11px] font-bold ${selectedRewardId === reward.id ? "text-orange-700" : "text-gray-800"}`}>
@@ -1920,7 +1912,7 @@ const MobileSummarySection = ({
 
       {/* 🎫 Coupon Section */}
       <div className="py-2 border-y border-dashed border-orange-100 my-4 px-1">
-        <CouponSelector 
+        <CouponSelector
           isMobile={true}
           couponInput={couponInput}
           setCouponInput={setCouponInput}
@@ -1961,11 +1953,10 @@ const MobileSummarySection = ({
 const ContributionCard = ({ item, selected, onToggle }) => (
   <button
     onClick={onToggle}
-    className={`flex items-center justify-between p-3 md:p-5 rounded-xl border transition-all shadow-sm w-full gap-2 ${
-      selected
+    className={`flex items-center justify-between p-3 md:p-5 rounded-xl border transition-all shadow-sm w-full gap-2 ${selected
         ? "border-orange-400 bg-orange-50"
         : "border-orange-200 bg-white hover:border-orange-300"
-    }`}
+      }`}
   >
     <div className="flex items-center gap-3 text-left">
       <div

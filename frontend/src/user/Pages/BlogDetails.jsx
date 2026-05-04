@@ -131,6 +131,7 @@ export default function BlogDetail() {
                 <img
                   src={blog.image_url.startsWith('http') ? blog.image_url : blog.image_url.startsWith('/uploads/') ? `${API_BASE_URL.replace('/api', '')}${blog.image_url}` : `${API_BASE_URL}/uploads/${blog.image_url}`}
                   alt={blog.title}
+                  loading="lazy"
                   className="w-full h-64 md:h-80 object-cover"
                 />
               </div>

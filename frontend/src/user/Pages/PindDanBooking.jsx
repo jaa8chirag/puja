@@ -246,6 +246,10 @@ const PindDanBooking = () => {
             }
           }
 
+          const formattedDateForBooking = service?.dateOfStart 
+            ? new Date(service.dateOfStart).toISOString().split('T')[0] 
+            : new Date().toISOString().split('T')[0];
+
           const bookingData = {
             bookingId: currentBookingId,
             puja_id: id,
@@ -258,8 +262,8 @@ const PindDanBooking = () => {
               })
               : "10:00 AM",
             address: service?.address || "N/A",
-            city: "Default City",
-            state: service.address.split(",")[service.address.split(",").length - 1],
+            city: service?.address?.split(",")?.slice(-2, -1)[0]?.trim() || "N/A",
+            state: service?.address?.split(",")?.pop()?.trim() || "N/A",
             devoteeName: token
               ? jwtDecode(token).name
               : "Guest User",
@@ -452,7 +456,7 @@ const PindDanBooking = () => {
           navigate("/my-booking");
         }}
         title="Puja Booked!"
-        message="Aapki puja safaltapurvak book ho gayi hai."
+        message="Your puja has been booked successfully."
       />
       <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-6 text-gray-800 pb-32 md:pb-6">
         <div className="max-w-6xl mx-auto">
@@ -471,6 +475,7 @@ const PindDanBooking = () => {
                   {service?.image_url ? (
                     <img
                       src={`${API_BASE_URL}/uploads/${service?.image_url}`}
+                      loading="lazy"
                       className="absolute inset-0 w-full h-full object-cover"
                       alt="Puja"
                     />
@@ -578,7 +583,7 @@ const PindDanBooking = () => {
                     <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                       <Gem size={20} /> Benefits of {service?.puja_name}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                       {/* Dynamic Benefits from Backend */}
                       {service?.benefits && service.benefits.length > 0 ? (
                         service.benefits.map((benefit, index) => (

@@ -12,6 +12,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SEO from "../Components/SEO";
+import { CardSkeleton } from "../Components/Skeleton";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -132,6 +134,11 @@ const ManageSankalp = () => {
 
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-6 font-sans antialiased">
+      <SEO 
+        title="Manage Sankalp Details" 
+        description="Securely manage your family details and Gotra for sacred Vedic rituals. Maintain ancestral records for accurate Sankalp during pujas."
+        keywords="Manage Sankalp, Family Gotra, Vedic Ritual Details, Ancestral Records, Sri Vedic Puja"
+      />
       <div className="max-w-xl mx-auto">
         {/* Header Section */}
         <button
@@ -144,17 +151,17 @@ const ManageSankalp = () => {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-gray-900 leading-tight">
+            <h1 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 leading-tight">
               Manage Sankalp
             </h1>
-            <p className="text-[#8E97A4] text-[11px] font-bold tracking-[0.15em] uppercase mt-1">
+            <p className="text-[#8E97A4] text-[10px] md:text-[11px] font-bold tracking-[0.15em] uppercase mt-1">
               Family details for sacred rituals
             </p>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="w-full md:w-auto px-4 bg-[#FF822D] text-white py-2 rounded-[12px] flex justify-center items-center gap-2 font-bold text-sm shadow-lg active:scale-95 transition-all"
+            className="w-full md:w-auto px-4 bg-[#FF822D] text-white py-3 md:py-2 rounded-[16px] md:rounded-[12px] flex justify-center items-center gap-2 font-bold text-sm shadow-lg active:scale-95 transition-all"
           >
             <Plus
               size={16}
@@ -167,13 +174,13 @@ const ManageSankalp = () => {
 
         {/* Members List */}
         {loading ? (
-          <div className="py-20 text-center text-orange-400 animate-pulse font-bold italic">
-            Connecting...
+          <div className="space-y-4">
+             {Array(3).fill(0).map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : members.length === 0 ? (
           <div className="bg-white rounded-[32px] py-16 px-8 text-center shadow-sm border border-orange-200 mb-8">
             <Users size={40} className="text-orange-200 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-[#1A2B47] mb-3">
+            <h2 className="text-xl md:text-2xl font-bold text-[#1A2B47] mb-3">
               No family members yet
             </h2>
           </div>

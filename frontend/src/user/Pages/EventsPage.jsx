@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { CalendarDays, MapPin, Loader2 } from "lucide-react";
+import { CalendarDays, MapPin } from "lucide-react";
 import { stripHtml } from "../../utils/stripHtml";
+import SEO from "../Components/SEO";
+import { CardSkeleton } from "../Components/Skeleton";
 
 const EventsPage = () => {
   const [eventsData, setEventsData] = useState([]);
@@ -27,23 +29,19 @@ const EventsPage = () => {
     fetchEvents();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-orange-50">
-        <Loader2 className="animate-spin text-orange-500" size={48} />
-        <p className="text-orange-600 font-bold animate-pulse">Loading Sacred Events...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-gradient-to-b from-orange-100 to-white min-h-screen">
+      <SEO 
+        title="Temple Events & Festivals" 
+        description="Discover sacred celebrations, spiritual gatherings, and divine rituals at Sri Vedic Puja. Join us for upcoming festivals and special temple events."
+        keywords="Temple Events, Hindu Festivals, Spiritual Gatherings, Vedic Celebrations, Puja Events"
+      />
       {/* Header */}
       <div className="bg-orange-400 py-8 text-center text-white">
-        <h1 className="text-4xl md:text-5xl font-black mb-4">
+        <h1 className="text-3xl md:text-5xl font-black mb-4 px-4">
           Temple Events & Festivals
         </h1>
-        <p className="text-lg opacity-90 max-w-2xl mx-auto">
+        <p className="text-sm md:text-lg opacity-90 max-w-2xl mx-auto px-6">
           Discover sacred celebrations, spiritual gatherings, and divine rituals 
           that bring positivity and peace into life.
         </p>
@@ -51,7 +49,9 @@ const EventsPage = () => {
 
       {/* Events Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-3 sm:grid-cols-2 gap-8">
-        {eventsData.map((event) => (
+        {loading ? (
+          Array(6).fill(0).map((_, i) => <CardSkeleton key={i} />)
+        ) : eventsData.map((event) => (
           <div
             key={event.id}
             className="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-[600px]"
@@ -61,6 +61,7 @@ const EventsPage = () => {
                 // Image URL handling: check if it's external or local
                 src={`${API_BASE_URL}/uploads/${event.image}`}
                 alt={event.title}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             </div>

@@ -1,0 +1,1 @@
+import{j as n}from"./index-DvGDDthJ.js";/* empty css                      */const o=({content:r,className:t})=>r?/<\/?[a-z][\s\S]*>/i.test(r)?n.jsx("div",{className:`quill-content ${t||""}`,dangerouslySetInnerHTML:{__html:r}}):n.jsx("p",{className:t,children:r}):null;export{o as H};

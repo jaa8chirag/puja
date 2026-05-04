@@ -82,9 +82,9 @@ const SignUp = () => {
 
                 <div className="flex flex-col items-center mt-6">
                     <img
-                        src="/img/download.jpg"
+                        src="/img/download2.png"
                         alt="logo"
-                        className="w-12 h-12 md:w-16 md:h-16 bg-orange-400 p-2 md:p-3 rounded-2xl mb-2 shadow-sm"
+                        className="w-12 h-12 md:w-16 md:h-16 mb-2"
                     />
                     <h1 className="text-xl md:text-3xl font-serif font-bold text-gray-800">Join Sri Vedic Puja</h1>
                     <p className="text-[11px] md:text-sm text-gray-400 mt-1">Begin your spiritual journey with us</p>
