@@ -67,6 +67,8 @@ const INDIAN_STATES = [
   "Delhi",
 ];
 
+const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL?.replace('/api', '') || 'http://localhost:5052';
+
 const Pandits = () => {
   // --- Existing States ---
   const [pandits, setPandits] = useState([]);
@@ -205,10 +207,11 @@ const Pandits = () => {
     if (!formData.name || !formData.phone)
       return showToast("Name & Phone are required", "error");
 
-    // Payment validation (only for new pandit, not edit)
-    if (!editingPandit && formData.paymentMethod === "bank") {
+    // Payment validation
+    if (formData.paymentMethod === "bank") {
       if (
         formData.bankAccountNumber &&
+        formData.confirmBankAccountNumber &&
         formData.bankAccountNumber !== formData.confirmBankAccountNumber
       ) {
         return showToast("Bank account numbers match nahi kar rahe", "error");
@@ -227,13 +230,23 @@ const Pandits = () => {
     setActionLoading("form");
     try {
       if (editingPandit) {
-        // Edit: only send basic fields (same as before)
+        // Edit: send all fields including address & payment
         await API.put(`/pandits/${editingPandit.id}`, {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
           pandit_type: formData.pandit_type,
           document_url: formData.document_url,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          paymentMethod: formData.paymentMethod,
+          accountHolderName: formData.accountHolderName,
+          bankName: formData.bankName,
+          bankAccountNumber: formData.bankAccountNumber,
+          ifscCode: formData.ifscCode,
+          upiId: formData.upiId,
         });
         showToast("Profile Updated");
       } else {
@@ -312,18 +325,19 @@ const Pandits = () => {
       phone: p.phone,
       pandit_type: p.pandit_type || "",
       document_url: p.document_url || "",
-      // Address & payment empty on edit (not shown)
-      address: "",
-      city: "",
-      state: "",
-      pincode: "",
-      paymentMethod: "bank",
-      accountHolderName: "",
-      bankName: "",
-      bankAccountNumber: "",
-      confirmBankAccountNumber: "",
-      ifscCode: "",
-      upiId: "",
+      // Pre-fill Address from API data
+      address: p.address || "",
+      city: p.city || "",
+      state: p.state || "",
+      pincode: p.pincode || "",
+      // Pre-fill Payment from API data
+      paymentMethod: p.payment_method || "bank",
+      accountHolderName: p.account_holder_name || "",
+      bankName: p.bank_name || "",
+      bankAccountNumber: p.bank_account_number || "",
+      confirmBankAccountNumber: p.bank_account_number || "",
+      ifscCode: p.ifsc_code || "",
+      upiId: p.upi_id || "",
     });
     setShowModal(true);
   };
@@ -580,7 +594,7 @@ const Pandits = () => {
                     <td className="px-6 py-5 text-center">
                       {p.document_url ? (
                         <a
-                          href={p.document_url}
+                          href={p.document_url.startsWith('http') ? p.document_url : `${BACKEND_BASE}/${p.document_url.replace(/^\//, '')}`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all text-[10px] font-black uppercase"
@@ -670,7 +684,7 @@ const Pandits = () => {
                 </h3>
                 <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-[0.2em] mt-1">
                   {editingPandit
-                    ? "Edit Basic Details"
+                    ? "Edit Profile, Address & Payment"
                     : "Complete Profile — Basic, Address & Payment"}
                 </p>
               </div>
@@ -843,8 +857,8 @@ const Pandits = () => {
                 </div>
               </div>
 
-              {/* ── SECTION 2: Address (only on Add, not Edit) ── */}
-              {!editingPandit && (
+              {/* ── SECTION 2: Address ── */}
+              {(
                 <div>
                   <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
                     <Home size={12} /> Address Details
@@ -959,8 +973,8 @@ const Pandits = () => {
                 </div>
               )}
 
-              {/* ── SECTION 3: Payment Details (only on Add, not Edit) ── */}
-              {!editingPandit && (
+              {/* ── SECTION 3: Payment Details ── */}
+              {(
                 <div>
                   <p className="text-[10px] font-black text-orange-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
                     <Wallet size={12} /> Payment Details

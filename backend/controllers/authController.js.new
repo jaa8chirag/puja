@@ -1,0 +1,78 @@
+// =============================
+// 3️⃣ SOCIAL LOGIN (Google/Apple)
+// =============================
+export const socialAuth = async (req, res) => {
+  try {
+    const { google_id, apple_id, email, name, avatar_url } = req.body;
+
+    if (!google_id && !apple_id) {
+      return res.status(400).json({ message: "Social ID is required" });
+    }
+
+    let query = "";
+    let value = "";
+    if (google_id) {
+      query = "SELECT * FROM users WHERE google_id = ? AND is_deleted = 0";
+      value = google_id;
+    } else {
+      query = "SELECT * FROM users WHERE apple_id = ? AND is_deleted = 0";
+      value = apple_id;
+    }
+
+    const [rows] = await db.query(query, [value]);
+
+    let user;
+    if (rows.length === 0) {
+      // Create new user if not exists
+      const uniqueReferralCode = 'PUJA' + (name ? name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') : 'USR') + Math.floor(1000 + Math.random() * 9000);
+      
+      const [result] = await db.query(
+        "INSERT INTO users (name, email, google_id, apple_id, avatar_url, role, referral_code) VALUES (?, ?, ?, ?, ?, 'user', ?)",
+        [name, email, google_id || null, apple_id || null, avatar_url || null, uniqueReferralCode]
+      );
+      
+      const [newUser] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
+      user = newUser[0];
+    } else {
+      user = rows[0];
+    }
+
+    const token = jwt.sign(
+      { id: user.id, name: user.name, phone: user.phone, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "90d" },
+    );
+
+    res.status(200).json({
+      message: "Social Login success",
+      token,
+      role: user.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Social Auth failed", error: error.message });
+  }
+};
+
+// profile update
+// =============================
+// UPDATE PROFILE - Step 1: Personal Details
+// =============================
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, email, gotra } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    await db.query(
+      "UPDATE users SET name = ?, email = ?, gotra = ? WHERE id = ?",
+      [name, email || null, gotra || null, userId],
+    );
+
+    res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Update failed", error: error.message });
+  }
+};

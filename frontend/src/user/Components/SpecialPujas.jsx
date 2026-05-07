@@ -82,63 +82,50 @@ export default function SpecialPujas() {
                   </div>
                 </div>
 
-                {/* CONTENT - Reduced padding from p-8 to p-5 */}
-                <div className="p-5 md:p-8 flex flex-col flex-1 text-left">
-                  <div className="flex-1">
-                    {/* Tagline */}
+                {/* CONTENT */}
+                <div className="p-5 md:p-4 flex flex-col flex-1">
+                  <div className="mb-4 md:mb-2 flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
+                        {service.title || service.puja_name}
+                      </h3>
+                      <button className="shrink-0 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500 whitespace-nowrap">
+                        Book Now
+                      </button>
+                    </div>
 
-
-                    {/* Title Scaled */}
-                    <h3 className="text-xl md:text-2xl font-serif mb-2 group-hover:text-orange-600 transition-colors duration-300 leading-tight">
-                      {service.title || service.puja_name}
-                    </h3>
-
-                    {/* About - smaller text */}
-                    <p className="text-gray-700 text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
+                    <p className="text-gray-500 text-[13px] md:text-[14px] leading-relaxed line-clamp-3">
                       {stripHtml(service.about)}
                     </p>
 
-                    <div className="flex items-center justify-between w-full mt-2">
-                      {/* Left Side: Address and Time together */}
-                      <div className="flex flex-col gap-1.5 min-w-0">
-
-                        {/* 1. Location Row */}
-                        <div className="flex items-center gap-2">
-                          <MapPin size={12} className="text-orange-500 shrink-0" />
-                          <p className="text-gray-500 text-xs line-clamp-1">
-                            {service.address}
-                          </p>
-                        </div>
-
-                        {/* 2. Date & Time Row */}
-                        <div className="flex items-center gap-2">
-                          <Calendar size={12} className="text-orange-500 shrink-0" />
-                          <div className="flex items-center gap-1.5 font-bold text-[12px] md:text-[13px] text-gray-700 whitespace-nowrap">
-                            <span>
-                              {new Date(service.dateOfStart).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: 'short'
-                              })}
-                            </span>
-                            <span className="text-orange-300">|</span>
-                            <span className="text-gray-500 font-medium">
-                              {new Date(service.dateOfStart).toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                              })}
-                            </span>
-                          </div>
-                        </div>
+                    <div className="flex flex-col gap-1.5 mt-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={12} className="text-orange-500 shrink-0" />
+                        <p className="text-gray-500 text-[11px] md:text-xs line-clamp-1">
+                          {service.address}
+                        </p>
                       </div>
-
-                      {/* Right Side: Arrow Button (Now perfectly centered to both lines) */}
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl border border-orange-100 bg-orange-50 group-hover:bg-orange-600 flex items-center justify-center text-orange-600 group-hover:text-white transition-all duration-500 shadow-sm shrink-0 ml-4">
-                        <ArrowRight size={18} />
+                      <div className="flex items-center gap-2">
+                        <Calendar size={12} className="text-orange-500 shrink-0" />
+                        <div className="flex items-center gap-1.5 font-bold text-[11px] md:text-[12px] text-gray-700 whitespace-nowrap">
+                          <span>
+                            {new Date(service.dateOfStart).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: 'short'
+                            })}
+                          </span>
+                          <span className="text-orange-300">|</span>
+                          <span className="text-gray-500 font-medium">
+                            {new Date(service.dateOfStart).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-
                 </div>
               </div>
             ))}

@@ -1,63 +1,26 @@
 import db from "../config/db.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
 
-let otpStore = {};
-
-// =============================
-// 1️⃣ SIGNUP REQUEST
-// =============================
-export const signupRequest = async (req, res) => {
-  try {
-    const { name, phone, email, gotra } = req.body;
-
-    if (!phone || !name) {
-      return res.status(400).json({ message: "Name and Phone are required" });
-    }
-
-    const [existing] = await db.query("SELECT id FROM users WHERE phone = ?", [
-      phone,
-    ]);
-
-    if (existing.length > 0) {
-      return res
-        .status(409)
-        .json({ message: "Already registered. Please Login." });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000);
-
-    otpStore[phone] = {
-      userData: { name, phone, email, gotra },
-      otp,
-      expires: Date.now() + 10 * 60 * 1000,
-    };
-
-    console.log(`\n--- OTP FOR ${phone}: ${otp} ---\n`);
-
-    res.status(200).json({ message: "OTP sent successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
 
 // =============================
-// 2️⃣ SIGNUP VERIFY
+// 1️⃣ SIGNUP (Direct Register with Password)
 // =============================
-export const signupVerify = async (req, res) => {
+export const signup = async (req, res) => {
   let connection;
-
   try {
     const {
+      name,
       phone,
-      otp,
+      email,
+      gotra,
+      password,
       role,
       address,
       city,
       state,
-      gotra,
-      email,
-      name,
       pincode,
       address_type,
       panditType,
@@ -70,21 +33,21 @@ export const signupVerify = async (req, res) => {
       referralCode,
     } = req.body;
 
-    const documentPath = req.file ? req.file.path : null;
-
-    const session = otpStore[phone];
-    const isBypass = otp?.toString() === "123456";
-
-    if (
-      !isBypass &&
-      (!session ||
-        session.otp.toString() !== otp?.toString() ||
-        session.expires < Date.now())
-    ) {
-      return res.status(400).json({
-        message: "Invalid OTP or Session Expired",
-      });
+    if (!phone || !name || !password) {
+      return res.status(400).json({ message: "Name, Phone and Password are required" });
     }
+
+    if (phone.length !== 10) {
+      return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
+    }
+
+    const [existing] = await db.query("SELECT id FROM users WHERE phone = ?", [phone]);
+    if (existing.length > 0) {
+      return res.status(409).json({ message: "Phone number already registered. Please Login." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const documentPath = req.file ? req.file.path : null;
 
     connection = await db.getConnection();
     await connection.beginTransaction();
@@ -92,22 +55,15 @@ export const signupVerify = async (req, res) => {
     // 1️⃣ Insert into users
     let referredBy = null;
     if (referralCode) {
-      console.log(`[Signup] Attempting to find referrer for code: ${referralCode}`);
       const [refRow] = await connection.query("SELECT id FROM users WHERE referral_code = ?", [referralCode]);
-      if (refRow.length > 0) {
-        referredBy = refRow[0].id;
-        console.log(`[Signup] Found referrer: ${referredBy} for code: ${referralCode}`);
-      } else {
-        console.log(`[Signup] Referrer NOT found for code: ${referralCode}`);
-      }
+      if (refRow.length > 0) referredBy = refRow[0].id;
     }
 
     const uniqueReferralCode = 'PUJA' + (name ? name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') : 'USR') + Math.floor(1000 + Math.random() * 9000);
-    console.log(`[Signup] Registering new user ${phone} with referred_by: ${referredBy}`);
 
     const [userResult] = await connection.query(
-      "INSERT INTO users (name, phone, email, gotra, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [name, phone, email || null, gotra || null, role || "user", uniqueReferralCode, referredBy],
+      "INSERT INTO users (name, phone, email, password, gotra, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, phone, email || null, hashedPassword, gotra || null, role || "user", uniqueReferralCode, referredBy],
     );
 
     const newUserId = userResult.insertId;
@@ -115,18 +71,8 @@ export const signupVerify = async (req, res) => {
     // 2️⃣ Insert Address
     if (address) {
       await connection.query(
-        `INSERT INTO addresses
-        (user_id, address_line1, city, state, address_type, pincode, is_default)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          newUserId,
-          address,
-          city,
-          state,
-          address_type || "home",
-          pincode || null,
-          1,
-        ],
+        `INSERT INTO addresses (user_id, address_line1, city, state, address_type, pincode, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [newUserId, address, city, state, address_type || "home", pincode || null, 1],
       );
     }
 
@@ -137,27 +83,15 @@ export const signupVerify = async (req, res) => {
         [newUserId, panditType || "Standard", documentPath],
       );
 
-      // 4️⃣ Insert Payment Details — sirf pandit ke liye
       if (paymentMethod && ["bank", "upi"].includes(paymentMethod)) {
         await connection.query(
-          `INSERT INTO partner_payment_details
-           (user_id, payment_method, account_holder_name, bank_name, bank_account_number, ifsc_code, upi_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            newUserId,
-            paymentMethod,
-            accountHolderName || null,
-            bankName || null,
-            bankAccountNumber || null,
-            ifscCode ? ifscCode.toUpperCase() : null,
-            upiId || null,
-          ],
+          `INSERT INTO partner_payment_details (user_id, payment_method, account_holder_name, bank_name, bank_account_number, ifsc_code, upi_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [newUserId, paymentMethod, accountHolderName || null, bankName || null, bankAccountNumber || null, ifscCode ? ifscCode.toUpperCase() : null, upiId || null],
         );
       }
     }
 
     await connection.commit();
-    delete otpStore[phone];
 
     const token = jwt.sign(
       { id: newUserId, name, phone, role: role || "user" },
@@ -166,136 +100,148 @@ export const signupVerify = async (req, res) => {
     );
 
     res.status(201).json({
-      message: "Verified Successfully!",
+      message: "Registered Successfully!",
       token,
       role: role || "user",
       user_id: newUserId,
     });
   } catch (error) {
-    console.error("Signup Error:", error);
     if (connection) await connection.rollback();
-    res.status(500).json({
-      message: "Error saving data",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Registration failed", error: error.message });
   } finally {
     if (connection) connection.release();
   }
 };
-// --- 3. LOGIN REQUEST (Modified for Partner Check) ---
-export const loginRequest = async (req, res) => {
-  try {
-    const { phone, role } = req.body; // Frontend se role ('user' ya 'pandit') bhejien
 
-    // Role wise check: Pandit login tabhi hoga jab DB mein role 'pandit' ho
+// =============================
+// 2️⃣ LOGIN (Password Based)
+// =============================
+export const login = async (req, res) => {
+  try {
+    const { phone, password, role } = req.body;
+
+    if (!phone || !password) {
+      return res.status(400).json({ message: "Email/Phone and Password are required" });
+    }
+
+    // Lookup by phone OR email
     const [rows] = await db.query(
-      "SELECT id, role FROM users WHERE phone = ? AND is_deleted = 0",
-      [phone],
+      "SELECT * FROM users WHERE (phone = ? OR email = ?) AND is_deleted = 0",
+      [phone, phone],
     );
 
-    if (rows.length === 0)
-      return res.status(404).json({ message: "Account not found." });
-
-    // Security Check: Role match hona chahiye
-    if (role && rows[0].role !== role) {
-      return res.status(403).json({
-        message: "Access denied. You are not authorized to login here.",
-      });
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Account not found with this Email or Phone." });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStore[phone] = {
-      otp,
-      type: "LOGIN",
-      expires: Date.now() + 5 * 60 * 1000,
-    };
+    const user = rows[0];
 
-    console.log(`\n--- LOGIN OTP FOR ${phone}: ${otp} ---\n`);
-    res.status(200).json({ message: "OTP sent" });
+    // Security Check: Role match hona chahiye (optional if needed)
+    if (role && user.role !== role) {
+      return res.status(403).json({ message: "Access denied. Role mismatch." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, name: user.name, phone: user.phone, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "90d" },
+    );
+
+    res.status(200).json({
+      message: "Login success",
+      token,
+      role: user.role,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// --- 4. VERIFY OTP (Bypass Logic Added) ---
-export const verifyOtp = async (req, res) => {
+// =============================
+// 3️⃣ SOCIAL LOGIN (Google/Apple)
+// =============================
+export const socialAuth = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
-    const session = otpStore[phone];
+    const { google_id, apple_id, email, name, avatar_url } = req.body;
 
-    // --- BYPASS LOGIC ---
-    // Agar OTP '123456' hai, toh ye bypass ho jayega
-    const isBypass = otp.toString() === "123456";
-
-    if (
-      isBypass ||
-      (session &&
-        session.type === "LOGIN" &&
-        session.otp.toString() === otp.toString())
-    ) {
-      const [rows] = await db.query(
-        "SELECT id, name, phone, email, role FROM users WHERE phone = ? AND is_deleted = 0",
-        [phone],
-      );
-
-      // Check agar bypass use kar rahe hain par user DB mein nahi hai
-      if (rows.length === 0) {
-        return res.status(404).json({ message: "User not found in database." });
-      }
-
-      // Session delete karein agar normal login tha
-      if (session) delete otpStore[phone];
-
-      const token = jwt.sign(
-        {
-          id: rows[0].id,
-          name: rows[0].name,
-          phone: rows[0].phone,
-          email: rows[0].email,
-          role: rows[0].role,
-        },
-        process.env.JWT_SECRET || "secret",
-        { expiresIn: "90d" },
-      );
-
-      res.status(200).json({
-        message: isBypass ? "Login success (Bypass Used)" : "Login success",
-        token,
-        role: rows[0].role,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid OTP" });
+    if (!google_id && !apple_id) {
+      return res.status(400).json({ message: "Social ID is required" });
     }
+
+    let query = "";
+    let value = "";
+    if (google_id) {
+      query = "SELECT * FROM users WHERE google_id = ? AND is_deleted = 0";
+      value = google_id;
+    } else {
+      query = "SELECT * FROM users WHERE apple_id = ? AND is_deleted = 0";
+      value = apple_id;
+    }
+
+    const [rows] = await db.query(query, [value]);
+
+    let user;
+    if (rows.length === 0) {
+      // Create new user if not exists
+      const uniqueReferralCode = 'PUJA' + (name ? name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') : 'USR') + Math.floor(1000 + Math.random() * 9000);
+      
+      const [result] = await db.query(
+        "INSERT INTO users (name, email, google_id, apple_id, avatar_url, role, referral_code) VALUES (?, ?, ?, ?, ?, 'user', ?)",
+        [name, email, google_id || null, apple_id || null, avatar_url || null, uniqueReferralCode]
+      );
+      
+      const [newUser] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
+      user = newUser[0];
+    } else {
+      user = rows[0];
+    }
+
+    const token = jwt.sign(
+      { id: user.id, name: user.name, phone: user.phone, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "90d" },
+    );
+
+    res.status(200).json({
+      message: "Social Login success",
+      token,
+      role: user.role,
+    });
   } catch (error) {
-    console.error("Verify OTP Error:", error);
-    res.status(500).json({ message: "Verification failed" });
+    res.status(500).json({ message: "Social Auth failed", error: error.message });
   }
 };
 
-// profile update
 // =============================
 // UPDATE PROFILE - Step 1: Personal Details
 // =============================
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email, gotra } = req.body;
+    const { name, email, gotra, phone } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
 
+    if (phone && phone.length !== 10) {
+      return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
+    }
+
     await db.query(
-      "UPDATE users SET name = ?, email = ?, gotra = ? WHERE id = ?",
-      [name, email || null, gotra || null, userId],
+      "UPDATE users SET name = ?, email = ?, gotra = ?, phone = ? WHERE id = ?",
+      [name, email?.trim() || null, gotra?.trim() || null, phone?.trim() || null, userId],
     );
 
     res.status(200).json({ message: "Profile updated successfully" });
   } catch (error) {
     console.error("Update Profile Error:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to update profile", error: error.message });
+    res.status(500).json({ message: "Failed to update profile", error: error.message });
   }
 };
 
@@ -326,9 +272,7 @@ export const getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Get Profile Error:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch profile", error: error.message });
+    res.status(500).json({ message: "Failed to fetch profile", error: error.message });
   }
 };
 
@@ -336,40 +280,24 @@ export const getProfile = async (req, res) => {
 export const addAddress = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { address_line1, city, state, pincode, address_type, is_default } =
-      req.body;
+    const { address_line1, city, state, pincode, address_type, is_default } = req.body;
 
     if (!address_line1 || !city || !state || !pincode) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Agar naya address default hai, toh baaki purane addresses ko default se hatao
     if (is_default) {
-      await db.query("UPDATE addresses SET is_default = 0 WHERE user_id = ?", [
-        userId,
-      ]);
+      await db.query("UPDATE addresses SET is_default = 0 WHERE user_id = ?", [userId]);
     }
 
     const [result] = await db.query(
       `INSERT INTO addresses (user_id, address_line1, city, state, pincode, address_type, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        userId,
-        address_line1,
-        city,
-        state,
-        pincode,
-        address_type,
-        is_default ? 1 : 0,
-      ],
+      [userId, address_line1, city, state, pincode, address_type, is_default ? 1 : 0],
     );
 
-    res
-      .status(201)
-      .json({ message: "Address added successfully", id: result.insertId });
+    res.status(201).json({ message: "Address added successfully", id: result.insertId });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to add address", error: error.message });
+    res.status(500).json({ message: "Failed to add address", error: error.message });
   }
 };
 
@@ -383,9 +311,7 @@ export const getUserAddresses = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching addresses", error: error.message });
+    res.status(500).json({ message: "Error fetching addresses", error: error.message });
   }
 };
 
@@ -399,8 +325,7 @@ export const getSingleAddress = async (req, res) => {
       [id, userId],
     );
 
-    if (rows.length === 0)
-      return res.status(404).json({ message: "Address not found" });
+    if (rows.length === 0) return res.status(404).json({ message: "Address not found" });
     res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: "Error fetching address" });
@@ -412,27 +337,15 @@ export const updateAddress = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const { address_line1, city, state, pincode, address_type, is_default } =
-      req.body;
+    const { address_line1, city, state, pincode, address_type, is_default } = req.body;
 
     if (is_default) {
-      await db.query("UPDATE addresses SET is_default = 0 WHERE user_id = ?", [
-        userId,
-      ]);
+      await db.query("UPDATE addresses SET is_default = 0 WHERE user_id = ?", [userId]);
     }
 
     await db.query(
       `UPDATE addresses SET address_line1=?, city=?, state=?, pincode=?, address_type=?, is_default=? WHERE id=? AND user_id=?`,
-      [
-        address_line1,
-        city,
-        state,
-        pincode,
-        address_type,
-        is_default ? 1 : 0,
-        id,
-        userId,
-      ],
+      [address_line1, city, state, pincode, address_type, is_default ? 1 : 0, id, userId],
     );
 
     res.json({ message: "Address Updated successfully" });
@@ -467,9 +380,7 @@ export const setDefaultAddress = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    await db.query("UPDATE addresses SET is_default = 0 WHERE user_id = ?", [
-      userId,
-    ]);
+    await db.query("UPDATE addresses SET is_default = 0 WHERE user_id = ?", [userId]);
     await db.query(
       "UPDATE addresses SET is_default = 1 WHERE id = ? AND user_id = ?",
       [id, userId],
@@ -481,8 +392,7 @@ export const setDefaultAddress = async (req, res) => {
   }
 };
 
-//10.add family member
-
+// 10. add family member
 export const addMember = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -493,14 +403,12 @@ export const addMember = async (req, res) => {
     }
 
     await db.query(
-      `INSERT INTO user_family_members
-            (user_id, name, relation ,gotra ,dob ,rashi)
-            VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO user_family_members (user_id, name, relation ,gotra ,dob ,rashi) VALUES (?, ?, ?, ?, ?, ?)`,
       [userId, name, relation, gotra, dob, rashi],
     );
     res.json({ message: "Family member added" });
   } catch (error) {
-    console.log("Server", error);
+    console.error("Add Member Error:", error);
     res.status(500).json({ message: "Fill all Details" });
   }
 };
@@ -510,14 +418,12 @@ export const allMembers = async (req, res) => {
   try {
     const userId = req.user.id;
     const [members] = await db.query(
-      `SELECT * FROM user_family_members 
-            WHERE user_id = ? 
-            ORDER BY created_at DESC`,
+      `SELECT * FROM user_family_members WHERE user_id = ? ORDER BY created_at DESC`,
       [userId],
     );
     res.json(members);
   } catch (error) {
-    console.log(error);
+    console.error("All Members Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -526,23 +432,18 @@ export const allMembers = async (req, res) => {
 export const deleteMember = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id; // Token se user ki ID nikaali
+    const userId = req.user.id;
 
-    // Pehle check karein ki ye member usi user ka hai ya nahi (Security check)
     const [member] = await db.execute(
       "SELECT * FROM user_family_members WHERE id = ? AND user_id = ?",
       [id, userId],
     );
 
     if (member.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Member not found or unauthorized" });
+      return res.status(404).json({ message: "Member not found or unauthorized" });
     }
 
-    // Member delete karein
     await db.execute("DELETE FROM user_family_members WHERE id = ?", [id]);
-
     res.status(200).json({ message: "Member deleted successfully" });
   } catch (error) {
     console.error("Delete Member Error:", error);
@@ -554,24 +455,14 @@ export const deleteMember = async (req, res) => {
 export const getDefaultAddress = async (req, res) => {
   try {
     const userId = req.user.id;
-
     const [rows] = await db.query(
-      `
-      SELECT id, address_line1, city, state, pincode
-      FROM addresses
-      WHERE user_id = ? AND is_default = true
-      LIMIT 1
-      `,
+      `SELECT id, address_line1, city, state, pincode FROM addresses WHERE user_id = ? AND is_default = true LIMIT 1`,
       [userId],
     );
-
     res.status(200).json(rows[0] || null);
   } catch (error) {
     console.error("Default Address Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch default address",
-    });
+    res.status(500).json({ success: false, message: "Failed to fetch default address" });
   }
 };
 
@@ -592,3 +483,177 @@ export const getReferralRewards = async (req, res) => {
   }
 };
 
+// =============================
+// FORGOT PASSWORD
+// =============================
+export const forgotPassword = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ message: "Phone number is required" });
+
+    const [rows] = await db.query("SELECT id FROM users WHERE phone = ? AND is_deleted = 0", [phone]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No account found with this phone number" });
+    }
+
+    // Generate a 6-digit numeric reset code (instead of a complex token for easier UX)
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    await db.query(
+      "UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE phone = ?",
+      [resetCode, expiry, phone]
+    );
+
+    // In a real app, send this code via SMS
+    console.log(`Password reset code for ${phone}: ${resetCode}`);
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Reset code sent successfully",
+      // Only for demo purposes, we'll return it so the frontend can pre-fill or user can see it
+      debug_code: resetCode 
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error in forgot password", error: error.message });
+  }
+};
+
+// =============================
+// RESET PASSWORD
+// =============================
+export const resetPassword = async (req, res) => {
+  try {
+    const { phone, resetCode, newPassword } = req.body;
+
+    if (!phone || !resetCode || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const [rows] = await db.query(
+      "SELECT * FROM users WHERE phone = ? AND reset_token = ? AND reset_token_expires > NOW() AND is_deleted = 0",
+      [phone, resetCode]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ message: "Invalid or expired reset code" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.query(
+      "UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE phone = ?",
+      [hashedPassword, phone]
+    );
+
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error in reset password", error: error.message });
+  }
+};
+
+// =============================
+// GOOGLE LOGIN
+// =============================
+export const googleLogin = async (req, res) => {
+  try {
+    const { idToken, phone } = req.body;
+    if (!idToken) return res.status(400).json({ message: "Token is required" });
+
+    let email, name, picture, googleId;
+
+    // Check if it's an Access Token (starts with ya29) or an ID Token (JWT)
+    if (idToken.startsWith("ya29.") || !idToken.includes(".")) {
+      const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${idToken}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error_description || "Invalid Access Token");
+      email = data.email;
+      name = data.name;
+      picture = data.picture;
+      googleId = data.sub;
+    } else {
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+      googleId = payload.sub;
+    }
+
+    if (!email) throw new Error("Could not retrieve email from Google");
+
+    // Check if user exists with this email or google_id
+    let [users] = await db.query(
+      "SELECT * FROM users WHERE (email = ? OR google_id = ?) AND is_deleted = 0",
+      [email, googleId]
+    );
+
+    let user;
+    if (users.length === 0) {
+      // New user — need phone before creating account
+      if (!phone) {
+        return res.status(200).json({
+          success: false,
+          needsPhone: true,
+          message: "Phone number required for new account",
+          tempGoogle: { name, email, googleId, picture }
+        });
+      }
+      // Create new user with phone + google_id
+      const [result] = await db.query(
+        "INSERT INTO users (name, email, phone, google_id, role, avatar_url, is_verified) VALUES (?, ?, ?, ?, 'user', ?, 1)",
+        [name, email, phone, googleId || null, picture]
+      );
+      const [newUsers] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
+      user = newUsers[0];
+    } else {
+      user = users[0];
+      // Existing user — check if phone missing
+      if (!user.phone && !phone) {
+        return res.status(200).json({
+          success: false,
+          needsPhone: true,
+          message: "Phone number required",
+          tempGoogle: { name, email, googleId, picture }
+        });
+      }
+      // Update missing fields
+      const updates = [];
+      const values = [];
+      if (!user.phone && phone) { updates.push("phone = ?"); values.push(phone); }
+      if (!user.google_id && googleId) { updates.push("google_id = ?"); values.push(googleId); }
+      if (!user.avatar_url && picture) { updates.push("avatar_url = ?"); values.push(picture); }
+      if (updates.length > 0) {
+        values.push(user.id);
+        await db.query(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, values);
+        if (phone) user.phone = phone;
+      }
+    }
+
+    // Generate JWT for our app session
+    const token = jwt.sign(
+      { id: user.id, name: user.name, phone: user.phone, role: user.role },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "90d" }
+    );
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        avatar: user.avatar_url
+      }
+    });
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    res.status(500).json({ success: false, message: "Google Authentication failed", error: error.message });
+  }
+};

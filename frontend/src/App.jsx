@@ -30,6 +30,7 @@ const SignUp = lazy(() => import("./user/Pages/SignUp"));
 const PartnerSignIn = lazy(() => import("./user/Pages/PartnerSignIn"));
 const PartnerSignUp = lazy(() => import("./user/Pages/PartnerSignUp"));
 const PartnerDashboard = lazy(() => import("./user/Pages/PartnerDashboard"));
+const ForgotPassword = lazy(() => import("./user/Pages/ForgotPassword"));
 const CustomerCareSignIn = lazy(() => import("./admin/pages/CustomerCareSignIn"));
 const CustomerCareDashboard = lazy(() => import("./admin/pages/CustomerCareDashboard"));
 const FullTemplePage = lazy(() => import("./user/Pages/FullTemplePage"));
@@ -128,6 +129,7 @@ function App() {
     "/admin/login",
     "/admin/dashboard",
     "/admin/name-correct",
+    "/forgot-password",
   ].includes(location.pathname);
 
   const isHomePage = location.pathname === "/";
@@ -241,6 +243,7 @@ function App() {
           {/* ================= AUTH ROUTES ================= */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/partner-signin" element={<PartnerSignIn />} />
           <Route path="/partner-signup" element={<PartnerSignUp />} />
 

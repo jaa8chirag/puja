@@ -1,12 +1,10 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
 import fs from "fs";
 import {
-  signupRequest,
-  signupVerify,
-  loginRequest,
-  verifyOtp,
+  signup,
+  login,
+  socialAuth,
   addAddress,
   getUserAddresses,
   setDefaultAddress,
@@ -20,6 +18,9 @@ import {
   updateProfile,
   getProfile,
   getReferralRewards,
+  forgotPassword,
+  resetPassword,
+  googleLogin,
 } from "../controllers/authController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -62,21 +63,19 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-// 4. Route par middleware apply karein
-// 'document' wahi key hai jo aapne frontend FormData mein append ki hai
-
 // -------- AUTH --------
-router.post("/signup-request", signupRequest);
-router.post("/signup-verify", upload.single("document"), signupVerify);
-router.post("/login-request", loginRequest);
-router.post("/verify-otp", verifyOtp);
+router.post("/signup", upload.single("document"), signup);
+router.post("/login", login);
+router.post("/social-auth", socialAuth);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
+router.post("/google-login", googleLogin);
 
 // Profile Routes
 router.get("/get-profile", verifyToken, getProfile);
 router.put("/update-profile", verifyToken, updateProfile);
 
 // -------- ADDRESS MANAGEMENT ROUTES --------
-
 router.post("/add-address", verifyToken, addAddress);
 router.get("/get-addresses", verifyToken, getUserAddresses);
 router.get("/address/:id", verifyToken, getSingleAddress);

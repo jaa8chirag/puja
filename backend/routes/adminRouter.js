@@ -2,11 +2,9 @@ import express from "express";
 import { upload, pdfUpload } from "../middleware/multerMiddleware.js";
 import { adminOnly } from "../middleware/admin.js";
 import {
-  AdminLoginRequest,
-  AdminVerifyOtp,
+  AdminLogin,
   createPandit,
   createService,
-  createUser,
   deletePandit,
   deleteService,
   deleteUser,
@@ -63,6 +61,7 @@ import {
   updatePersonalInfo,
   deletePersonalInfo,
   updatePersonalInfoStatus,
+  adminCreateUser,
   addPanditPayout,
 } from "../controllers/adminController.js";
 
@@ -81,9 +80,8 @@ router.post(
     res.json({ success: true, message: "Checklist successfully update ho gayi ✅" });
   }
 );
-// Admin Authentication Routes can be added here (e.g., login, logout)
-router.post("/login", AdminLoginRequest);
-router.post("/verify-otp", AdminVerifyOtp);
+// Admin Authentication Routes
+router.post("/login", AdminLogin);
 
 // Admin Dashboard Routes
 router.get("/dashboard", verifyToken, adminOnly, getDashboardStats);
@@ -93,7 +91,7 @@ router.get("/monthly-growth", verifyToken, adminOnly, getMonthlyGrowthChart);
 
 // User Management, CRUD Operations Routes for Admin
 router.get("/users", verifyToken, adminOnly, getAllUsers);
-router.post("/createUser", verifyToken, adminOnly, createUser);
+router.post("/createUser", verifyToken, adminOnly, adminCreateUser);
 router.get("/users/:id", verifyToken, adminOnly, getUserById);
 router.put("/users/:id", verifyToken, adminOnly, updateUser);
 router.delete("/users/:id", verifyToken, adminOnly, deleteUser);

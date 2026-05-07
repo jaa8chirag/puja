@@ -583,7 +583,7 @@ const PindDanBooking = () => {
                     <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                       <Gem size={20} /> Benefits of {service?.puja_name}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                       {/* Dynamic Benefits from Backend */}
                       {service?.benefits && service.benefits.length > 0 ? (
                         service.benefits.map((benefit, index) => (
@@ -1222,7 +1222,7 @@ const ContributionCard = ({ item, selected, onToggle }) => (
 const BenefitSmall = ({ icon, title, desc }) => (
   <div className="flex flex-row items-center gap-3 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400 text-left">
     {/* Icon Container: Visible on all sizes, centered icon */}
-    <div className="flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
       {React.cloneElement(icon, { size: 36 })}
     </div>
     <div className="flex flex-col">

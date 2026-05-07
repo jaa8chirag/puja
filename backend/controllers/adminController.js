@@ -1,8 +1,6 @@
 import db from "../config/db.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-const otpStore = {}; // In-memory OTP store (phone: { otp, type, expires })
-import pool from "../config/db.js";
-
 // 1. Get All Contributions
 export const getAllContributions = async (req, res) => {
   try {
@@ -58,103 +56,50 @@ export const deleteContribution = async (req, res) => {
   }
 };
 
-// Admin sign-in with OTP
-export const AdminLoginRequest = async (req, res) => {
+// Admin Login (Password Based)
+export const AdminLogin = async (req, res) => {
   try {
-    const { phone, role } = req.body;
-    // Database mein check karein ki user hai aur uska role 'admin' hai
+    const { phone, password } = req.body;
+
+    if (!phone || !password) {
+      return res.status(400).json({ message: "Email/Phone and Password are required" });
+    }
+
     const [rows] = await db.query(
-      "SELECT id, role FROM users WHERE phone = ? AND role = ? AND is_deleted = 0",
-      [phone, role],
+      "SELECT * FROM users WHERE (phone = ? OR email = ?) AND (role = 'admin' OR role = 'superAdmin') AND is_deleted = 0",
+      [phone, phone],
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: "Admin account not found." });
+      return res.status(404).json({ message: "Admin account not found with this Email or Phone." });
     }
 
-    // Role Strict Check: Agar role 'admin' nahi hai toh block karein
-    if (rows[0].role !== "admin") {
-      return res.status(403).json({
-        message: "Access denied. Only administrators can login here.",
-      });
+    const user = rows[0];
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    // Generate 6 Digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    const token = jwt.sign(
+      {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+      },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "90d" },
+    );
 
-    // Store in memory (expires in 5 mins)
-    otpStore[phone] = {
-      otp,
-      type: "ADMIN_LOGIN",
-      expires: Date.now() + 5 * 60 * 1000,
-    };
-
-    // Logging for development (Sms gateway yaha integrate hoga)
-    console.log(`\n--- ADMIN LOGIN OTP FOR ${phone}: ${otp} ---\n`);
-
-    res.status(200).json({ message: "Admin OTP sent successfully" });
+    res.status(200).json({
+      message: "Admin Login success",
+      token,
+      role: user.role,
+    });
   } catch (error) {
     console.error("Admin Login Error:", error);
     res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-export const AdminVerifyOtp = async (req, res) => {
-  try {
-    const { phone, otp } = req.body;
-    const session = otpStore[phone];
-
-    // BYPASS LOGIC (Sirf testing ke liye)
-    const isBypass = otp.toString() === "123456";
-
-    // Validation: OTP match hona chahiye, type ADMIN_LOGIN hona chahiye aur expire nahi hona chahiye
-    const isValidOtp =
-      session &&
-      session.type === "ADMIN_LOGIN" &&
-      session.otp.toString() === otp.toString() &&
-      Date.now() < session.expires;
-
-    if (isBypass || isValidOtp) {
-      // Fetch fresh admin details
-      const [rows] = await db.query(
-        "SELECT id, name, phone, email, role FROM users WHERE phone = ? AND role = 'admin' AND is_deleted = 0",
-        [phone],
-      );
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "Admin authentication failed." });
-      }
-
-      // Session delete karein
-      if (session) delete otpStore[phone];
-
-      // Generate Admin JWT Token
-      const token = jwt.sign(
-        {
-          id: rows[0].id,
-          name: rows[0].name,
-          phone: rows[0].phone,
-          role: rows[0].role, // isme 'admin' value hogi
-        },
-        process.env.JWT_SECRET || "supersecretkey", // Admin ke liye alag secret bhi use kar sakte hain
-        { expiresIn: "90d" }, // Admin session persistence badha di (90 days)
-      );
-
-      res.status(200).json({
-        message: isBypass
-          ? "Admin Login success (Bypass)"
-          : "Admin Login success",
-        token,
-        role: rows[0].role,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid or expired OTP" });
-    }
-  } catch (error) {
-    console.error("Admin Verify Error:", error);
-    res.status(500).json({ message: "Admin verification failed" });
   }
 };
 
@@ -342,33 +287,6 @@ GROUP BY u.id
   }
 };
 
-// ✅ Role dynamic — user/admin/customerCare sab ban sakte hain
-export const createUser = async (req, res) => {
-  try {
-    const { name, email, phone, role } = req.body;
-
-    if (!name || !phone) {
-      return res.status(400).json({
-        success: false,
-        message: "Name and phone are required",
-      });
-    }
-
-    const allowedRoles = ["user", "admin", "customerCare"];
-    const userRole = allowedRoles.includes(role) ? role : "user";
-
-    await db.execute(
-      `INSERT INTO users (name, email, phone, role) VALUES (?, ?, ?, ?)`,
-      [name, email || null, phone, userRole],
-    );
-
-    res.json({ success: true, message: "User created successfully" });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
 // Get Single user
 export const getUserById = async (req, res) => {
   try {
@@ -396,6 +314,14 @@ export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, phone, role } = req.body;
+    const requesterRole = req.user.role;
+
+    // Check if target user is superadmin
+    // Security check: Only superAdmin can modify another superAdmin
+    const [[targetUser]] = await db.execute("SELECT role FROM users WHERE id = ?", [id]);
+    if (targetUser && targetUser.role === 'superAdmin' && requesterRole !== 'superAdmin') {
+      return res.status(403).json({ success: false, message: "Only SuperAdmin can modify another SuperAdmin." });
+    }
 
     const fields = [];
     const values = [];
@@ -413,14 +339,26 @@ export const updateUser = async (req, res) => {
       values.push(phone);
     }
 
+    if (req.body.password) {
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      fields.push("password=?");
+      values.push(hashedPassword);
+    }
+
     // ✅ Role validate karke update karo
     if (role !== undefined) {
-      const allowedRoles = ["user", "admin", "customerCare"];
+      const allowedRoles = ["user", "admin", "superAdmin", "customerCare"];
       if (!allowedRoles.includes(role)) {
         return res
           .status(400)
           .json({ success: false, message: "Invalid role" });
       }
+      
+      // Only superAdmin can promote someone to superAdmin
+      if (role === 'superAdmin' && requesterRole !== 'superAdmin') {
+        return res.status(403).json({ success: false, message: "Only SuperAdmin can assign SuperAdmin role." });
+      }
+
       fields.push("role=?");
       values.push(role);
     }
@@ -449,19 +387,73 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Delete id:", id, "User id:", req.user.id, typeof req.user.id);
+    const requesterRole = req.user.role;
+
     if (Number(id) === Number(req.user.id)) {
       return res.status(400).json({
         success: false,
-        message: "Admin cannot delete himself",
+        message: "You cannot delete yourself",
       });
+    }
+
+    // Check if target user is superAdmin
+    const [[targetUser]] = await db.execute("SELECT role FROM users WHERE id = ?", [id]);
+    if (targetUser && targetUser.role === 'superAdmin' && requesterRole !== 'superAdmin') {
+      return res.status(403).json({ success: false, message: "Only SuperAdmin can delete a SuperAdmin." });
     }
 
     await db.execute("UPDATE users SET is_deleted = 1 WHERE id=?", [id]);
 
     res.json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Admin Create User (Admin, CustomerCare, etc.)
+export const adminCreateUser = async (req, res) => {
+  try {
+    const { name, phone, password, role } = req.body;
+    const requesterRole = req.user.role;
+
+    if (!name || !phone || !password || !role) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    if (phone.length !== 10) {
+      return res.status(400).json({ success: false, message: "Phone number must be exactly 10 digits" });
+    }
+
+    // Security: Only superAdmin can create another superAdmin
+    if (role === 'superAdmin') {
+      if (requesterRole !== 'superAdmin') {
+        return res.status(403).json({ success: false, message: "Only SuperAdmin can create another SuperAdmin." });
+      }
+    }
+
+    // Check if user already exists
+    const [existing] = await db.execute("SELECT id FROM users WHERE phone = ?", [phone]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, message: "User with this phone already exists" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user
+    const [result] = await db.execute(
+      "INSERT INTO users (name, phone, password, role, is_verified) VALUES (?, ?, ?, ?, 1)",
+      [name, phone, hashedPassword, role]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      userId: result.insertId
+    });
+  } catch (error) {
+    console.error("Admin Create User Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -470,7 +462,7 @@ export const filtarUsers = async (req, res) => {
   try {
     const { types } = req.params;
 
-    const allowedRoles = ["user", "admin", "customerCare"];
+    const allowedRoles = ["user", "admin", "superAdmin", "customerCare"];
     if (!allowedRoles.includes(types)) {
       return res.status(400).json({ success: false, message: "Invalid role" });
     }
@@ -611,28 +603,33 @@ export const getAllPandits = async (req, res) => {
       params,
     );
 
-    const [rows] = await db.query(
-      `SELECT 
-        u.id, u.name, u.email, u.phone, u.is_blocked, u.created_at,
-        p.pandit_type, p.document_url,
-        ppd.id as payment_id,
-        ppd.payment_method,
-        ppd.account_holder_name,
-        ppd.bank_name,
-        ppd.bank_account_number,
-        ppd.ifsc_code,
-        ppd.upi_id,
-        ppd.is_active as payment_is_active,
-        ppd.is_verified as payment_is_verified,
-        ppd.verified_at as payment_verified_at
-       FROM users u
-       LEFT JOIN pandits p ON u.id = p.user_id
-       LEFT JOIN partner_payment_details ppd ON u.id = ppd.user_id AND ppd.is_active = 1
-       ${whereClause}
-       ORDER BY u.created_at DESC
-       LIMIT ? OFFSET ?`,
-      [...params, limit, offset],
-    );
+     const [rows] = await db.query(
+       `SELECT 
+         u.id, u.name, u.email, u.phone, u.is_blocked, u.created_at,
+         p.pandit_type, p.document_url,
+         ppd.id as payment_id,
+         ppd.payment_method,
+         ppd.account_holder_name,
+         ppd.bank_name,
+         ppd.bank_account_number,
+         ppd.ifsc_code,
+         ppd.upi_id,
+         ppd.is_active as payment_is_active,
+         ppd.is_verified as payment_is_verified,
+         ppd.verified_at as payment_verified_at,
+         a.address_line1 as address,
+         a.city,
+         a.state,
+         a.pincode
+        FROM users u
+        LEFT JOIN pandits p ON u.id = p.user_id
+        LEFT JOIN partner_payment_details ppd ON u.id = ppd.user_id AND ppd.is_active = 1
+        LEFT JOIN addresses a ON u.id = a.user_id AND a.is_default = 1
+        ${whereClause}
+        ORDER BY u.created_at DESC
+        LIMIT ? OFFSET ?`,
+       [...params, limit, offset],
+     );
 
     res.json({
       success: true,
@@ -684,7 +681,25 @@ export const updatePandit = async (req, res) => {
   const connection = await db.getConnection();
   try {
     const { id } = req.params;
-    const { name, email, phone, pandit_type, document_url } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      pandit_type,
+      document_url,
+      // Address fields
+      address,
+      city,
+      state,
+      pincode,
+      // Payment fields
+      paymentMethod,
+      accountHolderName,
+      bankName,
+      bankAccountNumber,
+      ifscCode,
+      upiId,
+    } = req.body;
 
     await connection.beginTransaction();
 
@@ -704,12 +719,53 @@ export const updatePandit = async (req, res) => {
       [id, pandit_type, document_url],
     );
 
+    // 3. Update Address
+    if (address && city && state) {
+      await connection.query(
+        `INSERT INTO addresses
+         (user_id, address_line1, city, state, address_type, pincode, is_default)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+         address_line1 = VALUES(address_line1),
+         city = VALUES(city),
+         state = VALUES(state),
+         pincode = VALUES(pincode)`,
+        [id, address, city, state, "home", pincode || null, 1],
+      );
+    }
+
+    // 4. Update Payment Details
+    if (paymentMethod && ["bank", "upi"].includes(paymentMethod)) {
+      await connection.query(
+        `INSERT INTO partner_payment_details
+         (user_id, payment_method, account_holder_name, bank_name, bank_account_number, ifsc_code, upi_id, is_active)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+         ON DUPLICATE KEY UPDATE
+         payment_method = VALUES(payment_method),
+         account_holder_name = VALUES(account_holder_name),
+         bank_name = VALUES(bank_name),
+         bank_account_number = VALUES(bank_account_number),
+         ifsc_code = VALUES(ifsc_code),
+         upi_id = VALUES(upi_id),
+         is_active = 1`,
+        [
+          id,
+          paymentMethod,
+          accountHolderName || null,
+          bankName || null,
+          bankAccountNumber || null,
+          ifscCode ? ifscCode.toUpperCase() : null,
+          upiId || null,
+        ],
+      );
+    }
+
     await connection.commit();
     res.json({ success: true, message: "Pandit updated successfully" });
   } catch (error) {
     await connection.rollback();
     console.error(error);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: error.message });
   } finally {
     connection.release();
   }

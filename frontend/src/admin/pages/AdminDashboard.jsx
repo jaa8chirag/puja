@@ -313,7 +313,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
 };
 
 // ─── Topbar ───────────────────────────────────────────────────────────────────
-const Topbar = ({ onMenuClick }) => {
+const Topbar = ({ onMenuClick, role }) => {
   return (
     <div
       className="h-16 bg-[#0f1117] border-b border-white/[0.06] flex items-center justify-between px-4 md:px-7 sticky top-0 z-40"
@@ -333,8 +333,8 @@ const Topbar = ({ onMenuClick }) => {
           🕉
         </div>
         <div>
-          <div className="text-white text-sm font-bold leading-tight">
-            Super Admin Control
+          <div className="text-white text-sm font-bold leading-tight capitalize">
+            {role === 'superAdmin' ? 'Super Admin' : role} Control
           </div>
           <div className="text-gray-500 text-[11px] hidden sm:block">
             Sri Vedic Puja
@@ -447,6 +447,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({});
   const [active, setActive] = useState("God View");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const adminRole = localStorage.getItem("adminRole");
 
   const fetchData = async () => {
     try {
@@ -483,7 +484,7 @@ const AdminDashboard = () => {
           className="flex-1 flex flex-col lg:ml-[220px] min-w-0"
           style={{ fontFamily: "'DM Sans', sans-serif" }}
         >
-          <Topbar onMenuClick={() => setSidebarOpen(true)} />
+          <Topbar onMenuClick={() => setSidebarOpen(true)} role={adminRole} />
 
           <div className="flex-1 p-4 md:p-7">
             {active === "God View" && (

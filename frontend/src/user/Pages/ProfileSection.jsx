@@ -36,6 +36,7 @@ const ProfileSection = () => {
   const [personalData, setPersonalData] = useState({
     name: decoded.name || "",
     email: decoded.email || "",
+    phone: "",
     gotra: "",
     referral_code: "",
     pending_referral_discounts: 0,
@@ -80,6 +81,7 @@ const ProfileSection = () => {
           setPersonalData({
             name: data.user.name || "",
             email: data.user.email || "",
+            phone: data.user.phone || "",
             gotra: data.user.gotra || "",
             referral_code: data.user.referral_code || "",
             pending_referral_discounts: data.user.pending_referral_discounts || 0,
@@ -134,6 +136,10 @@ const ProfileSection = () => {
   const handlePersonalSubmit = async () => {
     if (!personalData.name.trim()) {
       alert("Name is required");
+      return;
+    }
+    if (personalData.phone && personalData.phone.length !== 10) {
+      alert("Please enter a valid 10-digit phone number");
       return;
     }
     setLoading(true);
@@ -334,13 +340,20 @@ const ProfileSection = () => {
                 <div className="relative">
                   <input
                     type="text"
-                    value={decoded.phone}
-                    disabled
-                    className={disabledStyle}
+                    value={personalData.phone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 10) {
+                        setPersonalData({ ...personalData, phone: val });
+                      }
+                    }}
+                    maxLength={10}
+                    className={inputStyle}
+                    placeholder="Enter 10-digit mobile number"
                   />
                   <Phone
                     size={16}
-                    className="absolute right-4 top-3 text-gray-300"
+                    className="absolute right-4 top-3 text-orange-300"
                   />
                 </div>
               </div>

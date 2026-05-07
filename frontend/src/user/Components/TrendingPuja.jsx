@@ -101,37 +101,20 @@ export default function TrendingPuja() {
 
               {/* Content */}
               <div className="p-5 md:p-4 flex flex-col flex-1">
-                <div className="mb-4 md:mb-2">
-
-                  {/* Title + Arrow */}
-                  <div className="flex items-center justify-between gap-3 mb-1">
+                  <div className="flex items-center justify-between gap-2">
                     <h3 className="text-lg md:text-2xl font-serif text-[#2f1e12] leading-tight group-hover:text-orange-600 transition-colors line-clamp-1">
                       {service.title || service.puja_name}
                     </h3>
-
-                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl border border-orange-200 bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all duration-500 shrink-0">
-                      <ArrowRight size={18} />
-                    </div>
+                    <button className="shrink-0 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm md:rounded-2xl border border-orange-200 bg-orange-50 text-orange-600 font-medium hover:bg-orange-600 hover:text-white transition-all duration-500 whitespace-nowrap">
+                      Book Now
+                    </button>
                   </div>
 
-                  {/* Meta info */}
-                  <div className="flex items-center text-gray-400 text-[10px] md:text-xs font-medium gap-2">
-                    <div className="flex items-center gap-1 bg-orange-50 px-2 py-0.5 rounded">
-                      <Calendar size={10} className="text-orange-500" />
-                      <span className="text-orange-700">Available Daily</span>
-                    </div>
-                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                    <span>At Home</span>
-                  </div>
-
-                  {/* Description — 3 lines */}
                   {service.description && (
-                    <p className="mt-2 text-gray-500 text-[12px] md:text-[13px] leading-relaxed line-clamp-3">
+                    <p className="mt-2 text-gray-500 text-[13px] md:text-[14px] leading-relaxed line-clamp-3">
                       {stripHtml(service.description)}
                     </p>
                   )}
-
-                </div>
               </div>
             </div>
           ))}

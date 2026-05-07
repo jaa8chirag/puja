@@ -1,20 +1,27 @@
 import { useEffect, useState } from "react";
 import { API } from "../../services/adminApi";
 import {
+  Users as UsersIcon,
   Search,
   Plus,
-  Pencil,
+  MoreVertical,
+  Edit2,
   Trash2,
-  X,
-  User,
+  Shield,
+  ShieldCheck,
   Mail,
   Phone,
-  Shield,
-  Users as UsersIcon,
-  Loader2,
+  User,
+  X,
+  Lock,
   CheckCircle2,
   XCircle,
+  Eye,
+  EyeOff,
+  Pencil,
+  Loader2,
 } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 import Pagination from "../../Components/Pagination";
 
 // ✅ Component ke BAHAR — re-render fix
@@ -36,18 +43,34 @@ const ModalField = ({
   type = "text",
   value,
   onChange,
-}) => (
-  <div className="relative">
-    <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-    <input
-      type={type}
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      className="w-full pl-11 pr-4 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder:text-slate-600 transition-all"
-    />
-  </div>
-);
+  ...props
+}) => {
+  const [show, setShow] = useState(false);
+  const isPassword = type === "password";
+
+  return (
+    <div className="relative">
+      <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+      <input
+        type={isPassword ? (show ? "text" : "password") : type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        {...props}
+        className="w-full pl-11 pr-10 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder:text-slate-600 transition-all"
+      />
+      {isPassword && (
+        <button
+          type="button"
+          onClick={() => setShow(!show)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-orange-500 transition-colors"
+        >
+          {show ? <EyeOff size={14} /> : <Eye size={14} />}
+        </button>
+      )}
+    </div>
+  );
+};
 
 // ✅ Role dropdown bhi bahar
 const ModalSelect = ({ icon: Icon, value, onChange, options }) => (
@@ -71,6 +94,7 @@ const roleOptions = [
   { value: "user", label: "User" },
   { value: "admin", label: "Admin" },
   { value: "customerCare", label: "Customer Care" },
+  { value: "superAdmin", label: "Super Admin" },
 ];
 
 const Users = () => {
@@ -92,8 +116,23 @@ const Users = () => {
     name: "",
     email: "",
     phone: "",
+    password: "",
     role: "user",
   });
+
+  const [currentAdminRole, setCurrentAdminRole] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setCurrentAdminRole(decoded.role || "");
+      } catch (err) {
+        console.error("Token decode error:", err);
+      }
+    }
+  }, []);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -171,7 +210,7 @@ const Users = () => {
       await API.post(`/createUser`, newUser);
       showToast("User created");
       setShowAddModal(false);
-      setNewUser({ name: "", email: "", phone: "", role: "user" });
+      setNewUser({ name: "", email: "", phone: "", password: "", role: "user" });
       await fetchUsers();
     } catch {
       showToast("Failed to create user", "error");
@@ -235,6 +274,7 @@ const Users = () => {
               <option value="all">All Permissions</option>
               <option value="user">User</option>
               <option value="admin">Admin</option>
+              <option value="superAdmin">Super Admin</option>
               <option value="pandit">Pandit</option>
               <option value="customerCare">Customer Care</option>
             </select>
@@ -359,10 +399,12 @@ const Users = () => {
                         className={`inline-block px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${
                           u.role === "admin"
                             ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                            : u.role === "customerCare"
-                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                              : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                        }`}
+                            : u.role === "superAdmin"
+                              ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
+                              : u.role === "customerCare"
+                                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                        } shadow-sm shadow-black/50`}
                       >
                         {u.role}
                       </span>
@@ -473,17 +515,33 @@ const Users = () => {
                   : setEditingUser({ ...editingUser, email: e.target.value })
               }
             />
-            <ModalField
-              icon={Phone}
-              placeholder="Phone Number *"
-              type="tel"
-              value={showAddModal ? newUser.phone : editingUser?.phone}
-              onChange={(e) =>
-                showAddModal
-                  ? setNewUser({ ...newUser, phone: e.target.value })
-                  : setEditingUser({ ...editingUser, phone: e.target.value })
-              }
-            />
+              <ModalField
+                icon={Phone}
+                placeholder="Phone Number *"
+                type="tel"
+                maxLength={10}
+                value={showAddModal ? newUser.phone : editingUser?.phone}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  showAddModal
+                    ? setNewUser({ ...newUser, phone: val })
+                    : setEditingUser({ ...editingUser, phone: val });
+                }}
+              />
+
+             {(showAddModal || editingUser) && (
+               <ModalField
+                 icon={Lock}
+                 placeholder={showAddModal ? "Set Password *" : "Set New Password (optional)"}
+                 type="password"
+                 value={showAddModal ? newUser.password : editingUser?.password || ""}
+                 onChange={(e) =>
+                   showAddModal
+                     ? setNewUser({ ...newUser, password: e.target.value })
+                     : setEditingUser({ ...editingUser, password: e.target.value })
+                 }
+               />
+             )}
 
             {/* ✅ Role Dropdown */}
             <ModalSelect
@@ -494,7 +552,11 @@ const Users = () => {
                   ? setNewUser({ ...newUser, role: e.target.value })
                   : setEditingUser({ ...editingUser, role: e.target.value })
               }
-              options={roleOptions}
+              options={roleOptions.filter(opt => {
+                // If current user is not superAdmin, they can't create/set superAdmin
+                if (opt.value === 'superAdmin' && currentAdminRole !== 'superAdmin') return false;
+                return true;
+              })}
             />
           </div>
 
