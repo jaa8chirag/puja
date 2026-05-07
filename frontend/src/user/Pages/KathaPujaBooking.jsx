@@ -328,7 +328,7 @@ const KathaPujaBooking = () => {
                   <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Dynamic Benefits from Backend */}
                     {service?.benefits && service.benefits.length > 0 ? (
                       service.benefits.map((benefit, index) => (
@@ -535,15 +535,16 @@ const KathaPujaBooking = () => {
    Mobile:  no icon, compact (2-col grid)
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
-    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 28 })}
+  <div className="flex flex-row items-center gap-3 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400 text-left">
+    {/* Icon Container: Visible on all sizes, centered icon */}
+    <div className="flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 36 })}
     </div>
     <div className="flex flex-col">
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
+      <h4 className="text-[14px] md:text-[16px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium">
+      <p className="text-[12px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium break-words">
         {desc}
       </p>
     </div>

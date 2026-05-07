@@ -8,16 +8,33 @@ const HTMLContent = ({ content, className }) => {
   const containsHTML = /<\/?[a-z][\s\S]*>/i.test(content);
 
   if (containsHTML) {
+    // Clean content: remove <br> tags and normalize whitespace
+    let cleanedContent = content
+      // Remove <br> tags completely or replace with space
+      .replace(/<br\s*\/?>/gi, ' ')
+      // Remove extra spaces
+      .replace(/&nbsp;/g, ' ')
+      // Normalize multiple spaces to single space
+      .replace(/\s+/g, ' ')
+      // Trim
+      .trim();
+    
     return (
       <div 
         className={`quill-content ${className || ""}`}
-        dangerouslySetInnerHTML={{ __html: content }} 
+        dangerouslySetInnerHTML={{ __html: cleanedContent }} 
       />
     );
   }
 
-  // Fallback for plain text / basic markdown-like
-  return <p className={className}>{content}</p>;
+  // Fallback for plain text
+  return (
+    <p 
+      className={`quill-content ${className || ""}`}
+    >
+      {content}
+    </p>
+  );
 };
 
 export default HTMLContent;

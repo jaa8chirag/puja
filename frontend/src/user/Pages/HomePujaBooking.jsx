@@ -147,8 +147,8 @@ const HomePujaBooking = () => {
   // console.log("services-----", service);
   return (
     <div className="min-h-screen bg-[#FFF4E1] p-4 md:p-6 font-sans text-gray-800 pb-28 md:pb-6">
-      <SEO 
-        title={`Book ${service?.puja_name || 'Home Puja'}`} 
+      <SEO
+        title={`Book ${service?.puja_name || 'Home Puja'}`}
         description={`Book verified Pandits for ${service?.puja_name}. Authentic Vedic ceremonies at your doorstep with modern convenience.`}
         keywords={`${service?.puja_name}, Home Puja Booking, Book Pandit, Vedic Rituals, Sri Vedic Puja`}
       />
@@ -368,7 +368,7 @@ const HomePujaBooking = () => {
                     <Gem size={20} /> Benefits of {service?.puja_name}
                   </div>
                   {/* grid-cols-2 lagane se mobile par 2 boxes side by side aayenge */}
-                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {/* Dynamic Benefits from Backend */}
                     {service?.benefits && service.benefits.length > 0 ? (
                       service.benefits.map((benefit, index) => (
@@ -576,19 +576,17 @@ const HomePujaBooking = () => {
 
 // --- HELPER COMPONENTS ---
 const BenefitSmall = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-2 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm">
-    {/* Icon: Mobile (hidden), Desktop (md:flex) */}
-    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 28 })}
+  <div className="flex flex-row items-center gap-3 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400 text-left">
+    {/* Icon Container: Visible on all sizes, centered icon */}
+    <div className="flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 36 })}
     </div>
 
     <div className="flex flex-col min-w-0">
-      {" "}
-      {/* min-w-0 prevents text overflow */}
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-tight whitespace-normal">
+      <h4 className="text-[14px] md:text-[16px] font-bold text-gray-800 tracking-tight leading-tight">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1 md:mt-2 leading-tight font-medium">
+      <p className="text-[12px] md:text-[13px] text-gray-500 mt-0.5 leading-tight font-medium break-words">
         {desc}
       </p>
     </div>

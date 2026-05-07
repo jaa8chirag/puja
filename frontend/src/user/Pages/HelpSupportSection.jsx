@@ -138,7 +138,7 @@ const ContactCard = ({ icon, title, sub }) => (
   <div className="bg-white p-4 h-full rounded-2xl border border-orange-200 text-center flex flex-col items-center hover:shadow-xl hover:border-orange-300 transition-all duration-300">
     <div className="mb-4 bg-gray-50 p-4 rounded-full">{icon}</div>
     <h4 className="text-sm font-bold text-gray-900 mb-1">{title}</h4>
-    <p className="text-xs text-gray-400 font-medium break-all">{sub}</p>
+    <p className="text-xs text-gray-400 font-medium break-words">{sub}</p>
   </div>
 );
 

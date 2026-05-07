@@ -246,8 +246,8 @@ const PindDanBooking = () => {
             }
           }
 
-          const formattedDateForBooking = service?.dateOfStart 
-            ? new Date(service.dateOfStart).toISOString().split('T')[0] 
+          const formattedDateForBooking = service?.dateOfStart
+            ? new Date(service.dateOfStart).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0];
 
           const bookingData = {
@@ -583,7 +583,7 @@ const PindDanBooking = () => {
                     <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                       <Gem size={20} /> Benefits of {service?.puja_name}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Dynamic Benefits from Backend */}
                       {service?.benefits && service.benefits.length > 0 ? (
                         service.benefits.map((benefit, index) => (
@@ -866,8 +866,8 @@ const PindDanBooking = () => {
                       <div
                         onClick={handleReferralToggle}
                         className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${useReferralDiscount
-                            ? "border-orange-500 bg-orange-50"
-                            : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                          ? "border-orange-500 bg-orange-50"
+                          : "border-gray-100 bg-gray-50 hover:border-orange-200"
                           }`}
                       >
                         <div className="flex items-center gap-2">
@@ -1009,170 +1009,170 @@ const PindDanBooking = () => {
   );
 };
 
-      /* ─────────────────────────────────────────────
-         MOBILE INLINE SUMMARY SECTION
-      ───────────────────────────────────────────── */
-      const MobileSummarySection = ({
-        service, donations, setDonations, contributionList,
-        calculateTotal, selectedContributionsTotal, scrollToSection, getPrice,
-        contributionOptions, couponInput, setCouponInput, appliedCoupon,
-        handleApplyCoupon, removeCoupon, isApplying, couponError,
-        paymentOption, setPaymentOption, grandTotal, advancePercentage,
-        handleBooking, isBooking, pendingRewards, useReferralDiscount,
-        handleReferralToggle, referralDiscount, publicCoupons,
-        discountAmount, grandTotalBeforeDiscount, finalTotal
-      }) => (
-      <div>
-        <div className="mb-5">
-          <h3 className="text-[15px] font-bold text-slate-700 uppercase tracking-[0.15em] mb-2">
-            Booking Summary
-          </h3>
-          <div className="flex gap-1">
-            <div className="h-1 w-12 bg-orange-500 rounded-full" />
-            <div className="h-1 w-4 bg-orange-100 rounded-full" />
+/* ─────────────────────────────────────────────
+   MOBILE INLINE SUMMARY SECTION
+───────────────────────────────────────────── */
+const MobileSummarySection = ({
+  service, donations, setDonations, contributionList,
+  calculateTotal, selectedContributionsTotal, scrollToSection, getPrice,
+  contributionOptions, couponInput, setCouponInput, appliedCoupon,
+  handleApplyCoupon, removeCoupon, isApplying, couponError,
+  paymentOption, setPaymentOption, grandTotal, advancePercentage,
+  handleBooking, isBooking, pendingRewards, useReferralDiscount,
+  handleReferralToggle, referralDiscount, publicCoupons,
+  discountAmount, grandTotalBeforeDiscount, finalTotal
+}) => (
+  <div>
+    <div className="mb-5">
+      <h3 className="text-[15px] font-bold text-slate-700 uppercase tracking-[0.15em] mb-2">
+        Booking Summary
+      </h3>
+      <div className="flex gap-1">
+        <div className="h-1 w-12 bg-orange-500 rounded-full" />
+        <div className="h-1 w-4 bg-orange-100 rounded-full" />
+      </div>
+    </div>
+
+    <div className="space-y-4">
+      <div className="flex justify-between items-center px-1">
+        <span className="text-[14px] font-bold text-slate-500 tracking-wider">
+          Base Price
+        </span>
+        <span className="text-[15px] font-bold text-slate-800">
+          ₹{Number(service?.standard_price).toLocaleString("en-IN")}
+        </span>
+      </div>
+
+      <button
+        onClick={() => scrollToSection("contributions")}
+        className="w-full flex items-center justify-between p-3 rounded-2xl border border-orange-200 bg-orange-50/50 hover:bg-orange-100 transition-all active:scale-[0.98]"
+      >
+        <div className="flex items-center gap-2 text-orange-600 text-[14px] font-bold">
+          <div className="p-1.5 bg-white rounded-lg shadow-sm">
+            <Heart size={15} fill="currentColor" className="text-orange-500" />
           </div>
+          <span className="font-bold text-[13px]">
+            {selectedContributionsTotal > 0
+              ? "Edit Contributions"
+              : "Add Contributions"}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          {selectedContributionsTotal > 0 ? (
+            <span className="text-[14px] font-bold text-orange-600">
+              +₹{selectedContributionsTotal.toLocaleString("en-IN")}
+            </span>
+          ) : (
+            <ChevronRight size={15} className="text-orange-400" />
+          )}
+        </div>
+      </button>
+
+      <div className="flex flex-col border-y border-orange-200 pt-3">
+        <div className="flex items-center justify-between py-1 px-1">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={donations["Temple Donation"]}
+              onChange={(e) =>
+                setDonations((prev) => ({
+                  ...prev,
+                  "Temple Donation": e.target.checked,
+                }))
+              }
+              className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+            />
+            <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">
+              Temple Donation
+            </span>
+          </label>
+
+          <span className="text-[13px] font-black text-orange-500">
+            +₹{getPrice("Temple Donation")}
+          </span>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center px-1">
-            <span className="text-[14px] font-bold text-slate-500 tracking-wider">
-              Base Price
-            </span>
-            <span className="text-[15px] font-bold text-slate-800">
-              ₹{Number(service?.standard_price).toLocaleString("en-IN")}
+        <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
+          {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving devotees."}
+        </p>
+      </div>
+
+      {/* 🎟️ Mobile Referral Reward Section */}
+      {pendingRewards > 0 && (
+        <div className="py-3 border-y border-dashed border-orange-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-orange-500" />
+              <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Reward</span>
+            </div>
+            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+              {pendingRewards} Available
             </span>
           </div>
 
-          <button
-            onClick={() => scrollToSection("contributions")}
-            className="w-full flex items-center justify-between p-3 rounded-2xl border border-orange-200 bg-orange-50/50 hover:bg-orange-100 transition-all active:scale-[0.98]"
+          <div
+            onClick={handleReferralToggle}
+            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${useReferralDiscount
+              ? "border-orange-500 bg-orange-50"
+              : "border-gray-100 bg-gray-50 hover:border-orange-200"
+              }`}
           >
-            <div className="flex items-center gap-2 text-orange-600 text-[14px] font-bold">
-              <div className="p-1.5 bg-white rounded-lg shadow-sm">
-                <Heart size={15} fill="currentColor" className="text-orange-500" />
+            <div className="flex items-center gap-2">
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                }`}>
+                {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
               </div>
-              <span className="font-bold text-[13px]">
-                {selectedContributionsTotal > 0
-                  ? "Edit Contributions"
-                  : "Add Contributions"}
-              </span>
+              <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
             </div>
-            <div className="flex items-center gap-1">
-              {selectedContributionsTotal > 0 ? (
-                <span className="text-[14px] font-bold text-orange-600">
-                  +₹{selectedContributionsTotal.toLocaleString("en-IN")}
-                </span>
-              ) : (
-                <ChevronRight size={15} className="text-orange-400" />
-              )}
-            </div>
-          </button>
+            {useReferralDiscount && (
+              <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
+            )}
+          </div>
+        </div>
+      )}
 
-          <div className="flex flex-col border-y border-orange-200 pt-3">
-            <div className="flex items-center justify-between py-1 px-1">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={donations["Temple Donation"]}
-                  onChange={(e) =>
-                    setDonations((prev) => ({
-                      ...prev,
-                      "Temple Donation": e.target.checked,
-                    }))
-                  }
-                  className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
-                />
-                <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">
-                  Temple Donation
-                </span>
-              </label>
+      <div className="py-2 border-y border-dashed border-orange-100 my-2">
+        <CouponSelector
+          isMobile={true}
+          couponInput={couponInput}
+          setCouponInput={setCouponInput}
+          appliedCoupon={appliedCoupon}
+          handleApplyCoupon={handleApplyCoupon}
+          removeCoupon={removeCoupon}
+          isApplying={isApplying}
+          couponError={couponError}
+          publicCoupons={publicCoupons}
+        />
+      </div>
 
-              <span className="text-[13px] font-black text-orange-500">
-                +₹{getPrice("Temple Donation")}
-              </span>
-            </div>
+      <PaymentOptionSelector
+        paymentOption={paymentOption}
+        setPaymentOption={setPaymentOption}
+        grandTotal={finalTotal}
+        advancePercentage={advancePercentage}
+      />
 
-            <p className="text-[11px] text-gray-500 mt-1 ml-7 leading-snug">
-              {contributionOptions?.find((c) => c.name === "Temple Donation")?.description || "Helps in temple upkeep, rituals, and serving devotees."}
+      <div className="flex justify-between items-center pt-1 px-1">
+        <div>
+          <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">
+            Total Amount
+          </span>
+          <div className="flex items-center gap-1 text-emerald-600 mt-0.5">
+            <ShieldCheck size={11} />
+            <span className="text-[10px] font-bold">
+              Inclusive of all taxes
+            </span>
+          </div>
+        </div>
+        <div className="text-right">
+          {discountAmount > 0 && (
+            <p className="text-[11px] font-bold text-green-600 line-through opacity-70">
+              ₹{grandTotalBeforeDiscount.toLocaleString("en-IN")}
             </p>
-          </div>
-
-          {/* 🎟️ Mobile Referral Reward Section */}
-          {pendingRewards > 0 && (
-            <div className="py-3 border-y border-dashed border-orange-100">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={14} className="text-orange-500" />
-                  <span className="text-[12px] font-bold text-gray-700 uppercase">Referral Reward</span>
-                </div>
-                <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                  {pendingRewards} Available
-                </span>
-              </div>
-
-              <div
-                onClick={handleReferralToggle}
-                className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${useReferralDiscount
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                  }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${useReferralDiscount ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                    }`}>
-                    {useReferralDiscount && <CheckCircle size={10} className="text-white" />}
-                  </div>
-                  <span className="text-xs font-bold text-gray-800">Use 10% Discount</span>
-                </div>
-                {useReferralDiscount && (
-                  <span className="text-[10px] font-black text-green-600">-₹{referralDiscount}</span>
-                )}
-              </div>
-            </div>
           )}
-
-          <div className="py-2 border-y border-dashed border-orange-100 my-2">
-            <CouponSelector
-              isMobile={true}
-              couponInput={couponInput}
-              setCouponInput={setCouponInput}
-              appliedCoupon={appliedCoupon}
-              handleApplyCoupon={handleApplyCoupon}
-              removeCoupon={removeCoupon}
-              isApplying={isApplying}
-              couponError={couponError}
-              publicCoupons={publicCoupons}
-            />
-          </div>
-
-          <PaymentOptionSelector
-            paymentOption={paymentOption}
-            setPaymentOption={setPaymentOption}
-            grandTotal={finalTotal}
-            advancePercentage={advancePercentage}
-          />
-
-          <div className="flex justify-between items-center pt-1 px-1">
-            <div>
-              <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">
-                Total Amount
-              </span>
-              <div className="flex items-center gap-1 text-emerald-600 mt-0.5">
-                <ShieldCheck size={11} />
-                <span className="text-[10px] font-bold">
-                  Inclusive of all taxes
-                </span>
-              </div>
-            </div>
-            <div className="text-right">
-              {discountAmount > 0 && (
-                <p className="text-[11px] font-bold text-green-600 line-through opacity-70">
-                  ₹{grandTotalBeforeDiscount.toLocaleString("en-IN")}
-                </p>
-              )}
-              <span className="text-xl font-black text-orange-600">
-                ₹{finalTotal.toLocaleString("en-IN")}
-              </span>
+          <span className="text-xl font-black text-orange-600">
+            ₹{finalTotal.toLocaleString("en-IN")}
+          </span>
         </div>
       </div>
     </div>
@@ -1220,15 +1220,16 @@ const ContributionCard = ({ item, selected, onToggle }) => (
    Mobile:  text only — no icon
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
-    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 28 })}
+  <div className="flex flex-row items-center gap-3 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400 text-left">
+    {/* Icon Container: Visible on all sizes, centered icon */}
+    <div className="flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 36 })}
     </div>
     <div className="flex flex-col">
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
+      <h4 className="text-[14px] md:text-[16px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium">
+      <p className="text-[12px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium break-words">
         {desc}
       </p>
     </div>

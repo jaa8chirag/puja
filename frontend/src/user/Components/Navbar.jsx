@@ -15,6 +15,7 @@ import {
   LogOut,
   MapPin,
   HelpCircle,
+  Ticket,
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 
@@ -364,17 +365,6 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            {/* My Booking */}
-            {user && (
-              <NavLink
-                to="/my-booking"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
-              >
-                <Settings size={18} /> My-Booking
-              </NavLink>
-            )}
-
             {/* Mobile Pind-Dan Dropdown */}
             <div className="pt-1">
               <button
@@ -419,6 +409,17 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+
+            {/* My Booking */}
+            {user && (
+              <NavLink
+                to="/my-booking"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-4 p-4 font-bold text-gray-600 hover:bg-orange-50 rounded-xl"
+              >
+                <Ticket size={18} /> My-Booking
+              </NavLink>
+            )}
 
             {/* Mobile Gallery Dropdown */}
             <div className="pt-1">

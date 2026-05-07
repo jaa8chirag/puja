@@ -10,7 +10,7 @@ export default function TermsAndConditions() {
 
   const extractSections = (sections) => {
     if (!sections) return [];
-    
+
     let parsed;
     try {
       parsed = typeof sections === "string" ? JSON.parse(sections) : sections;
@@ -32,7 +32,7 @@ export default function TermsAndConditions() {
     if (typeof parsed === "object") {
       const sectionsArray = [];
       const priorityKeys = ["hero_title", "hero_subtitle", "hero_text", "mission_title", "mission_text", "vision_title", "vision_text", "intro_text"];
-      
+
       let currentSection = { title: "", content: "" };
 
       priorityKeys.forEach(k => {
@@ -56,7 +56,7 @@ export default function TermsAndConditions() {
           }
         }
       });
-      
+
       if (currentSection.content || currentSection.title) sectionsArray.push(currentSection);
       return sectionsArray;
     }
@@ -86,7 +86,7 @@ export default function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-[#FFF4E1] text-[#2D1A00] py-12 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto flex flex-col items-center">
-        
+
         {/* Top Icon */}
         <div className="mb-2">
           <span className="text-orange-500 text-2xl">ॐ</span>
@@ -99,16 +99,16 @@ export default function TermsAndConditions() {
 
         {/* Divider icon */}
         <div className="flex items-center gap-4 mb-12 w-full max-w-md justify-center">
-           <div className="h-[1px] bg-orange-200 flex-grow"></div>
-           <div className="w-2 h-2 bg-orange-800 rotate-45"></div>
-           <div className="h-[1px] bg-orange-200 flex-grow"></div>
+          <div className="h-[1px] bg-orange-200 flex-grow"></div>
+          <div className="w-2 h-2 bg-orange-800 rotate-45"></div>
+          <div className="h-[1px] bg-orange-200 flex-grow"></div>
         </div>
 
         {/* Small Boxes (Cards) */}
-        <div className="flex flex-col gap-8 w-full max-w-2xl">
+        <div className="grid grid-cols-1 gap-8 w-full max-w-2xl">
           {data && data.length > 0 ? (
             data.map((section, idx) => (
-              <div 
+              <div
                 key={idx}
                 className="bg-white p-6 md:p-8 rounded-[1.5rem] border border-orange-100 shadow-[0_4px_15px_-5px_rgba(251,146,60,0.1)] transition-all"
               >
@@ -117,10 +117,10 @@ export default function TermsAndConditions() {
                     {section.title}
                   </h3>
                 )}
-                <div className="prose prose-orange prose-sm max-w-none">
-                  <HTMLContent 
-                    content={section.content} 
-                    className="text-[#3d1500]/80 text-[15px] leading-relaxed font-sans" 
+                <div className="w-full">
+                  <HTMLContent
+                    content={section.content}
+                    className="text-[#3d1500]/80 text-[15px] leading-relaxed font-sans"
                   />
                 </div>
               </div>

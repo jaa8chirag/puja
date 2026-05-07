@@ -1165,8 +1165,8 @@ const TemplePujaBooking = () => {
                       key={tab}
                       onClick={() => scrollToSection(tab)}
                       className={`flex-1 px-4 md:px-6 py-4 text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all relative whitespace-nowrap ${activeTab === tab
-                          ? "text-orange-600 bg-orange-50/50"
-                          : "text-gray-400"
+                        ? "text-orange-600 bg-orange-50/50"
+                        : "text-gray-400"
                         }`}
                     >
                       {tab}
@@ -1228,7 +1228,7 @@ const TemplePujaBooking = () => {
                     <div className="flex items-center gap-2 text-orange-600 font-bold text-[13px] uppercase tracking-widest">
                       <Gem size={20} /> Benefits of {service?.puja_name}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Dynamic Benefits from Backend */}
                       {service?.benefits && service.benefits.length > 0 ? (
                         service.benefits.map((benefit, index) => (
@@ -1433,8 +1433,8 @@ const TemplePujaBooking = () => {
                         key={t.label}
                         onClick={() => handleTicketClick(t.label)}
                         className={`relative flex flex-col items-center py-4 px-2 rounded-2xl border-2 transition-all duration-300 ${selectedTicket === t.label
-                            ? "border-orange-500 bg-orange-50/30 ring-4 ring-orange-50"
-                            : "border-gray-100 bg-white hover:border-orange-200"
+                          ? "border-orange-500 bg-orange-50/30 ring-4 ring-orange-50"
+                          : "border-gray-100 bg-white hover:border-orange-200"
                           }`}
                       >
                         <div
@@ -1587,8 +1587,8 @@ const TemplePujaBooking = () => {
                                   }
                                 }}
                                 className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedRewardId === reward.id
-                                    ? "bg-orange-500 border-orange-500 shadow-md shadow-orange-200"
-                                    : "bg-white border-orange-100 hover:border-orange-300"
+                                  ? "bg-orange-500 border-orange-500 shadow-md shadow-orange-200"
+                                  : "bg-white border-orange-100 hover:border-orange-300"
                                   }`}
                               >
                                 <div className="flex items-center gap-3">
@@ -1760,8 +1760,8 @@ const MobileSummarySection = ({
             key={t.label}
             onClick={() => setSelectedTicket(t.label)}
             className={`flex flex-col items-center py-2 px-2 rounded-2xl border-2 transition-all ${selectedTicket === t.label
-                ? "border-orange-500 bg-orange-50 ring-2 ring-orange-100"
-                : "border-gray-100 bg-white hover:border-orange-200"
+              ? "border-orange-500 bg-orange-50 ring-2 ring-orange-100"
+              : "border-gray-100 bg-white hover:border-orange-200"
               }`}
           >
             <div
@@ -1888,8 +1888,8 @@ const MobileSummarySection = ({
                   }
                 }}
                 className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedRewardId === reward.id
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                  ? "border-orange-500 bg-orange-50"
+                  : "border-gray-100 bg-gray-50 hover:border-orange-200"
                   }`}
               >
                 <div className="flex items-center gap-2">
@@ -1954,8 +1954,8 @@ const ContributionCard = ({ item, selected, onToggle }) => (
   <button
     onClick={onToggle}
     className={`flex items-center justify-between p-3 md:p-5 rounded-xl border transition-all shadow-sm w-full gap-2 ${selected
-        ? "border-orange-400 bg-orange-50"
-        : "border-orange-200 bg-white hover:border-orange-300"
+      ? "border-orange-400 bg-orange-50"
+      : "border-orange-200 bg-white hover:border-orange-300"
       }`}
   >
     <div className="flex items-center gap-3 text-left">
@@ -1983,15 +1983,16 @@ const ContributionCard = ({ item, selected, onToggle }) => (
    BENEFIT SMALL
 ───────────────────────────────────────────── */
 const BenefitSmall = ({ icon, title, desc }) => (
-  <div className="flex items-center gap-3 bg-[#FFFDF8] p-3 md:p-5 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400">
-    <div className="hidden md:flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
-      {React.cloneElement(icon, { size: 28 })}
+  <div className="flex flex-row items-center gap-3 md:gap-4 bg-[#FFFDF8] p-3 md:p-4 rounded-xl border border-orange-200 group transition-all shadow-sm hover:border-orange-400 text-left">
+    {/* Icon Container: Visible on all sizes, centered icon */}
+    <div className="flex w-12 h-12 items-center justify-center bg-orange-50 text-orange-500 rounded-full shadow-sm transition-all shrink-0 group-hover:bg-orange-100">
+      {React.cloneElement(icon, { size: 36 })}
     </div>
     <div className="flex flex-col">
-      <h4 className="text-[13px] md:text-[15px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
+      <h4 className="text-[14px] md:text-[16px] font-bold text-gray-800 tracking-tight leading-none group-hover:text-orange-700 transition-colors">
         {title}
       </h4>
-      <p className="text-[11px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium">
+      <p className="text-[12px] md:text-[13px] text-gray-500 mt-1.5 leading-tight font-medium break-words">
         {desc}
       </p>
     </div>

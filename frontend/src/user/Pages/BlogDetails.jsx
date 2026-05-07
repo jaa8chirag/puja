@@ -249,7 +249,7 @@ function BlogContent({ content }) {
           return <hr key={i} className="border-orange-200 my-4" />;
 
         return (
-          <p key={i} className="text-[#3d1500]/75 my-1.5 leading-7">{l}</p>
+          <p key={i} className="text-[#3d1500]/75 my-1.5 leading-7 break-words">{l}</p>
         );
       })}
     </div>

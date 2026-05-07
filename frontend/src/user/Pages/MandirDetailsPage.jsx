@@ -46,11 +46,11 @@ const MandirDetailsPage = () => {
 
                 <div className="relative h-[400px] rounded-[2.5rem] overflow-hidden shadow-xl mb-10">
                     {mandir.image_url_1 ? (
-                        <img 
-                            src={`${API_BASE_URL}/uploads/${mandir.image_url_1}`} 
-                            alt={mandir.name} 
+                        <img
+                            src={`${API_BASE_URL}/uploads/${mandir.image_url_1}`}
+                            alt={mandir.name}
                             loading="lazy"
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover"
                             onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.src = "https://placehold.co/1200x800?text=Sacred+Temple";
@@ -72,7 +72,7 @@ const MandirDetailsPage = () => {
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm">
                             <h3 className="text-orange-600 font-bold uppercase tracking-widest text-sm mb-4 flex items-center gap-2">
-                                <Info size={18}/> About Mandir
+                                <Info size={18} /> About Mandir
                             </h3>
                             <p className="text-gray-700 leading-relaxed text-lg">{mandir.about}</p>
                             <hr className="my-6 border-orange-100" />
@@ -86,9 +86,9 @@ const MandirDetailsPage = () => {
                             <div className="flex items-center gap-3 text-gray-600 font-medium"><Clock size={18} className="text-orange-500" /> {mandir.timings || "Check locally"}</div>
                             <div className="flex items-center gap-3 text-gray-600 font-medium"><Car size={18} className="text-orange-500" /> Parking Available</div>
                         </div>
-                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mandir.name + " " + mandir.location)}`} 
-                           target="_blank" rel="noreferrer"
-                           className="block text-center bg-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-orange-700 transition-all">
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mandir.name + " " + mandir.location)}`}
+                            target="_blank" rel="noreferrer"
+                            className="block text-center bg-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-orange-700 transition-all">
                             VIEW ON MAPS
                         </a>
                     </div>
