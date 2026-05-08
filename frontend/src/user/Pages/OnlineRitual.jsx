@@ -467,7 +467,7 @@ const BenefitCard = ({ icon, title, desc }) => (
       <h4 className="text-[14px] md:text-[16px] font-bold text-gray-800 tracking-tight leading-tight mb-1">
         {title}
       </h4>
-      <p className="text-[12px] md:text-[13px] text-gray-500 leading-tight font-medium break-words">
+      <p className="text-[12px] md:text-[13px] text-gray-500 leading-tight font-medium">
         {desc}
       </p>
     </div>

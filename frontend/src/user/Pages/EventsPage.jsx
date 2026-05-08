@@ -54,7 +54,7 @@ const EventsPage = () => {
         ) : eventsData.map((event) => (
           <div
             key={event.id}
-            className="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-[600px]"
+            className="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden"
           >
             <div className="h-56 bg-gray-100">
               <img
@@ -82,8 +82,8 @@ const EventsPage = () => {
                   {event.location}
                 </div>
 
-                <p className="text-gray-600 text-sm leading-6 line-clamp-6">
-                  {stripHtml(event.description)}...
+                <p className="text-gray-600 text-sm leading-6">
+                  {stripHtml(event.description)}
                 </p>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { MapPin, Calendar, ArrowRight, Ticket, Sparkles } from "lucide-react";
+import { MapPin, Calendar, ArrowRight, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { stripHtml } from "../../utils/stripHtml";
@@ -31,9 +31,9 @@ export default function SpecialPujas() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FFF4E1] text-[#2D1B08] pt-16 md:pt-20 selection:bg-orange-100">
+    <div className="min-h-fit bg-[#FFF4E1] text-[#2D1B08] pt-16 md:pt-20 selection:bg-orange-100">
       {/* Reduced px-6 to px-4 and pt-10 to pt-6 for mobile */}
-      <section className="relative max-w-7xl mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-16 md:pb-20">
+      <section className="relative max-w-7xl mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-10 md:pb-12">
 
         {/* TOP HEADER - Scaled for Mobile */}
         <div className="text-center mb-8 md:mb-12">
@@ -48,12 +48,11 @@ export default function SpecialPujas() {
 
         {/* SERVICES GRID - Tightened gaps */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 justify-items-center">
-          {services
-            .filter(service =>
-              (service.puja_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              (service.title && service.title.toLowerCase().includes(searchTerm.toLowerCase()))) &&
-              Number(service.is_featured) === 1
-            )
+          {Array.isArray(services) && services
+            .filter(service => {
+              const name = service.puja_name || service.title || "";
+              return name.toLowerCase().includes(searchTerm.toLowerCase());
+            })
             .slice(0, 3)
             .map((service) => (
               <div
@@ -72,14 +71,7 @@ export default function SpecialPujas() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1108]/90 via-transparent to-transparent opacity-60" />
 
                   {/* Badge scaled down */}
-                  <div className="absolute top-3 left-3 z-20">
-                    <div className="bg-orange-500/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
-                      <Sparkles size={10} fill="white" className="text-white" />
-                      <span className="text-[11px] capitalize md:text-[13px] font-bold tracking-wide">
-                        {service.status}
-                      </span>
-                    </div>
-                  </div>
+
                 </div>
 
                 {/* CONTENT */}

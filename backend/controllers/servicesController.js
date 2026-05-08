@@ -3,6 +3,9 @@ import pool from "../config/db.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Razorpay from "razorpay";
+import { sendPaymentReceipt } from "../utils/mailService.js";
+
+
 
 dotenv.config();
 
@@ -365,6 +368,30 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
     await processReferrerReward(userId, connection);
     await connection.commit();
 
+    // ── SEND EMAIL RECEIPT (Non-blocking) ──
+    try {
+      const [userRows] = await db.query("SELECT email FROM users WHERE id = ?", [userId]);
+      const [pujaRows] = await db.query("SELECT puja_name FROM services WHERE id = ?", [puja_id]);
+      const userEmail = userRows[0]?.email;
+      const pName = pujaRows[0]?.puja_name || "Vedic Puja";
+
+      if (userEmail) {
+        sendPaymentReceipt(userEmail, {
+          devoteeName: devoteeName || "User",
+          pujaName: pName,
+          bookingId: bookingId,
+          amountPaid: paid_amount,
+          totalAmount: total_price,
+          paymentStatus: paymentStatus,
+          date: formattedDate,
+          time: time || "Morning Slot",
+        });
+      }
+    } catch (mailErr) {
+      console.error("Mail Receipt Error (Home/Katha):", mailErr.message);
+    }
+    // ──────────────────────────────────────
+
     res.status(201).json({
       success: true,
       message: "Home/Katha Booking Stored Successfully",
@@ -677,6 +704,30 @@ export const onlinePinddanBookingDetails = async (req, res) => {
     await processReferrerReward(userId, connection);
     await connection.commit();
 
+    // ── SEND EMAIL RECEIPT (Non-blocking) ──
+    try {
+      const [userRows] = await db.query("SELECT email FROM users WHERE id = ?", [userId]);
+      const [pujaRows] = await db.query("SELECT puja_name FROM services WHERE id = ?", [puja_id]);
+      const userEmail = userRows[0]?.email;
+      const pName = pujaRows[0]?.puja_name || "Vedic Puja";
+
+      if (userEmail) {
+        sendPaymentReceipt(userEmail, {
+          devoteeName: devoteeName || "User",
+          pujaName: pName,
+          bookingId: bookingId,
+          amountPaid: paid_amount,
+          totalAmount: total_price,
+          paymentStatus: paymentStatus,
+          date: formattedDate,
+          time: time || "Morning Slot",
+        });
+      }
+    } catch (mailErr) {
+      console.error("Mail Receipt Error (Online Pind Dan):", mailErr.message);
+    }
+    // ──────────────────────────────────────
+
     res.status(201).json({
       success: true,
       message: "Home/Katha Booking Stored Successfully",
@@ -869,6 +920,30 @@ export const bookingDetails = async (req, res) => {
 
     await processReferrerReward(userId, connection);
     await connection.commit();
+
+    // ── SEND EMAIL RECEIPT (Non-blocking) ──
+    try {
+      const [userRows] = await db.query("SELECT email FROM users WHERE id = ?", [userId]);
+      const [pujaRows] = await db.query("SELECT puja_name FROM services WHERE id = ?", [puja_id]);
+      const userEmail = userRows[0]?.email;
+      const pName = pujaRows[0]?.puja_name || "Temple Puja";
+
+      if (userEmail) {
+        sendPaymentReceipt(userEmail, {
+          devoteeName: devoteeName || "User",
+          pujaName: pName,
+          bookingId: bookingId,
+          amountPaid: paid_amount,
+          totalAmount: total_price,
+          paymentStatus: paymentStatus,
+          date: formattedDate,
+          time: time || "Morning Slot",
+        });
+      }
+    } catch (mailErr) {
+      console.error("Mail Receipt Error (Temple):", mailErr.message);
+    }
+    // ──────────────────────────────────────
 
     res.status(201).json({
       success: true,

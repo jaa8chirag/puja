@@ -633,7 +633,7 @@ const ChatSupportPanel = ({
                       className={`max-w-[75%] md:max-w-[65%] flex flex-col ${msg.senderType === "agent" ? "items-end" : "items-start"}`}
                     >
                       <div
-                        className={`px-3 md:px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed break-words ${msg.senderType === "agent" ? "bg-gradient-to-br from-blue-600/80 to-indigo-600/80 text-white rounded-br-sm border border-blue-500/30" : "bg-[#0d1829] border border-white/[0.06] text-slate-200 rounded-bl-sm"}`}
+                        className={`px-3 md:px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed ${msg.senderType === "agent" ? "bg-gradient-to-br from-blue-600/80 to-indigo-600/80 text-white rounded-br-sm border border-blue-500/30" : "bg-[#0d1829] border border-white/[0.06] text-slate-200 rounded-bl-sm"}`}
                       >
                         {msg.text}
                       </div>

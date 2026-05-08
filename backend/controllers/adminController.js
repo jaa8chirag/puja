@@ -1250,7 +1250,11 @@ export const getAllBookings = async (req, res) => {
         (SELECT GROUP_CONCAT(ct.name SEPARATOR ', ') 
          FROM service_contributions sc 
          JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
-         WHERE sc.puja_request_id = pr.id) as contribution_names
+         WHERE sc.puja_request_id = pr.id) as contribution_names,
+        (SELECT GROUP_CONCAT(CONCAT(ct.name, '::', sc.amount) SEPARATOR '||') 
+         FROM service_contributions sc 
+         JOIN contribution_types ct ON sc.contribution_type_id = ct.id 
+         WHERE sc.puja_request_id = pr.id) as contributions_data
       FROM puja_requests pr
       LEFT JOIN users u ON pr.user_id = u.id
       LEFT JOIN services s ON pr.service_id = s.id
@@ -1952,7 +1956,7 @@ export const adminGetAllBlogs = async (req, res) => {
     query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
     params.push(Number(limit), Number(offset));
 
-    const [blogs] = await pool.query(query, params);
+    const [blogs] = await db.query(query, params);
 
     // Total count
     let countQ = `SELECT COUNT(*) as total FROM blogs WHERE 1=1`;
@@ -1969,10 +1973,10 @@ export const adminGetAllBlogs = async (req, res) => {
       countQ += ` AND (title LIKE ? OR excerpt LIKE ?)`;
       countP.push(`%${search}%`, `%${search}%`);
     }
-    const [[{ total }]] = await pool.query(countQ, countP);
+    const [[{ total }]] = await db.query(countQ, countP);
 
     // Stats cards ke liye
-    const [[stats]] = await pool.query(`
+    const [[stats]] = await db.query(`
       SELECT
         COUNT(*)                  AS total,
         SUM(status = 'published') AS published,
@@ -1998,7 +2002,7 @@ export const adminGetAllBlogs = async (req, res) => {
 // GET /api/admin/blogs/:id
 export const adminGetBlogById = async (req, res) => {
   try {
-    const [[blog]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [
+    const [[blog]] = await db.query(`SELECT * FROM blogs WHERE id = ?`, [
       req.params.id,
     ]);
     if (!blog)
@@ -2037,7 +2041,7 @@ export const adminCreateBlog = async (req, res) => {
 
     const image_url = req.file ? req.file.filename : null;
 
-    const [result] = await pool.query(
+    const [result] = await db.query(
       `INSERT INTO blogs (title, slug, excerpt, content, category, tag, author, image_url, read_time, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -2075,7 +2079,7 @@ export const adminCreateBlog = async (req, res) => {
 export const adminUpdateBlog = async (req, res) => {
   try {
     const { id } = req.params;
-    const [[existing]] = await pool.query(`SELECT * FROM blogs WHERE id = ?`, [
+    const [[existing]] = await db.query(`SELECT * FROM blogs WHERE id = ?`, [
       id,
     ]);
     if (!existing)
@@ -2100,7 +2104,7 @@ export const adminUpdateBlog = async (req, res) => {
         .slice(0, 120)
       : existing.slug;
 
-    await pool.query(
+    await db.query(
       `UPDATE blogs SET title=?, slug=?, excerpt=?, content=?, category=?,
                         tag=?, author=?, image_url=?, read_time=?, status=?
        WHERE id = ?`,
@@ -2129,12 +2133,12 @@ export const adminUpdateBlog = async (req, res) => {
 // DELETE /api/admin/blogs/:id
 export const adminDeleteBlog = async (req, res) => {
   try {
-    const [[blog]] = await pool.query(`SELECT id FROM blogs WHERE id = ?`, [
+    const [[blog]] = await db.query(`SELECT id FROM blogs WHERE id = ?`, [
       req.params.id,
     ]);
     if (!blog)
       return res.status(404).json({ success: false, error: "Blog nahi mila" });
-    await pool.query(`DELETE FROM blogs WHERE id = ?`, [req.params.id]);
+    await db.query(`DELETE FROM blogs WHERE id = ?`, [req.params.id]);
     res.json({ success: true, message: "Blog delete ho gaya" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -2144,7 +2148,7 @@ export const adminDeleteBlog = async (req, res) => {
 // PATCH /api/admin/blogs/:id/status  — Published ↔ Draft toggle
 export const adminToggleBlogStatus = async (req, res) => {
   try {
-    const [[blog]] = await pool.query(
+    const [[blog]] = await db.query(
       `SELECT id, status FROM blogs WHERE id = ?`,
       [req.params.id],
     );
@@ -2152,7 +2156,7 @@ export const adminToggleBlogStatus = async (req, res) => {
       return res.status(404).json({ success: false, error: "Blog nahi mila" });
 
     const newStatus = blog.status === "published" ? "draft" : "published";
-    await pool.query(`UPDATE blogs SET status = ? WHERE id = ?`, [
+    await db.query(`UPDATE blogs SET status = ? WHERE id = ?`, [
       newStatus,
       req.params.id,
     ]);
@@ -2700,3 +2704,23 @@ export const addPanditPayout = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const getAllKundliRequests = async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM kundli_requests ORDER BY created_at DESC");
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const deleteKundliRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query("DELETE FROM kundli_requests WHERE id = ?", [id]);
+    res.json({ success: true, message: "Request deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+

@@ -41,6 +41,13 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
     }
 
+    if (role === "pandit" && paymentMethod === "upi" && upiId) {
+      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+      if (!upiRegex.test((upiId || "").trim())) {
+        return res.status(400).json({ message: "Invalid UPI ID format (e.g. name@upi)." });
+      }
+    }
+
     const [existing] = await db.query("SELECT id FROM users WHERE phone = ?", [phone]);
     if (existing.length > 0) {
       return res.status(409).json({ message: "Phone number already registered. Please Login." });

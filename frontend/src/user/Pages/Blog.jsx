@@ -168,11 +168,11 @@ export default function Blog() {
                       )}
                     </div>
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 leading-snug group-hover:text-orange-100 transition-colors"
-                      style={{ fontFamily: "'Georgia', serif", textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+                      style={{ fontFamily: "'Georgia', serif", textShadow: '0 2px 8px rgba(0,0,0,0.4)', wordBreak: 'normal', overflowWrap: 'break-word' }}>
                       {featured.title}
                     </h2>
                     {featured.excerpt && (
-                      <p className="text-orange-100/70 text-sm leading-relaxed mb-5 max-w-2xl line-clamp-2">
+                      <p className="text-orange-100/70 text-sm leading-relaxed mb-5 max-w-2xl line-clamp-2" style={{ wordBreak: 'normal', overflowWrap: 'break-word' }}>
                         {featured.excerpt}
                       </p>
                     )}
@@ -283,12 +283,12 @@ function BlogCard({ blog, imageUrl, onRead }) {
         </div>
 
         <h3 className="text-orange-800 font-bold text-[17px] mb-2 leading-snug group-hover:text-orange-700 transition-colors line-clamp-2"
-          style={{ fontFamily: "'Georgia', serif" }}>
+          style={{ fontFamily: "'Georgia', serif", wordBreak: 'normal', overflowWrap: 'break-word' }}>
           {blog.title}
         </h3>
 
         {blog.excerpt && (
-          <p className="text-orange-700 text-[14px] leading-relaxed line-clamp-3">
+          <p className="text-orange-700 text-[14px] leading-relaxed line-clamp-3" style={{ wordBreak: 'normal', overflowWrap: 'break-word' }}>
             {blog.excerpt}
           </p>
         )}

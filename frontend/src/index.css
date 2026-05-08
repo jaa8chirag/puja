@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Global Text Wrapping Fix */
+* {
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
 /* index.css ya App.css */
 .app-container {
   width: 100%;

@@ -113,6 +113,7 @@ const Adminblogs = () => {
         headers: authHeaders(),
       });
       const data = await res.json();
+      if (!data.success || !data.blog) throw new Error(data.error || "Blog data not found");
       const b = data.blog;
       setForm({
         title: b.title || "",
@@ -128,8 +129,9 @@ const Adminblogs = () => {
       setImageFile(null);
       setSelected(b);
       setModal("edit");
-    } catch {
-      alert("Blog load nahi ho saka");
+    } catch (err) {
+      console.error("Blog load error:", err);
+      alert("Blog load nahi ho saka: " + err.message);
     }
   };
 

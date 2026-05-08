@@ -573,7 +573,7 @@ function TabBar({ tabs, active, onChange }) {
 // ── Main App ──────────────────────────────────────────────────
 export default function KundliPortal() {
   const [form, setForm] = useState({
-    name: '', dateOfBirth: '', timeOfBirth: '', placeOfBirth: '',
+    name: '', mobile: '', dateOfBirth: '', timeOfBirth: '', placeOfBirth: '',
     gender: 'Male', latitude: null, longitude: null, timezoneOffset: 5.5
   });
   const [loading, setLoading] = useState(false);
@@ -636,14 +636,16 @@ export default function KundliPortal() {
 
   const generate = async () => {
     setError(''); setResult(null);
-    if (!form.name || !form.dateOfBirth || !form.timeOfBirth || !form.placeOfBirth)
-      return setError('Please fill all fields.');
+    if (!form.name || !form.mobile || !form.dateOfBirth || !form.timeOfBirth || !form.placeOfBirth)
+      return setError('Please fill all mandatory fields, including your mobile number.');
+    if (form.mobile.length < 10)
+      return setError('Please enter a valid 10-digit mobile number.');
     setLoading(true);
     try {
       const res = await fetch(API_URL, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.name, dateOfBirth: form.dateOfBirth, timeOfBirth: form.timeOfBirth,
+          name: form.name, mobile: form.mobile, dateOfBirth: form.dateOfBirth, timeOfBirth: form.timeOfBirth,
           placeOfBirth: form.placeOfBirth, gender: form.gender,
           latitude: form.latitude || 20.5937, longitude: form.longitude || 78.9629,
           timezoneOffset: form.timezoneOffset || 5.5,
@@ -668,10 +670,10 @@ export default function KundliPortal() {
   ];
 
   const SOURCE_BADGE = {
-    swisseph: { cl: 'bg-green-100 text-green-700 border-green-300', ic: '🌌', t: 'Swiss Ephemeris — 0.001 arcsec accuracy' },
-    moshier: { cl: 'bg-blue-100 text-blue-700 border-blue-300', ic: '🔭', t: 'Swiss Ephemeris Moshier — ~1 arcsec' },
-    mixed: { cl: 'bg-amber-100 text-amber-700 border-amber-300', ic: '⚡', t: 'Swiss Ephe + Math fallback (mixed)' },
-    fallback: { cl: 'bg-stone-100 text-stone-600 border-stone-300', ic: '📐', t: 'Mathematical VSOP87 fallback' },
+    swisseph: { cl: 'bg-green-100 text-green-700 border-green-300', ic: '🌌', t: 'Precision Calculation — High Accuracy' },
+    moshier: { cl: 'bg-blue-100 text-blue-700 border-blue-300', ic: '🔭', t: 'Standard Calculation — Optimized' },
+    mixed: { cl: 'bg-amber-100 text-amber-700 border-amber-300', ic: '⚡', t: 'Multi-Engine Calculation' },
+    fallback: { cl: 'bg-stone-100 text-stone-600 border-stone-300', ic: '📐', t: 'Mathematical Fallback' },
   };
 
   return (
@@ -702,10 +704,10 @@ export default function KundliPortal() {
             Kundli Nirman
           </h1>
           <p className="text-amber-700 text-sm tracking-widest uppercase mt-1 opacity-70">
-            Vedic Birth Chart · Swiss Ephemeris · AI Dual Analysis
+            Professional Birth Chart · Accurate Calculations · Detailed Analysis
           </p>
           <div className="flex justify-center gap-2 mt-3 flex-wrap">
-            {['🌌 Swiss Ephemeris', '📿 Lahiri Ayanamsa', '🏠 Whole Sign Houses'].map(t => (
+            {['🌌 Vedic Calculations', '📿 Lahiri Ayanamsa', '🏠 Whole Sign Houses'].map(t => (
               <span key={t} className="text-xs bg-amber-100 border border-amber-300 text-amber-700 px-3 py-1 rounded-full">{t}</span>
             ))}
           </div>
@@ -716,33 +718,42 @@ export default function KundliPortal() {
           <h2 className="text-amber-800 font-semibold text-lg mb-5">📋 Birth Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">Full Name</label>
+              <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">Full Name <span className="text-red-500">*</span></label>
               <input name="name" value={form.name} onChange={setF}
                 placeholder="e.g. Ramesh Kumar Sharma"
                 className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-colors text-sm shadow-sm" />
             </div>
             <div>
-              <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">Gender</label>
+              <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">Mobile Number <span className="text-red-500">*</span></label>
+              <input name="mobile" value={form.mobile} onChange={e => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setForm(f => ({ ...f, mobile: val }));
+              }}
+                placeholder="10-digit mobile number"
+                className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-colors text-sm shadow-sm" />
+            </div>
+            <div>
+              <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">Gender <span className="text-red-500">*</span></label>
               <select name="gender" value={form.gender} onChange={setF}
                 className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-stone-800 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-sm shadow-sm">
                 <option>Male</option><option>Female</option><option>Other</option>
               </select>
             </div>
             <div>
-              <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">Date of Birth</label>
+              <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">Date of Birth <span className="text-red-500">*</span></label>
               <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={setF}
                 className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-stone-800 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 text-sm shadow-sm" />
             </div>
             <div>
               <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">
-                Time of Birth
+                Time of Birth <span className="text-red-500">*</span>
                 {form.timeOfBirth && <span className="ml-2 text-green-600 normal-case text-xs font-normal">✓ {form.timeOfBirth}</span>}
               </label>
               <TimePicker value={form.timeOfBirth} onChange={v => setForm(f => ({ ...f, timeOfBirth: v }))} />
             </div>
             <div className="md:col-span-2">
               <label className="text-amber-700 text-xs uppercase tracking-wider mb-1.5 block font-medium">
-                Place of Birth
+                Place of Birth <span className="text-red-500">*</span>
                 {form.latitude && <span className="ml-2 text-green-600 normal-case text-xs font-normal">
                   📍 {form.latitude?.toFixed(3)}, {form.longitude?.toFixed(3)} TZ:+{form.timezoneOffset}
                 </span>}
@@ -772,9 +783,9 @@ export default function KundliPortal() {
             {loading
               ? <span className="flex items-center justify-center gap-3">
                 <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                Swiss Ephemeris calculating + AI analyzing…
+                Calculating Chart & Analyzing...
               </span>
-              : '🛕 Generate Kundli (Swiss Ephemeris + AI)'}
+              : '🛕 Generate Kundli Report'}
           </button>
         </div>
 
@@ -980,7 +991,7 @@ export default function KundliPortal() {
                 {/* ── Raw Tab ── */}
                 {tab === 'raw' && (
                   <div>
-                    <h3 className="text-amber-800 font-semibold mb-3">🔍 Raw AI Response</h3>
+                    <h3 className="text-amber-800 font-semibold mb-3">🔍 Technical Details</h3>
                     <pre className="bg-stone-50 border border-stone-200 rounded-xl p-4 text-xs text-stone-600 whitespace-pre-wrap overflow-auto max-h-[600px]">
                       {result.rawAnalysis}
                     </pre>
@@ -994,7 +1005,7 @@ export default function KundliPortal() {
 
         {/* ── Footer ── */}
         <div className="text-center mt-14 text-amber-600 text-xs space-y-1 opacity-60">
-          <p>🔭 Swiss Ephemeris • 📿 Lahiri Ayanamsa • 🏠 Whole Sign</p>
+          <p>🔭 Vedic Calculations • 📿 Lahiri Ayanamsa • 🏠 Whole Sign</p>
           <p>For important decisions, consult a qualified Jyotishi.</p>
         </div>
       </div>

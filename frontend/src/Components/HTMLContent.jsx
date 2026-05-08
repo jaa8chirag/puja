@@ -1,38 +1,38 @@
 import React from "react";
 import "./quill-content.css";
 
-const HTMLContent = ({ content, className }) => {
+const HTMLContent = ({ content, className, style }) => {
   if (!content) return null;
 
-  // Check if content contains HTML tags (likely from Quill)
+  // Clean content function to prevent weird spacing/wrapping issues
+  const clean = (text) => {
+    if (typeof text !== 'string') return text;
+    return text
+      .replace(/<br\s*\/?>/gi, ' ') // Remove <br>
+      .replace(/&nbsp;/g, ' ')      // Replace non-breaking space with normal space
+      .replace(/\u00A0/g, ' ')      // Unicode non-breaking space
+      .replace(/\s+/g, ' ')         // Normalize multiple spaces
+      .trim();
+  };
+
   const containsHTML = /<\/?[a-z][\s\S]*>/i.test(content);
 
   if (containsHTML) {
-    // Clean content: remove <br> tags and normalize whitespace
-    let cleanedContent = content
-      // Remove <br> tags completely or replace with space
-      .replace(/<br\s*\/?>/gi, ' ')
-      // Remove extra spaces
-      .replace(/&nbsp;/g, ' ')
-      // Normalize multiple spaces to single space
-      .replace(/\s+/g, ' ')
-      // Trim
-      .trim();
-    
     return (
       <div 
         className={`quill-content ${className || ""}`}
-        dangerouslySetInnerHTML={{ __html: cleanedContent }} 
+        style={style}
+        dangerouslySetInnerHTML={{ __html: clean(content) }} 
       />
     );
   }
 
-  // Fallback for plain text
   return (
     <p 
       className={`quill-content ${className || ""}`}
+      style={style}
     >
-      {content}
+      {clean(content)}
     </p>
   );
 };

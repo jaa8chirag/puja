@@ -2,7 +2,6 @@ import {
   MapPin,
   Calendar,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -42,19 +41,16 @@ export default function TrendingPuja() {
     .filter((service) => {
       const name = service.title || service.puja_name || "";
       // Check for search term AND is_featured status
-      return (
-        name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        Number(service.is_featured) === 1
-      );
+      return name.toLowerCase().includes(searchTerm.toLowerCase());
     })
     .slice(0, 3);
 
   return (
-    <div className="min-h-fit bg-[#FFF4E1] pb-30">
+    <div className="min-h-fit bg-[#FFF4E1] pb-10 md:pb-16">
       <section className="relative max-w-7xl mx-auto p-5 md:p-10">
 
         {/* HEADER SECTION */}
-        <div className="mb-6 md:mb-6 flex flex-row items-center justify-between pb-4 md:pb-6 border-b border-orange-200 lg:border-none">
+        <div className="mb-6 md:mb-6 flex flex-row items-center justify-between pb-4 md:pb-6 lg:border-none">
           <div className="flex flex-col">
             <h2 className="text-2xl md:text-4xl font-serif font-bold text-[#3b2a1a]">
               Trending Pujas
@@ -75,7 +71,7 @@ export default function TrendingPuja() {
 
         {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-          {filteredServices.map((service) => (
+          {Array.isArray(filteredServices) && filteredServices.map((service) => (
             <div
               key={service.id}
               onClick={() => navigate(`/home-puja/${service.id}`)}
@@ -89,14 +85,7 @@ export default function TrendingPuja() {
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                 />
-                <div className="absolute top-3 right-3 z-20">
-                  <div className="bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
-                    <Sparkles size={10} fill="white" />
-                    <span className="text-[11px] md:text-[13px] capitalize font-bold tracking-wide">
-                      {service.status}
-                    </span>
-                  </div>
-                </div>
+
               </div>
 
               {/* Content */}

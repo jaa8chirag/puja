@@ -75,6 +75,15 @@ export const updateProfile = async (req, res) => {
       upiId,
     } = req.body;
 
+    if (paymentMethod === "upi" && upiId) {
+      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+      if (!upiRegex.test(upiId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid UPI ID format (e.g. name@upi)." });
+      }
+    }
+
     const documentPath = req.file ? req.file.path : null;
 
     connection = await db.getConnection();

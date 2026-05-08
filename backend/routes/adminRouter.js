@@ -63,6 +63,8 @@ import {
   updatePersonalInfoStatus,
   adminCreateUser,
   addPanditPayout,
+  getAllKundliRequests,
+  deleteKundliRequest,
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -252,4 +254,8 @@ router.put(
   updatePersonalInfoStatus,
 );
 
+router.get("/kundli-requests", verifyToken, adminOnly, getAllKundliRequests);
+router.delete("/kundli-requests/:id", verifyToken, adminOnly, deleteKundliRequest);
+
 export default router;
+

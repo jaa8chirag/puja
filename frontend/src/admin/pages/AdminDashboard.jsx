@@ -11,6 +11,8 @@ import Services from "../AdminComponets/AdminServices";
 import Pandit from "../AdminComponets/Pandit";
 import FinancialDashboard from "../AdminComponets/financialDashboard";
 import Adminblogs from "../AdminComponets/Adminblogs";
+import AdminKundliRequests from "../AdminComponets/AdminKundliRequests";
+
 import AdminReviews from "../AdminComponets/AdminReviews";
 import AnalyticsDashboard from "../AdminComponets/Analyticsdashboard";
 import AdminContributions from "../AdminComponets/AdminContributions";
@@ -257,6 +259,7 @@ const Sidebar = ({ active, setActive, isOpen, onClose }) => {
     { label: "Finance", icon: "financial" },
     { label: "Analytics", icon: "analytics" },
     { label: "Blogs", icon: "bookings" },
+    { label: "Kundli Logs", icon: "dashboard" },
     { label: "Reviews", icon: "gallery" },
     { label: "Coupons", icon: "gallery" },
     { label: "Pages", icon: "services" },
@@ -557,6 +560,7 @@ const AdminDashboard = () => {
             {active === "Finance" && <FinancialDashboard />}
             {active === "Analytics" && <AnalyticsDashboard />}
             {active === "Blogs" && <Adminblogs />}
+            {active === "Kundli Logs" && <AdminKundliRequests />}
             {active === "Reviews" && <AdminReviews />}
             {active === "Coupons" && <AdminCoupons />}
             {active === "Pages" && <AdminPages />}

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import HTMLContent from "../../Components/HTMLContent";
 import "../../Components/quill-content.css";
+
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -145,7 +147,11 @@ export default function BlogDetail() {
                   {blog.excerpt}
                 </p>
               )}
-              <BlogContent content={blog.content || blog.description || ''} />
+              <HTMLContent 
+                content={blog.content || blog.description || ''} 
+                className="text-sm md:text-base leading-relaxed"
+                style={{ fontFamily: "'Georgia', serif" }}
+              />
             </div>
 
             {/* ── Share / Back ── */}
@@ -176,82 +182,4 @@ export default function BlogDetail() {
     </div>
   );
 }
-
-// ── Blog Content Renderer ─────────────────────────────────────
-function BlogContent({ content }) {
-  if (!content?.trim()) return (
-    <p className="text-orange-400/60 text-sm italic">Content not available.</p>
-  );
-
-  // Check if content contains HTML tags (likely from Quill)
-  const containsHTML = /<\/?[a-z][\s\S]*>/i.test(content);
-
-  if (containsHTML) {
-    return (
-      <div
-        className="quill-content text-sm leading-relaxed"
-        style={{ fontFamily: "'Georgia', serif" }}
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
-    );
-  }
-
-  return (
-    <div className="space-y-2 text-sm leading-relaxed" style={{ fontFamily: "'Georgia', serif" }}>
-      {content.split('\n').map((raw, i) => {
-        const l = raw.trim();
-        if (!l) return <div key={i} className="h-3" />;
-
-        if (l.startsWith('## '))
-          return (
-            <h2 key={i} className="text-[#7c2d00] font-bold text-xl mt-6 mb-2 pb-2 border-b border-orange-200"
-              style={{ fontFamily: "'Georgia', serif" }}>
-              {l.slice(3)}
-            </h2>
-          );
-        if (l.startsWith('### '))
-          return (
-            <h3 key={i} className="text-orange-700 font-semibold text-lg mt-5 mb-1"
-              style={{ fontFamily: "'Georgia', serif" }}>
-              {l.slice(4)}
-            </h3>
-          );
-        if (l.startsWith('#### '))
-          return (
-            <h4 key={i} className="text-orange-600 font-medium text-base mt-4"
-              style={{ fontFamily: "'Georgia', serif" }}>
-              {l.slice(5)}
-            </h4>
-          );
-
-        if (/^[-*•]/.test(l))
-          return (
-            <div key={i} className="flex items-start gap-2 ml-4 my-1">
-              <span className="text-orange-500 mt-1.5 shrink-0 text-[8px]">◆</span>
-              <span className="text-[#3d1500]/80">{l.replace(/^[-*•]\s+/, '')}</span>
-            </div>
-          );
-
-        if (/^\d+\./.test(l)) {
-          const num = l.match(/^(\d+)/)[1];
-          const rest = l.replace(/^\d+\.\s*/, '');
-          return (
-            <div key={i} className="flex items-start gap-3 ml-4 my-1">
-              <span className="bg-orange-100 text-orange-700 border border-orange-200 rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 font-bold mt-0.5">
-                {num}
-              </span>
-              <span className="text-[#3d1500]/80">{rest}</span>
-            </div>
-          );
-        }
-
-        if (l === '---')
-          return <hr key={i} className="border-orange-200 my-4" />;
-
-        return (
-          <p key={i} className="text-[#3d1500]/75 my-1.5 leading-7 break-words">{l}</p>
-        );
-      })}
-    </div>
-  );
-}
+

@@ -1157,14 +1157,7 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              <div className="flex justify-center border-t border-[#EDE8DC] pt-5 pb-2">
-                <button
-                  onClick={() => setShowLogoutConfirm(true)}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 bg-red-50 text-red-600 font-bold rounded-xl border border-red-100 hover:bg-red-100 transition-all active:scale-95 text-sm"
-                >
-                  <LogOut size={16} strokeWidth={2.5} /> Logout from Account
-                </button>
-              </div>
+
 
               <div className="flex justify-center pb-2">
                 <div className="flex items-center gap-2 text-[9px] font-black text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100">

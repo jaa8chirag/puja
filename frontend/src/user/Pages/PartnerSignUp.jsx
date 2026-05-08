@@ -136,12 +136,35 @@ const PartnerSignUp = () => {
                 setError("Please enter UPI ID.");
                 return;
             }
+            // UPI ID Regex validation
+            const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+            if (!upiRegex.test((formData.upiId || "").trim())) {
+                setError("Please enter a valid UPI ID (e.g. name@upi).");
+                return;
+            }
         }
         setStep(3);
     };
 
     const handleFinalRegister = async (e) => {
         if (e) e.preventDefault();
+
+        // Re-validate Step 2 data just in case
+        if (paymentMethod === 'upi') {
+            const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+            if (!formData.upiId || !upiRegex.test(formData.upiId.trim())) {
+                setError("Please enter a valid UPI ID (e.g. name@upi).");
+                setStep(2); // Send them back to fix it
+                return;
+            }
+        } else if (paymentMethod === 'bank') {
+            if (!formData.accountHolderName || !formData.bankAccountNumber || !formData.bankName || !formData.ifscCode) {
+                setError("Please fill all bank details.");
+                setStep(2);
+                return;
+            }
+        }
+
         if (formData.password.length < 6) {
             setError("Password must be at least 6 characters.");
             return;

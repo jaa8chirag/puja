@@ -343,20 +343,23 @@ const BookingDetailDrawer = ({ booking, onClose }) => {
                 </span>
               </div>
               {/* ✅ Contributions (Specific names) */}
-              {booking.contribution_names && (
+              {booking.contributions_data && (
                 <div className="mt-3 pt-3 border-t border-slate-800">
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Selected Contributions
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {booking.contribution_names.split(", ").map((name, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 text-[9px] font-semibold border border-rose-500/20"
-                      >
-                        {name}
-                      </span>
-                    ))}
+                    {booking.contributions_data.split("||").map((item, idx) => {
+                      const [name, price] = item.split("::");
+                      return (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-300 text-[9px] font-semibold border border-orange-500/20"
+                        >
+                          {name} (₹{Number(price).toLocaleString()})
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -441,13 +444,29 @@ const InvoiceModal = ({ booking, onClose }) => {
               </tr>
             </thead>
             <tbody className="text-sm font-bold text-gray-800">
-              <tr className="border-b border-gray-50">
-                <td className="py-4">
-                  <p>{booking.puja_name} Ritual Fees</p>
-                  <p className="text-[10px] text-gray-400 font-medium">Sacred Vedic Ceremony Service</p>
-                </td>
-                <td className="py-4 text-right">{(booking.total_price - booking.donations - (booking.samagrikit === 1 ? 501 : 0)).toLocaleString()}</td>
-              </tr>
+              {(() => {
+                const baseAmount = booking.total_price - booking.donations - (booking.samagrikit === 1 ? 501 : 0);
+                const spiritualPrice = baseAmount * 0.75;
+                const platformPrice = baseAmount * 0.25;
+                return (
+                  <>
+                    <tr className="border-b border-gray-50">
+                      <td className="py-4">
+                        <p>Spiritual Puja Price</p>
+                        <p className="text-[10px] text-gray-400 font-medium">Sacred Vedic Ceremony Service</p>
+                      </td>
+                      <td className="py-4 text-right">{spiritualPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr className="border-b border-gray-50">
+                      <td className="py-4">
+                        <p>Platform Charges</p>
+                        <p className="text-[10px] text-gray-400 font-medium">Service and Maintenance Fee</p>
+                      </td>
+                      <td className="py-4 text-right">{platformPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  </>
+                );
+              })()}
               {booking.samagrikit === 1 && (
                 <tr className="border-b border-gray-50">
                   <td className="py-4">
@@ -458,47 +477,41 @@ const InvoiceModal = ({ booking, onClose }) => {
                 </tr>
               )}
               {booking.donations > 0 && (
-                <tr className="border-b border-gray-50">
-                  <td className="py-4">
-                    <p>Donations / Contributions</p>
-                    <p className="text-[10px] text-gray-400 font-medium">{booking.contribution_names || "General Seva"}</p>
-                  </td>
-                  <td className="py-4 text-right">{booking.donations.toLocaleString()}</td>
-                </tr>
+                <>
+                  <tr className="bg-orange-50/50 border-b border-orange-100">
+                    <td className="py-4 px-2">
+                      <p className="font-black text-orange-600">Total Contributions</p>
+                      <p className="text-[9px] text-orange-400 font-bold italic leading-tight mt-0.5">
+                        ({booking.contribution_names || "General Seva"})
+                      </p>
+                    </td>
+                    <td className="py-4 text-right font-black text-orange-600 px-2">
+                      ₹{Number(booking.donations).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                  {booking.contributions_data?.split("||").map((item, i) => {
+                    const [name, price] = item.split("::");
+                    return (
+                      <tr key={i} className="border-b border-gray-50 bg-gray-50/30">
+                        <td className="py-3 pl-6">
+                          <p className="text-gray-600 font-bold text-[11px]">• {name}</p>
+                        </td>
+                        <td className="py-3 text-right text-gray-500 text-[11px] pr-2">
+                          ₹{Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </>
               )}
             </tbody>
           </table>
 
           <div className="flex justify-end">
             <div className="w-72 space-y-3">
-              <div className="flex justify-between text-sm text-gray-500 font-bold">
-                <span>Gross Total</span>
-                <span>₹{booking.total_price.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-500 font-bold">
-                <span>Tax (GST Exempted)</span>
-                <span>₹0.00</span>
-              </div>
               <div className="flex justify-between text-lg font-black text-gray-900 border-t-2 border-gray-900 pt-3">
-                <span>NET PAYABLE</span>
-                <span className="text-orange-600">₹{booking.total_price.toLocaleString()}</span>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-dashed border-gray-200 space-y-2">
-                <div className="flex justify-between text-xs text-slate-500 font-bold">
-                  <span>Advance Payment Deduction</span>
-                  <span>- ₹{(booking.paid_amount - (booking.payment_status === 'fully_paid' ? (booking.last_payment_amount || 0) : 0)).toLocaleString()}</span>
-                </div>
-                {booking.payment_status === 'fully_paid' && (
-                  <div className="flex justify-between text-xs text-emerald-600 font-black bg-emerald-50 p-2 rounded-lg">
-                    <span>Final Settlement Received</span>
-                    <span>₹{(booking.last_payment_amount || (booking.total_price - (booking.paid_amount - (booking.last_payment_amount || 0)))).toLocaleString()}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm font-black text-slate-900 mt-2 border-t pt-2">
-                  <span>BALANCE OUTSTANDING</span>
-                  <span className="text-emerald-600">₹0.00</span>
-                </div>
+                <span>TOTAL AMOUNT</span>
+                <span className="text-orange-600">₹{booking.total_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>

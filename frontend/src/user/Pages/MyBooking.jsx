@@ -9,10 +9,6 @@ import {
   Search,
   X,
   CreditCard,
-  CheckCircle2,
-  Circle,
-  Truck,
-  UserCheck,
 } from "lucide-react";
 import { loadRazorpay } from "../utils/razorpay";
 import SEO from "../Components/SEO";
@@ -145,77 +141,8 @@ const MyBookings = () => {
     }
   };
 
-  const BookingTimeline = ({ status, assignmentStatus }) => {
-    // Status levels: 1 (Finding), 2 (Accepted/In Progress), 3 (Completed)
-    let currentLevel = 1;
-    if (assignmentStatus === "accepted") currentLevel = 2;
-    if (assignmentStatus === "completed") currentLevel = 3;
 
-    const isCancelled = assignmentStatus === "cancelled" || assignmentStatus === "declined" || status === "cancelled" || status === "declined";
-    const isRefunded = status === "refunded";
 
-    if (isRefunded) {
-      return (
-        <div className="flex items-center gap-2 mt-3 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg">
-          <CheckCircle2 size={12} className="text-emerald-500" />
-          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Payment Refunded</span>
-        </div>
-      );
-    }
-
-    if (isCancelled) {
-      return (
-        <div className="flex items-center gap-2 mt-4 px-3 py-2 bg-red-50 border border-red-100 rounded-xl">
-          <X size={14} className="text-red-500" />
-          <span className="text-[11px] font-bold text-red-600 uppercase tracking-wider">Booking Cancelled</span>
-        </div>
-      );
-    }
-
-    const steps = [
-      { id: 1, label: "Finding Pandit", icon: Search },
-      { id: 2, label: "In Progress", icon: UserCheck },
-      { id: 3, label: "Completed", icon: CheckCircle2 },
-    ];
-
-    return (
-      <div className="mt-4 w-full px-1">
-        <div className="relative flex justify-between">
-          {/* Progress Bar Background */}
-          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gray-100 -translate-y-1/2 z-0" />
-
-          {/* Active Progress Bar */}
-          <div
-            className="absolute top-1/2 left-0 h-[1px] bg-orange-500 -translate-y-1/2 z-0 transition-all duration-500"
-            style={{ width: `${((currentLevel - 1) / (steps.length - 1)) * 100}%` }}
-          />
-
-          {steps.map((step) => {
-            const Icon = step.icon;
-            const isActive = step.id <= currentLevel;
-            const isCurrent = step.id === currentLevel;
-
-            return (
-              <div key={step.id} className="relative z-10 flex flex-col items-center">
-                <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 border ${isCurrent ? "bg-orange-500 border-orange-500 text-white shadow-sm" :
-                      isActive ? "bg-white border-orange-500 text-orange-500" :
-                        "bg-white border-gray-200 text-gray-300"
-                    }`}
-                >
-                  <Icon size={9} strokeWidth={3} />
-                </div>
-                <span className={`mt-1.5 text-[8px] font-black uppercase tracking-tighter ${isCurrent ? "text-orange-600" : isActive ? "text-gray-600" : "text-gray-300"
-                  }`}>
-                  {step.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   const handleCancelBooking = async (bookingId) => {
     const token = localStorage.getItem("token");
@@ -503,15 +430,15 @@ const MyBookings = () => {
               return (
                 <div
                   key={b.id}
-                  className="relative bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all flex flex-col md:flex-row items-center gap-4 md:gap-6"
+                  className="relative bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all flex flex-col md:flex-row items-stretch gap-3 md:gap-6"
                 >
                   {/* Badge */}
                   <div className={`absolute top-0 right-0 px-2 py-0.5 rounded-bl-xl rounded-tr-2xl text-[9px] font-black uppercase tracking-wider text-white z-10 ${isTemplePuja ? "bg-orange-500" : "bg-blue-500"}`}>
-                    {isTemplePuja ? "Temple" : "Home"}
+                    {isTemplePuja ? "Temple Ritual" : "Home Ritual"}
                   </div>
 
                   {/* Image */}
-                  <div className="w-full md:w-48 md:h-48 h-36 shrink-0 overflow-hidden rounded-xl bg-gray-50 self-center">
+                  <div className="w-full h-32 sm:h-40 md:w-48 md:h-48 shrink-0 overflow-hidden rounded-xl bg-gray-50">
                     <img
                       src={`${API_BASE_URL}/uploads/${b.image_url}`}
                       loading="lazy"
@@ -522,11 +449,9 @@ const MyBookings = () => {
 
                   {/* Main Content */}
                   <div className="flex-1 min-w-0 py-0.5">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-800 leading-tight">
-                        {b.puja_name}
-                      </h3>
-                    </div>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 leading-tight">
+                      {b.puja_name}
+                    </h3>
 
                     <div className="grid grid-cols-2 gap-y-1.5 gap-x-3 mt-2 text-[12px] text-gray-500">
                       <div className="flex items-center gap-1.5">
@@ -539,9 +464,7 @@ const MyBookings = () => {
                       </div>
                       <div className="flex items-start gap-1.5 col-span-2">
                         <MapPin size={12} className="text-orange-400 shrink-0 mt-0.5" />
-                        <span className="truncate leading-tight">
-                          {b.final_address}
-                        </span>
+                        <span className="line-clamp-1 leading-tight">{b.final_address}</span>
                       </div>
                     </div>
 
@@ -552,17 +475,7 @@ const MyBookings = () => {
                       </div>
                     )}
 
-                    {isTemplePuja && (
-                      <div className="mt-2.5 p-2 bg-gray-50 rounded-lg border border-gray-100 text-[11px] text-gray-600">
-                        <div className="flex items-center gap-1.5 mb-0.5 font-bold text-gray-400 uppercase tracking-wider">
-                          <Info size={10} /> Booking Details
-                        </div>
-                        {b.final_address}
-                      </div>
-                    )}
 
-                    {/* Timeline Component */}
-                    <BookingTimeline status={b.status} assignmentStatus={b.assignment_status} />
 
                     {/* Contributions Section */}
                     {b.contribution_names && (
@@ -575,28 +488,37 @@ const MyBookings = () => {
                       </div>
                     )}
 
-                    <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-gray-50 pt-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Payment</span>
-                        {b.status === "refunded" ? (
+                    <div className="mt-3 border-t border-gray-50 pt-3">
+                      {b.status === "refunded" ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Payment</span>
                           <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md text-[9px] font-black uppercase border border-emerald-100">
                             Refunded
                           </div>
-                        ) : b.payment_status === "partially_paid" ? (
-                          <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md text-[9px] font-black uppercase border border-amber-100">
-                            Partial
+                          <span className="text-[12px] font-black text-emerald-700">₹{Number(b.total_price).toLocaleString("en-IN")}</span>
+                        </div>
+                      ) : b.payment_status === "partially_paid" ? (
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Total</span>
+                            <span className="text-[12px] font-black text-gray-700">₹{Number(b.total_price).toLocaleString("en-IN")}</span>
                           </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-2 py-0.5 rounded-md text-[9px] font-black uppercase border border-green-100">
-                            Full
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Paid</span>
+                            <span className="text-[12px] font-black text-green-600">₹{Number(b.paid_amount).toLocaleString("en-IN")}</span>
                           </div>
-                        )}
-                      </div>
-
-                      {b.payment_status === "partially_paid" && (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-lg">
+                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Due</span>
+                            <span className="text-[12px] font-black text-amber-700">₹{(b.total_price - b.paid_amount).toLocaleString("en-IN")}</span>
+                          </div>
+                        </div>
+                      ) : (
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Due</span>
-                          <span className="text-[12px] font-black text-amber-700">₹{(b.total_price - b.paid_amount).toLocaleString("en-IN")}</span>
+                          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Total</span>
+                          <span className="text-[13px] font-black text-green-700">₹{Number(b.total_price).toLocaleString("en-IN")}</span>
+                          <div className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-md text-[9px] font-black uppercase border border-green-100">
+                            ✓ Fully Paid
+                          </div>
                         </div>
                       )}
                     </div>
@@ -629,20 +551,20 @@ const MyBookings = () => {
                     )}
 
                     {/* Mobile Status + Cancel */}
-                    <div className="mt-4 flex items-center justify-between gap-2 md:hidden">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter shrink-0">
-                        ID: <span className="text-orange-600">{b.bookingId}</span>
+                    <div className="mt-2 flex items-center justify-between gap-2 md:hidden">
+                      <p className="text-[9px] font-bold text-gray-300 uppercase tracking-tighter shrink-0">
+                        ID: <span className="text-orange-500">{b.bookingId}</span>
                       </p>
-                      <div className="flex flex-col items-end gap-2 shrink-0 mt-1">
-                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${(b.assignment_status === "pending" && b.pandit_name) ? "bg-blue-100 text-blue-600 border border-blue-200" :
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${(b.assignment_status === "pending" && b.pandit_name) ? "bg-blue-100 text-blue-600 border border-blue-200" :
                             b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" :
                               b.assignment_status === "accepted" ? "bg-indigo-100 text-indigo-600 border border-indigo-200" :
                                 b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" :
                                   b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" :
                                     "bg-blue-100 text-blue-600 border border-blue-200"
                           }`}>
-                          {b.assignment_status === "pending" && b.pandit_name ? "Pandit Assigned" :
-                            b.assignment_status === "pending" ? "Finding Pandit" :
+                          {b.assignment_status === "pending" && b.pandit_name ? "Assigned" :
+                            b.assignment_status === "pending" ? "Finding" :
                               b.assignment_status === "accepted" ? "In Progress" :
                                 b.assignment_status}
                         </div>
@@ -650,10 +572,10 @@ const MyBookings = () => {
                         {b.payment_status === "partially_paid" && (
                           <button
                             onClick={() => handlePayRemaining(b)}
-                            className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                            className="bg-orange-500 text-white px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1"
                           >
-                            <CreditCard size={12} />
-                            Pay Balance
+                            <CreditCard size={10} />
+                            Pay
                           </button>
                         )}
                       </div>
