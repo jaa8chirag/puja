@@ -86,11 +86,8 @@ export default function SpecialPujas() {
                       </button>
                     </div>
 
-                    <p className="text-gray-500 text-[13px] md:text-[14px] leading-relaxed line-clamp-3">
-                      {stripHtml(service.about)}
-                    </p>
-
-                    <div className="flex flex-col gap-1.5 mt-2">
+                    {/* Location, Date and Time Info block - Moved right below Puja Name */}
+                    <div className="flex flex-col gap-1.5 mt-1 mb-3">
                       <div className="flex items-center gap-2">
                         <MapPin size={12} className="text-orange-500 shrink-0" />
                         <p className="text-gray-500 text-[11px] md:text-xs line-clamp-1">
@@ -117,6 +114,10 @@ export default function SpecialPujas() {
                         </div>
                       </div>
                     </div>
+
+                    <p className="text-gray-500 text-[13px] md:text-[14px] leading-relaxed line-clamp-3">
+                      {stripHtml(service.about)}
+                    </p>
                   </div>
                 </div>
               </div>

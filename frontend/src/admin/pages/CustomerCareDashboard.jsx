@@ -1122,8 +1122,9 @@ const CustomerCareDashboard = () => {
   const fetchBookings = async () => {
     setLoading(true);
     try {
+      const ts = Date.now();
       const res = await axios.get(
-        `${API_BASE_URL}/customerCare/dashboard`,
+        `${API_BASE_URL}/customerCare/dashboard?t=${ts}`,
         config,
       );
       setBookings(res.data.bookings || []);
@@ -1136,8 +1137,9 @@ const CustomerCareDashboard = () => {
   const fetchPandits = async () => {
     setLoading(true);
     try {
+      const ts = Date.now();
       const res = await axios.get(
-        `${API_BASE_URL}/customerCare/allPandits`,
+        `${API_BASE_URL}/customerCare/allPandits?t=${ts}`,
         config,
       );
       setPandits(res.data.pandits || []);
@@ -1150,8 +1152,9 @@ const CustomerCareDashboard = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      const ts = Date.now();
       const res = await axios.get(
-        `${API_BASE_URL}/customerCare/allUsers`,
+        `${API_BASE_URL}/customerCare/allUsers?t=${ts}`,
         config,
       );
       setUsers(res.data.users || []);
@@ -1164,7 +1167,8 @@ const CustomerCareDashboard = () => {
   const fetchQuery = async () => {
     setLoading(true);
     try {
-      let url = `${API_BASE_URL}/customerCare/support-queries?page=${queryPage}&limit=10`;
+      const ts = Date.now();
+      let url = `${API_BASE_URL}/customerCare/support-queries?page=${queryPage}&limit=10&t=${ts}`;
       if (queryStatusFilter) url += `&status=${queryStatusFilter}`;
       const res = await axios.get(url, config);
       setQueries(res.data.queries || []);
@@ -1236,7 +1240,7 @@ const CustomerCareDashboard = () => {
       setSelectedPanditPrice({});
       fetchBookings();
     } catch (err) {
-      alert("Assign Failed");
+      alert("Assign Failed: " + (err.response?.data?.message || err.message));
     }
   };
   const handleLogout = () => {

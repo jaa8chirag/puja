@@ -349,7 +349,8 @@ const PartnerDashboard = () => {
 
   const fetchMyPujas = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/partner/my-pujas`, {
+      const ts = Date.now();
+      const res = await axios.get(`${API_BASE_URL}/partner/my-pujas?t=${ts}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -386,7 +387,8 @@ const PartnerDashboard = () => {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/partner/profile`, {
+      const ts = Date.now();
+      const res = await axios.get(`${API_BASE_URL}/partner/profile?t=${ts}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {

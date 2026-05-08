@@ -1,11 +1,46 @@
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 import UserLayout from "./user/Layout/UserLayout";
 import NavbarOnlyLayout from "./user/Layout/NavbarOnlyLayout";
 import { ProtectedLayout } from "./user/Layout/ProtectedLayout";
 import GlobalErrorBoundary from "./user/Components/GlobalErrorBoundary";
 import ScrollToTop from "./user/Components/ScrollToTop"; // Assuming this exists or fix import if missing
+
+// ── GLOBAL CACHE BUSTING (AXIOS & FETCH) ──────────────────────────────────
+// This ensures NO GET request is ever cached by aggressive mobile browsers.
+
+// 1. Axios Interceptor
+axios.interceptors.request.use((config) => {
+  if (!config.method || config.method.toLowerCase() === 'get') {
+    config.params = { ...config.params, _t: Date.now() };
+  }
+  return config;
+});
+
+// 2. Fetch Monkey-Patch
+const originalFetch = window.fetch;
+window.fetch = async function (...args) {
+  let [resource, config] = args;
+  
+  if (typeof resource === 'string') {
+    const method = (config && config.method) ? config.method.toLowerCase() : 'get';
+    if (method === 'get' && resource.startsWith('http')) {
+      const urlObj = new URL(resource);
+      urlObj.searchParams.set('_t', Date.now());
+      resource = urlObj.toString();
+    }
+  } else if (resource instanceof Request) {
+    if (resource.method.toLowerCase() === 'get' && resource.url.startsWith('http')) {
+      const urlObj = new URL(resource.url);
+      urlObj.searchParams.set('_t', Date.now());
+      resource = new Request(urlObj.toString(), resource);
+    }
+  }
+  return originalFetch.call(this, resource, config);
+};
+// ──────────────────────────────────────────────────────────────────────────
 
 // ── Lazy Loaded Components ───────────────────────────────────────────────────
 const Home = lazy(() => import("./user/Pages/Home"));

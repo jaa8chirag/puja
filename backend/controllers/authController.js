@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
+import fetch from "node-fetch";
 
 
 // =============================
@@ -660,7 +661,12 @@ export const googleLogin = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Google Login Error:", error);
-    res.status(500).json({ success: false, message: "Google Authentication failed", error: error.message });
+    console.error("❌ Google Login Error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Google Authentication failed", 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };

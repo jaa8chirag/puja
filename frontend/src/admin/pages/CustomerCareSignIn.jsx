@@ -3,54 +3,28 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerCareSignIn = () => {
-  const [step, setStep] = useState(1); // 1: Phone, 2: OTP
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     phone: '',
-    otp: '',
+    password: '',
     role: 'customerCare',
   });
 
   const handleChange = (e) => {
     let value = e.target.value;
-    if (e.target.name === 'phone') {
-      value = value.replace(/\D/g, "").slice(0, 10);
-    }
+    // We allow email or phone for login
     setFormData({ ...formData, [e.target.name]: value });
   };
 
-  // Step 1: Send OTP (Login only)
-  const handleRequestOTP = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
     try {
-      const response = await axios.post(`${API_BASE_URL}/customerCare/login-request`, {
-        phone: formData.phone,
-        role: formData.role,
-      });
-      if (response.status === 200) {
-        setStep(2);
-        setMessage({ type: 'success', text: 'OTP sent to your phone!' });
-      }
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.message || 'Something went wrong',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 2: Verify OTP
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await axios.post(`${API_BASE_URL}/customerCare/verify-otp`, formData);
+      const response = await axios.post(`${API_BASE_URL}/user/login`, formData);
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('role', response.data.role);
@@ -60,7 +34,7 @@ const CustomerCareSignIn = () => {
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Invalid OTP',
+        text: error.response?.data?.message || 'Invalid Credentials',
       });
     } finally {
       setLoading(false);
@@ -93,54 +67,48 @@ const CustomerCareSignIn = () => {
             </div>
           )}
 
-          <form onSubmit={step === 1 ? handleRequestOTP : handleVerifyOTP} className="space-y-5">
-
-            {/* Step 1: Phone Input */}
-            {step === 1 && (
-              <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">Phone Number</label>
-                <div className="flex mt-1">
-                  <span className="inline-flex items-center px-3 bg-[#334155] border border-r-0 border-slate-700 rounded-l-lg text-slate-400">+91</span>
-                  <input
-                    type="tel"
-                    name="phone"
-                    required
-                    onChange={handleChange}
-                    className="w-full bg-[#0f172a] border border-slate-700 rounded-r-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
-                    placeholder="9876543210"
-                  />
-                </div>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="text-xs font-semibold uppercase text-slate-500">Email or Phone</label>
+              <div className="flex mt-1">
+                <input
+                  type="text"
+                  name="phone"
+                  required
+                  onChange={handleChange}
+                  className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+                  placeholder="Enter email or phone number"
+                />
               </div>
-            )}
+            </div>
 
-            {/* Step 2: OTP Input */}
-            {step === 2 && (
-              <div className="space-y-4 animate-in slide-in-from-bottom duration-500">
-                <div>
-                  <label className="text-xs font-semibold uppercase text-slate-500 flex justify-center mb-4">6-Digit Verification Code</label>
-                  <input
-                    type="text"
-                    name="otp"
-                    maxLength="6"
-                    required
-                    onChange={handleChange}
-                    autoFocus
-                    className="w-full bg-[#0f172a] border-2 border-blue-500 rounded-xl px-4 py-4 text-center text-3xl tracking-widest font-bold text-blue-400 focus:outline-none shadow-lg shadow-blue-500/10"
-                    placeholder="000000"
-                  />
-                </div>
-                <button type="button" onClick={() => setStep(1)} className="w-full text-xs text-slate-500 hover:text-blue-400 uppercase font-bold">
-                  Wrong number?
+            <div>
+              <label className="text-xs font-semibold uppercase text-slate-500">Password</label>
+              <div className="relative mt-1">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  required
+                  onChange={handleChange}
+                  className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white pr-10"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-white"
+                >
+                  {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
-            )}
+            </div>
 
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-all transform active:scale-95 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`w-full py-4 mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-all transform active:scale-95 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {loading ? 'Processing...' : (step === 1 ? 'Send OTP' : 'Verify & Enter Portal')}
+              {loading ? 'Processing...' : 'Login & Enter Portal'}
             </button>
           </form>
 

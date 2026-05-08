@@ -15,6 +15,18 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendPaymentReceipt = async (to, receiptData) => {
+  // Skip if credentials are not configured or are placeholders
+  const isConfigured = 
+    process.env.SMTP_USER && 
+    process.env.SMTP_USER !== 'your-email@gmail.com' && 
+    process.env.SMTP_PASS && 
+    process.env.SMTP_PASS !== 'your-app-password';
+
+  if (!isConfigured) {
+    console.log('⚠️ [Email Skipped] SMTP credentials not configured in .env. Skipping receipt email.');
+    return false;
+  }
+
   const {
     devoteeName,
     pujaName,

@@ -367,6 +367,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
 
     await processReferrerReward(userId, connection);
     await connection.commit();
+    console.log(`✅ [Booking Success] Home/Katha Puja stored. ID: ${pujaRequestId}`);
 
     // ── SEND EMAIL RECEIPT (Non-blocking) ──
     try {
@@ -703,6 +704,7 @@ export const onlinePinddanBookingDetails = async (req, res) => {
 
     await processReferrerReward(userId, connection);
     await connection.commit();
+    console.log(`✅ [Booking Success] Online Pind Dan stored. ID: ${pujaRequestId}`);
 
     // ── SEND EMAIL RECEIPT (Non-blocking) ──
     try {
@@ -920,6 +922,7 @@ export const bookingDetails = async (req, res) => {
 
     await processReferrerReward(userId, connection);
     await connection.commit();
+    console.log(`✅ [Booking Success] Temple/Pind Dan stored. ID: ${pujaRequestId}`);
 
     // ── SEND EMAIL RECEIPT (Non-blocking) ──
     try {
@@ -1326,14 +1329,14 @@ export const cancelBooking = async (req, res) => {
     if (currentStatus === "completed") {
       return res.status(400).json({
         success: false,
-        message: "Completed puja ko cancel nahi kiya ja sakta.",
+        message: "Completed pujas cannot be cancelled.",
       });
     }
 
     if (currentStatus === "declined" || currentStatus === "cancelled") {
       return res.status(400).json({
         success: false,
-        message: "Ye booking pehle hi cancel ho chuki hai.",
+        message: "This booking is already cancelled.",
       });
     }
 
@@ -1349,7 +1352,7 @@ export const cancelBooking = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Booking cancel ho gayi hai.",
+      message: "Booking cancelled successfully.",
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

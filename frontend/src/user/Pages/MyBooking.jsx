@@ -47,8 +47,14 @@ const MyBookings = () => {
     const fetchMyBookings = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await fetch(`${API_BASE_URL}/puja/my-bookings`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const timestamp = new Date().getTime();
+        const response = await fetch(`${API_BASE_URL}/puja/my-bookings?t=${timestamp}`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+          },
+          cache: "no-store",
         });
         const data = await response.json();
         if (data.success) setBookings(data.bookings);
@@ -190,12 +196,10 @@ const MyBookings = () => {
       booking.assignment_status === "cancelled" ||
       booking.status === "cancelled";
 
-    const isDisabled = isExpired || isCompleted || isCancelled;
-    const tooltipText = isCancelled
-      ? "Booking already cancelled"
-      : isCompleted
-        ? "Puja completed, cannot cancel"
-        : "Puja date & time expired, cannot cancel";
+    if (isCancelled || isCompleted) return null;
+
+    const isDisabled = isExpired;
+    const tooltipText = "Puja date & time expired, cannot cancel";
 
     const baseClass =
       size === "sm"
@@ -232,8 +236,20 @@ const MyBookings = () => {
 
   const filteredBookings = bookings.filter((b) => {
     const isCompleted = b.assignment_status === "completed";
+    const isCancelled =
+      b.assignment_status === "declined" ||
+      b.status === "declined" ||
+      b.assignment_status === "cancelled" ||
+      b.status === "cancelled";
 
-    const tabMatch = activeTab === "completed" ? isCompleted : !isCompleted;
+    let tabMatch = false;
+    if (activeTab === "cancelled") {
+      tabMatch = isCancelled;
+    } else if (activeTab === "completed") {
+      tabMatch = isCompleted && !isCancelled;
+    } else {
+      tabMatch = !isCompleted && !isCancelled;
+    }
 
     let subTabMatch = true;
     if (activeSubTab === "home_puja") {
@@ -379,6 +395,13 @@ const MyBookings = () => {
             >
               History
             </button>
+            <button
+              onClick={() => { setActiveTab("cancelled"); setActiveSubTab("all"); }}
+              className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all ${activeTab === "cancelled" ? "bg-orange-500 text-white shadow-md" : "text-gray-500 hover:text-orange-500"
+                }`}
+            >
+              Cancelled
+            </button>
           </div>
 
           <div className="relative w-full sm:w-72">
@@ -414,7 +437,7 @@ const MyBookings = () => {
         {filteredBookings.length === 0 ? (
           <div className="bg-white p-8 sm:p-10 rounded-3xl text-center shadow-sm">
             <p className="text-gray-500 font-medium">
-              {searchQuery ? "No bookings found matching your search." : activeTab === "completed" ? "No completed bookings yet." : "No upcoming/pending bookings."}
+              {searchQuery ? "No bookings found matching your search." : activeTab === "cancelled" ? "No cancelled bookings." : activeTab === "completed" ? "No completed bookings yet." : "No upcoming/pending bookings."}
             </p>
           </div>
         ) : (

@@ -188,6 +188,40 @@ export default function TemplePuja() {
                       </button>
                     </div>
 
+                    {/* Location, Date and Time Display - Matched with SpecialPujas style */}
+                    <div className="flex flex-col gap-1.5 mt-1 mb-3">
+                      {service.address && (
+                        <div className="flex items-center gap-2">
+                          <MapPin size={12} className="text-orange-500 shrink-0" />
+                          <p className="text-gray-500 text-[11px] md:text-xs line-clamp-1">
+                            {service.address}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {service.dateOfStart && (
+                        <div className="flex items-center gap-2">
+                          <Calendar size={12} className="text-orange-500 shrink-0" />
+                          <div className="flex items-center gap-1.5 font-bold text-[11px] md:text-[12px] text-gray-700 whitespace-nowrap">
+                            <span>
+                              {new Date(service.dateOfStart).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short'
+                              })}
+                            </span>
+                            <span className="text-orange-300">|</span>
+                            <span className="text-gray-500 font-medium">
+                              {new Date(service.dateOfStart).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     {service.about && (
                       <p className="text-gray-500 text-[13px] md:text-[14px] leading-relaxed line-clamp-3">
                         {stripHtml(service.about)}
