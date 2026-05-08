@@ -23,11 +23,12 @@ const SignUp = () => {
     const navigate = useNavigate();
 
     const isStep1Valid = formData.name.trim().length >= 3;
-    const isStep2Valid = formData.phone.length === 10 && formData.password.length >= 6 && formData.password === formData.confirmPassword;
+    const isStep2Valid = formData.phone.length === 10 && formData.email.trim() !== '' && formData.password.length >= 6 && formData.password === formData.confirmPassword;
 
     const handleRegister = async () => {
         if (!isStep2Valid) {
             if (formData.phone.length !== 10) setError("Please enter a valid 10-digit phone number.");
+            else if (formData.email.trim() === '') setError("Email is required for all users.");
             else if (formData.password.length < 6) setError("Password must be at least 6 characters.");
             else if (formData.password !== formData.confirmPassword) setError("Passwords do not match.");
             return;
@@ -188,7 +189,7 @@ const SignUp = () => {
 
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-gray-500 uppercase flex items-center gap-2">
-                                        <Mail size={12} className="text-[#E79A37]" /> Email (optional)
+                                        <Mail size={12} className="text-[#E79A37]" /> Your Email
                                     </label>
                                     <input
                                         type="email"

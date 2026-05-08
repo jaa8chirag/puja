@@ -31,6 +31,7 @@ import {
   IndianRupee,
   Ticket,
   Heart,
+  AlertTriangle,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -996,7 +997,8 @@ const BookingDetailDrawer = ({ booking, onClose }) => {
 const CustomerCareDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [completeConfirmId, setCompleteConfirmId] = useState(null); // For confirmation modal
+  const [completeConfirmId, setCompleteConfirmId] = useState(null);
+  const [confirmData, setConfirmData] = useState(null); // { title, message, onConfirm } // For confirmation modal
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState("");
@@ -2250,18 +2252,15 @@ const CustomerCareDashboard = () => {
                       />
                       <button
                         onClick={() => {
-                          // ✅ Offline hai to confirm popup, online hai to seedha assign
                           if (!pandit.is_online) {
-                            if (
-                              window.confirm(
-                                `⚠️ ${pandit.name} He is currently offline. Do you still want to assign it?`,
-                              )
-                            ) {
-                              assignPandit(
-                                pandit.id,
-                                selectedPanditPrice[pandit.id],
-                              );
-                            }
+                            setConfirmData({
+                              title: "Assign Offline Pandit?",
+                              message: `⚠️ ${pandit.name} is currently offline. Do you still want to proceed with the assignment?`,
+                              onConfirm: () => {
+                                assignPandit(pandit.id, selectedPanditPrice[pandit.id]);
+                                setConfirmData(null);
+                              }
+                            });
                           } else {
                             assignPandit(
                               pandit.id,
@@ -2300,19 +2299,19 @@ const CustomerCareDashboard = () => {
 
       {/* ── Completion Confirmation Modal ── */}
       {completeConfirmId && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
-          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-white/5 shadow-2xl p-6 text-center">
-            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-              <CheckCheck size={32} className="text-emerald-400" />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md px-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-[#131e32] rounded-[32px] border border-white/5 shadow-2xl p-8 text-center">
+            <div className="w-20 h-20 bg-emerald-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 text-emerald-400">
+              <CheckCheck size={40} />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Mark as Completed?</h3>
-            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+            <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">Success Verified?</h3>
+            <p className="text-[12px] text-slate-400 mb-8 leading-relaxed font-medium">
               Are you sure you want to mark this puja as completed? This will update the status for both the User and the Pandit.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setCompleteConfirmId(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+                className="flex-1 px-4 py-4 rounded-2xl text-[11px] font-black uppercase bg-slate-800 text-slate-400 hover:bg-slate-700 transition tracking-widest"
               >
                 Cancel
               </button>
@@ -2321,9 +2320,42 @@ const CustomerCareDashboard = () => {
                   updateStatus(completeConfirmId, "completed");
                   setCompleteConfirmId(null);
                 }}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/20"
+                className="flex-1 px-4 py-4 rounded-2xl text-[11px] font-black uppercase bg-emerald-500 text-white hover:bg-emerald-600 transition shadow-xl shadow-emerald-900/40 tracking-widest"
               >
                 Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Generic Confirmation Modal (Service Style) ── */}
+      {confirmData && (
+        <div className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-[#131e32] border border-slate-700/50 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-amber-500 ring-1 ring-amber-500/20">
+                <AlertTriangle size={40} />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+                {confirmData.title}
+              </h3>
+              <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
+                {confirmData.message}
+              </p>
+            </div>
+            <div className="flex gap-px bg-slate-800">
+              <button
+                onClick={() => setConfirmData(null)}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-slate-400 hover:text-white transition-colors text-[11px] font-black uppercase tracking-widest"
+              >
+                Discard
+              </button>
+              <button
+                onClick={confirmData.onConfirm}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-amber-500 hover:bg-amber-500/5 transition-all text-[11px] font-black uppercase tracking-widest"
+              >
+                Proceed
               </button>
             </div>
           </div>

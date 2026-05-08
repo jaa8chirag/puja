@@ -284,22 +284,25 @@ const ManageSankalp = () => {
                 {/* Relation */}
                 <div>
                   <label className={labelClass}>Relation *</label>
-                  <select
-                    name="relation"
-                    required
-                    value={formData.relation}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    <option value="">Select relation</option>
-                    <option value="Self">Self</option>
-                    <option value="Father">Father</option>
-                    <option value="Mother">Mother</option>
-                    <option value="Spouse">Spouse</option>
-                    <option value="Son">Son</option>
-                    <option value="Daughter">Daughter</option>
-                    <option value="Wife">Wife</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="relation"
+                      required
+                      value={formData.relation}
+                      onChange={handleChange}
+                      className={`${inputClass} appearance-none pr-10 cursor-pointer`}
+                    >
+                      <option value="">Select relation</option>
+                      <option value="Self">Self</option>
+                      <option value="Father">Father</option>
+                      <option value="Mother">Mother</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Son">Son</option>
+                      <option value="Daughter">Daughter</option>
+                      <option value="Wife">Wife</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* Name & Gotra Grid */}

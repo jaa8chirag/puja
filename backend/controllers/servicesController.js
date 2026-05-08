@@ -66,7 +66,7 @@ export const getServicesByType = async (req, res) => {
           MAX(CASE WHEN p.pricing_type = 'family' THEN p.price END) AS family_price
       FROM services s
       LEFT JOIN service_prices p ON s.id = p.service_id
-      WHERE s.puja_type = ? AND s.is_deleted = 0
+      WHERE s.puja_type = ? AND s.is_deleted = 0 AND s.is_active = 1
       GROUP BY s.id
       ORDER BY s.priority DESC, s.id DESC -- Pehle priority phir nayi ID
     `,
@@ -90,7 +90,7 @@ export const getAllServices = async (req, res) => {
   try {
     // Priority DESC lagane se high priority upar aayegi
     const [rows] = await db.query(
-      `SELECT * FROM services WHERE is_deleted = 0 ORDER BY priority DESC, created_at DESC`,
+      `SELECT * FROM services WHERE is_deleted = 0 AND is_active = 1 ORDER BY priority DESC, created_at DESC`,
     );
 
     res.status(200).json({
@@ -128,7 +128,7 @@ export const bookPuja = async (req, res) => {
       LEFT JOIN service_prices p 
         ON s.id = p.service_id
 
-      WHERE s.id = ? AND s.is_deleted = 0
+      WHERE s.id = ? AND s.is_deleted = 0 AND s.is_active = 1
 
       GROUP BY 
         s.id,
@@ -228,12 +228,16 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
          return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
       }
 
-      // 3. Enforce Minimum 25% Advance
-      if (actualPaidAmount < (Number(total_price) * 0.25) - 2) {
-         return res.status(400).json({ success: false, message: "Minimum 25% advance required." });
+      // 3. Enforce Dynamic Minimum Advance
+      const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'advance_payment_percentage'");
+      const advancePercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 25;
+      
+      if (actualPaidAmount < (Number(total_price) * (advancePercentage / 100)) - 2) {
+         return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
       }
     } catch (rzpErr) {
-      return res.status(400).json({ success: false, message: "Error validating Razorpay order" });
+      console.error("Razorpay/Security Validation Error:", rzpErr);
+      return res.status(400).json({ success: false, message: "Error validating Razorpay order: " + rzpErr.message });
     }
     // ---------------------------------------------------------
 
@@ -565,12 +569,16 @@ export const onlinePinddanBookingDetails = async (req, res) => {
          return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
       }
 
-      // 3. Enforce Minimum 25% Advance
-      if (actualPaidAmount < (Number(total_price) * 0.25) - 2) {
-         return res.status(400).json({ success: false, message: "Minimum 25% advance required." });
+      // 3. Enforce Dynamic Minimum Advance
+      const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'advance_payment_percentage'");
+      const advancePercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 25;
+      
+      if (actualPaidAmount < (Number(total_price) * (advancePercentage / 100)) - 2) {
+         return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
       }
     } catch (rzpErr) {
-      return res.status(400).json({ success: false, message: "Error validating Razorpay order" });
+      console.error("Razorpay/Security Validation Error:", rzpErr);
+      return res.status(400).json({ success: false, message: "Error validating Razorpay order: " + rzpErr.message });
     }
     // ---------------------------------------------------------
 
@@ -804,12 +812,16 @@ export const bookingDetails = async (req, res) => {
          return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
       }
 
-      // 3. Enforce Minimum 25% Advance
-      if (actualPaidAmount < (Number(total_price) * 0.25) - 2) {
-         return res.status(400).json({ success: false, message: "Minimum 25% advance required." });
+      // 3. Enforce Dynamic Minimum Advance
+      const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'advance_payment_percentage'");
+      const advancePercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 25;
+      
+      if (actualPaidAmount < (Number(total_price) * (advancePercentage / 100)) - 2) {
+         return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
       }
     } catch (rzpErr) {
-      return res.status(400).json({ success: false, message: "Error validating Razorpay order" });
+      console.error("Razorpay/Security Validation Error:", rzpErr);
+      return res.status(400).json({ success: false, message: "Error validating Razorpay order: " + rzpErr.message });
     }
     // ---------------------------------------------------------
 
@@ -1034,19 +1046,37 @@ export const payRemainingAmount = async (req, res) => {
 
     await connection.beginTransaction();
 
-    // 1. Update puja_requests paid_amount and status
-    await connection.query(
-      `UPDATE puja_requests 
-       SET paid_amount = paid_amount + ?, 
-           payment_status = CASE WHEN (paid_amount + ?) >= total_price THEN 'fully_paid' ELSE 'partially_paid' END
-       WHERE id = ?`,
-      [amount, amount, booking_id]
+    // 1. Fetch current booking details to calculate new state safely
+    const [bookingRows] = await connection.query(
+      "SELECT paid_amount, total_price FROM puja_requests WHERE id = ? FOR UPDATE",
+      [booking_id]
     );
 
-    // 2. Record in payments table
+    if (bookingRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    const currentPaid = Number(bookingRows[0].paid_amount);
+    const totalAmount = Number(bookingRows[0].total_price);
+    const newPaidAmount = currentPaid + Number(amount);
+    
+    // Determine new status (with small buffer for floating point)
+    const newStatus = (newPaidAmount >= totalAmount - 0.01) ? 'fully_paid' : 'partially_paid';
+
+    // 2. Update puja_requests with calculated values
+    await connection.query(
+      `UPDATE puja_requests 
+       SET paid_amount = ?, 
+           payment_status = ?
+       WHERE id = ?`,
+      [newPaidAmount, newStatus, booking_id]
+    );
+
+    // 2. Record in payments table (using 'full' type as it completes the payment)
     await connection.query(
       `INSERT INTO payments (booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature, payment_type, status) 
-       VALUES (?, ?, ?, ?, ?, 'balance', 'success')`,
+       VALUES (?, ?, ?, ?, ?, 'full', 'success')`,
       [booking_id, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature]
     );
 
@@ -1056,7 +1086,7 @@ export const payRemainingAmount = async (req, res) => {
   } catch (error) {
     if (connection) await connection.rollback();
     console.error("Pay Remaining Error:", error);
-    res.status(500).json({ success: false, message: "Server Error" });
+    res.status(500).json({ success: false, message: error.message || "Server Error" });
   } finally {
     if (connection) connection.release();
   }

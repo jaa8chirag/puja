@@ -237,9 +237,15 @@ const Navbar = () => {
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="h-10 w-10 bg-[#F3E5D8] cursor-pointer text-[#D97706] rounded-full flex items-center justify-center font-bold text-lg border-2 border-orange-300 shadow-sm active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 group cursor-pointer active:scale-95 transition-all"
                 >
-                  {user.name?.charAt(0).toUpperCase() || "U"}
+                  <div className="h-10 w-10 bg-[#F3E5D8] text-[#D97706] rounded-full flex items-center justify-center font-bold text-lg border-2 border-orange-300 shadow-sm transition-all group-hover:border-orange-400">
+                    {user.name?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <ChevronDown 
+                    size={14} 
+                    className={`text-gray-400 transition-transform duration-300 group-hover:text-orange-500 ${profileOpen ? 'rotate-180 text-orange-600' : ''}`} 
+                  />
                 </button>
 
                 {profileOpen && (

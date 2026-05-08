@@ -121,15 +121,25 @@ const MyBookings = () => {
             });
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
-              setBookings(prev => prev.map(b =>
-                b.id === booking.id ? { ...b, paid_amount: b.total_price, payment_status: 'fully_paid' } : b
-              ));
+              setBookings((prev) =>
+                prev.map((b) =>
+                  b.id === booking.id
+                    ? {
+                        ...b,
+                        paid_amount: Number(b.total_price),
+                        payment_status: "fully_paid",
+                      }
+                    : b
+                )
+              );
               setErrorMsg("Payment successful! Full payment received.");
               setTimeout(() => setErrorMsg(""), 3000);
+            } else {
+              setErrorMsg(verifyData.message || "Payment verification failed.");
             }
           } catch (err) {
             console.error(err);
-            setErrorMsg("Payment verification failed.");
+            setErrorMsg("Connection error during payment verification.");
           }
         },
         prefill: {

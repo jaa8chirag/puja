@@ -15,6 +15,7 @@ import {
   Power,
   MessageSquare,
   FileUp,
+  AlertTriangle,
 } from "lucide-react";
 import Pagination from "../../Components/Pagination";
 
@@ -93,6 +94,7 @@ const PersonalInfo = () => {
   // ── COMMON STATES ──
   const [actionLoading, setActionLoading] = useState(null);
   const [toast, setToast] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'record' | 'faq', id: number }
   const limit = 10;
 
   const showToast = (message, type = "success") => {
@@ -166,12 +168,12 @@ const PersonalInfo = () => {
   };
 
   const deleteFaq = async (id) => {
-    if (!window.confirm("Delete this FAQ?")) return;
     setActionLoading(`del-faq-${id}`);
     try {
       await API.delete(`/faq/delete/${id}`);
       showToast("FAQ deleted");
       fetchFaqs();
+      setDeleteTarget(null);
     } catch {
       showToast("Delete failed", "error");
     } finally {
@@ -181,12 +183,12 @@ const PersonalInfo = () => {
 
   // ── PERSONAL INFO ACTIONS ──
   const deleteRecord = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
     setActionLoading(id);
     try {
       await API.delete(`/personal-info/${id}`);
       showToast("Record deleted");
       fetchRecords();
+      setDeleteTarget(null);
     } catch {
       showToast("Delete failed", "error");
     } finally {
@@ -409,7 +411,7 @@ const PersonalInfo = () => {
                           <Pencil size={13} />
                         </button>
                         <button
-                          onClick={() => deleteRecord(rec.id)}
+                          onClick={() => setDeleteTarget({ type: 'record', id: rec.id })}
                           disabled={actionLoading === rec.id}
                           className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400"
                         >
@@ -520,7 +522,7 @@ const PersonalInfo = () => {
                           <Pencil size={13} />
                         </button>
                         <button
-                          onClick={() => deleteFaq(f.id)}
+                          onClick={() => setDeleteTarget({ type: 'faq', id: f.id })}
                           disabled={actionLoading === `del-faq-${f.id}`}
                           className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400"
                         >
@@ -806,6 +808,47 @@ const PersonalInfo = () => {
             </button>
           </div>
         </ModalWrapper>
+      )}
+      {/* Delete Confirmation Modal (Service Style) */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[110] p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-[#131e32] border border-slate-700/50 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-500 ring-1 ring-rose-500/20">
+                <AlertTriangle size={40} />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+                Purge Record?
+              </h3>
+              <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
+                This action will permanently delete this {deleteTarget.type === 'faq' ? 'FAQ' : 'contact record'}. This
+                operation cannot be reversed once executed.
+              </p>
+            </div>
+            <div className="flex gap-px bg-slate-800">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-slate-400 hover:text-white transition-colors text-[11px] font-black uppercase tracking-widest"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteTarget.type === 'record') deleteRecord(deleteTarget.id);
+                  else deleteFaq(deleteTarget.id);
+                }}
+                disabled={actionLoading}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-rose-500 hover:bg-rose-500/5 transition-all text-[11px] font-black uppercase tracking-widest disabled:opacity-50"
+              >
+                {actionLoading ? (
+                  <Loader2 className="animate-spin mx-auto" size={16} />
+                ) : (
+                  "Confirm Delete"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

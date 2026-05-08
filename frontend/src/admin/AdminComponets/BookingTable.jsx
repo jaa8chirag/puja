@@ -381,21 +381,26 @@ const InvoiceModal = ({ booking, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print:p-0 print:bg-white print:block">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:rounded-none">
+    <div id="invoice-modal-container" className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto print:p-0 print:bg-white print:block">
+      <div id="invoice-modal-box" className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:rounded-none">
         {/* Modal Header - Hidden on Print */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl print:hidden">
-          <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest">Booking Invoice</h2>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+              <Printer size={18} />
+            </div>
+            <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest">Booking Invoice</h2>
+          </div>
           <div className="flex items-center gap-3">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-200"
+              className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-xs font-black rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-200 active:scale-95"
             >
-              <Printer size={14} /> Print / PDF
+              <Printer size={14} /> Download PDF
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
             >
               <X size={20} />
             </button>
@@ -403,131 +408,179 @@ const InvoiceModal = ({ booking, onClose }) => {
         </div>
 
         {/* Invoice Content */}
-        <div id="invoice-content" className="flex-1 p-8 sm:p-12 overflow-y-auto print:overflow-visible print:p-0">
-          <div className="flex justify-between items-start mb-10">
+        <div id="invoice-content" className="flex-1 p-6 sm:p-10 overflow-y-auto print:overflow-visible print:p-0 print:m-0 bg-white">
+          <div className="flex justify-between items-start mb-6 break-inside-avoid">
             <div>
-              <img src="/img/download.jpg" alt="Logo" className="h-16 w-auto mb-4" />
-              <h1 className="text-2xl font-black text-gray-900 tracking-tighter">SRI VEDIC PUJA</h1>
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Divine Spiritual Services</p>
+              <div className="flex items-center gap-3 mb-2">
+                <img src="/img/download.jpg" alt="Logo" className="h-10 w-auto" />
+                <div className="h-8 w-[1px] bg-gray-200"></div>
+                <div>
+                  <h1 className="text-lg font-black text-gray-900 tracking-tighter leading-none">SRI VEDIC PUJA</h1>
+                  <p className="text-[8px] text-orange-600 font-bold uppercase tracking-[0.2em] mt-0.5">Divine Spiritual Services</p>
+                </div>
+              </div>
             </div>
             <div className="text-right">
-              <h2 className="text-4xl font-serif text-gray-200 uppercase tracking-tighter mb-2">INVOICE</h2>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Booking ID</p>
-              <p className="text-sm font-mono font-black text-gray-800">{booking.bookingId}</p>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Date</p>
-              <p className="text-sm font-bold text-gray-800">{new Date(booking.completed_at || new Date()).toLocaleDateString('en-IN')}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-12 mb-10 border-t border-b border-gray-50 py-8">
-            <div>
-              <h3 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-4">Devotee Information</h3>
-              <p className="text-lg font-black text-gray-800">{booking.user_name}</p>
-              <p className="text-sm text-gray-600 font-medium mt-1 leading-relaxed">{booking.address || "Devotee's Location"}</p>
-              <p className="text-sm text-gray-500 mt-2 font-bold">{booking.user_phone}</p>
-            </div>
-            <div className="text-right">
-              <h3 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-4">Ritual Finalized</h3>
-              <p className="text-lg font-black text-gray-800">{booking.puja_name}</p>
-              <p className="text-sm text-gray-600 font-bold mt-1 uppercase tracking-wider">{booking.puja_type?.replace('_', ' ')}</p>
-              <p className="text-sm text-gray-500 mt-2 font-medium">
-                {new Date(booking.preferred_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} at {booking.preferred_time}
-              </p>
-            </div>
-          </div>
-
-          <table className="w-full mb-10">
-            <thead>
-              <tr className="border-b-2 border-gray-900 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                <th className="py-3 text-left">Service Description</th>
-                <th className="py-3 text-right">Gross Amount (₹)</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm font-bold text-gray-800">
-              {(() => {
-                const baseAmount = booking.total_price - booking.donations - (booking.samagrikit === 1 ? 501 : 0);
-                const spiritualPrice = baseAmount * 0.75;
-                const platformPrice = baseAmount * 0.25;
-                return (
-                  <>
-                    <tr className="border-b border-gray-50">
-                      <td className="py-4">
-                        <p>Spiritual Puja Price</p>
-                        <p className="text-[10px] text-gray-400 font-medium">Sacred Vedic Ceremony Service</p>
-                      </td>
-                      <td className="py-4 text-right">{spiritualPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr className="border-b border-gray-50">
-                      <td className="py-4">
-                        <p>Platform Charges</p>
-                        <p className="text-[10px] text-gray-400 font-medium">Service and Maintenance Fee</p>
-                      </td>
-                      <td className="py-4 text-right">{platformPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  </>
-                );
-              })()}
-              {booking.samagrikit === 1 && (
-                <tr className="border-b border-gray-50">
-                  <td className="py-4">
-                    <p>Samagri Kit</p>
-                    <p className="text-[10px] text-gray-400 font-medium">Essential ritual materials and sacred items</p>
-                  </td>
-                  <td className="py-4 text-right">501.00</td>
-                </tr>
-              )}
-              {booking.donations > 0 && (
-                <>
-                  <tr className="bg-orange-50/50 border-b border-orange-100">
-                    <td className="py-4 px-2">
-                      <p className="font-black text-orange-600">Total Contributions</p>
-                      <p className="text-[9px] text-orange-400 font-bold italic leading-tight mt-0.5">
-                        ({booking.contribution_names || "General Seva"})
-                      </p>
-                    </td>
-                    <td className="py-4 text-right font-black text-orange-600 px-2">
-                      ₹{Number(booking.donations).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                  {booking.contributions_data?.split("||").map((item, i) => {
-                    const [name, price] = item.split("::");
-                    return (
-                      <tr key={i} className="border-b border-gray-50 bg-gray-50/30">
-                        <td className="py-3 pl-6">
-                          <p className="text-gray-600 font-bold text-[11px]">• {name}</p>
-                        </td>
-                        <td className="py-3 text-right text-gray-500 text-[11px] pr-2">
-                          ₹{Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </>
-              )}
-            </tbody>
-          </table>
-
-          <div className="flex justify-end">
-            <div className="w-72 space-y-3">
-              <div className="flex justify-between text-lg font-black text-gray-900 border-t-2 border-gray-900 pt-3">
-                <span>TOTAL AMOUNT</span>
-                <span className="text-orange-600">₹{booking.total_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <h2 className="text-3xl font-serif text-gray-100 uppercase tracking-tighter mb-2 leading-none select-none">INVOICE</h2>
+              <div className="space-y-0.5">
+                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Booking Reference</p>
+                <p className="text-xs font-mono font-black text-gray-900">{booking.bookingId}</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-20 pt-8 border-t border-gray-100 text-center">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Thank you for choosing Sri Vedic Puja</p>
-            <p className="text-[10px] text-gray-300">This is a computer-generated invoice and does not require a physical signature.</p>
+          <div className="grid grid-cols-2 gap-8 mb-6 border-t border-b border-gray-100 py-6 break-inside-avoid">
+            <div className="space-y-2">
+              <h3 className="text-[9px] font-black text-orange-500 uppercase tracking-[0.2em]">Devotee Details</h3>
+              <div>
+                <p className="text-base font-black text-gray-900 leading-tight mb-0.5">{booking.user_name}</p>
+                <p className="text-[12px] text-gray-500 font-bold mb-1">{booking.user_phone}</p>
+                <p className="text-[11px] text-gray-600 font-medium leading-relaxed max-w-[240px]">{booking.address || "Devotee's Location"}</p>
+              </div>
+            </div>
+            <div className="text-right space-y-2">
+              <h3 className="text-[9px] font-black text-orange-500 uppercase tracking-[0.2em]">Ritual Information</h3>
+              <div>
+                <p className="text-base font-black text-gray-900 leading-tight mb-0.5">{booking.puja_name}</p>
+                <p className="text-[10px] text-orange-600 font-black uppercase tracking-wider mb-2">{booking.puja_type?.replace('_', ' ')}</p>
+                <div className="inline-flex flex-col items-end gap-0.5 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-[12px] font-black text-gray-800">
+                    {new Date(booking.preferred_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{booking.preferred_time}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="break-inside-avoid">
+            <table className="w-full mb-6">
+              <thead>
+                <tr className="border-b-2 border-gray-900 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                  <th className="py-2 text-left">Description of Service</th>
+                  <th className="py-2 text-right">Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody className="text-[12px] font-bold text-gray-800">
+                {(() => {
+                  const baseAmount = Number(booking.total_price) - (Number(booking.donations) || 0) - (booking.samagrikit === 1 ? 501 : 0);
+                  const spiritualPrice = baseAmount * 0.75;
+                  const platformPrice = baseAmount * 0.25;
+                  return (
+                    <>
+                      <tr className="border-b border-gray-50 group">
+                        <td className="py-3">
+                          <p className="text-gray-900">Sacred Ritual Service</p>
+                          <p className="text-[9px] text-gray-400 font-medium">Vedic chanting, puja performance and ritual guidance</p>
+                        </td>
+                        <td className="py-3 text-right font-black">₹{spiritualPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr className="border-b border-gray-50">
+                        <td className="py-3">
+                          <p className="text-gray-900">Administrative & Platform Fee</p>
+                          <p className="text-[9px] text-gray-400 font-medium">Booking management and digital coordination</p>
+                        </td>
+                        <td className="py-3 text-right font-black">₹{platformPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </>
+                  );
+                })()}
+                {booking.samagrikit === 1 && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-3">
+                      <p className="text-gray-900">Ritual Samagri Kit</p>
+                      <p className="text-[9px] text-gray-400 font-medium">Essential sacred materials</p>
+                    </td>
+                    <td className="py-3 text-right font-black">₹501.00</td>
+                  </tr>
+                )}
+                {Number(booking.donations) > 0 && (
+                  <>
+                    <tr className="bg-orange-50/30 border-b border-orange-100/50">
+                      <td className="py-3 px-4">
+                        <p className="font-black text-orange-700">Dharmic Contributions</p>
+                        <p className="text-[9px] text-orange-500/80 font-bold italic">
+                          ({booking.contribution_names || "Sacred Seva"})
+                        </p>
+                      </td>
+                      <td className="py-3 text-right font-black text-orange-700 px-4">
+                        ₹{Number(booking.donations).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                    {booking.contributions_data?.split("||").map((item, i) => {
+                      const [name, price] = item.split("::");
+                      return (
+                        <tr key={i} className="border-b border-gray-50 bg-gray-50/20">
+                          <td className="py-2 pl-10">
+                            <p className="text-gray-600 font-bold text-[10px]">• {name}</p>
+                          </td>
+                          <td className="py-2 text-right text-gray-500 text-[10px] pr-4 font-black">
+                            ₹{Number(price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </>
+                )}
+              </tbody>
+            </table>
+
+            <div className="flex justify-end mb-10">
+              <div className="w-72 p-4 bg-gray-900 rounded-xl text-white shadow-xl shadow-gray-200 print:shadow-none">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Total Settlement</span>
+                  <span className="text-xl font-black text-orange-400">₹{Number(booking.total_price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-gray-100 text-center">
+              <div className="inline-block px-3 py-0.5 bg-green-50 text-green-700 text-[9px] font-black rounded-full border border-green-100 mb-2 uppercase tracking-widest">
+                ✓ Payment Received in Full
+              </div>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Sri Vedic Puja — Connecting Souls to Divinity</p>
+              <p className="text-[8px] text-gray-300 italic">This is a digitally signed document. No physical signature is required.</p>
+            </div>
           </div>
         </div>
       </div>
 
       <style>{`
         @media print {
+          /* Reset everything and hide background */
+          body { background: white !important; }
           body * { visibility: hidden; }
-          #invoice-content, #invoice-content * { visibility: visible; }
-          #invoice-content { position: absolute; left: 0; top: 0; width: 100%; }
+          
+          /* Only show the invoice content */
+          #invoice-modal-container, #invoice-modal-container * { visibility: visible; }
+          
+          #invoice-modal-container { 
+            position: absolute !important; 
+            left: 0 !important; 
+            top: 0 !important; 
+            width: 100% !important; 
+            height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: white !important;
+            display: block !important;
+          }
+          
+          #invoice-modal-box {
+            position: static !important;
+            box-shadow: none !important;
+            width: 100% !important;
+            max-width: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            display: block !important;
+          }
+
+          /* Ensure colors and backgrounds print */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
         }
       `}</style>
     </div>

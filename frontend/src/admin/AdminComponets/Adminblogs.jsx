@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { View, EyeOff, Code2 } from "lucide-react";
+import { View, EyeOff, Code2, AlertTriangle, Trash2, Loader2, Plus, Search, Filter, ChevronLeft, ChevronRight, Edit2, Calendar, User, Clock, Tag } from "lucide-react";
 import RichTextEditor from "../../Components/RichTextEditor";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -724,43 +724,38 @@ const Adminblogs = () => {
         </div>
       )}
 
-      {/* ══════════════════════════════════
-          DELETE MODAL
-      ══════════════════════════════════ */}
+      {/* Delete Confirmation Modal (Service Style) */}
       {modal === "delete" && selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="bg-[#0f1117] border border-red-500/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
-            <div className="text-center mb-5">
-              <div className="text-5xl mb-3">🗑️</div>
-              <h2 className="text-gray-100 font-bold text-lg m-0">
-                Delete Blog Post?
-              </h2>
-              <p className="text-gray-500 text-sm mt-2">
-                "<span className="text-orange-400">{selected.title}</span>" will
-                be permanently deleted.
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[110] p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-[#131e32] border border-slate-700/50 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-500 ring-1 ring-rose-500/20">
+                <AlertTriangle size={40} />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+                Purge Blog?
+              </h3>
+              <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
+                You are about to delete <span className="text-orange-400 font-bold">"{selected.title}"</span>. 
+                This action will remove the article from the public feed permanently.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-px bg-slate-800">
               <button
                 onClick={closeModal}
-                disabled={saving}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold border border-white/[0.08] text-gray-300 hover:border-white/20 transition-all bg-transparent cursor-pointer"
+                className="flex-1 px-4 py-5 bg-[#131e32] text-slate-400 hover:text-white transition-colors text-[11px] font-black uppercase tracking-widest"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={saving}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
-                style={{ background: saving ? "#7f1d1d" : "#dc2626" }}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-rose-500 hover:bg-rose-500/5 transition-all text-[11px] font-black uppercase tracking-widest disabled:opacity-50"
               >
                 {saving ? (
-                  <>
-                    <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full inline-block" />{" "}
-                    Deleting...
-                  </>
+                  <Loader2 className="animate-spin mx-auto" size={16} />
                 ) : (
-                  "🗑️ Yes, Delete"
+                  "Delete Blog"
                 )}
               </button>
             </div>

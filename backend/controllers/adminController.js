@@ -254,24 +254,41 @@ export const getAllUsers = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const role = req.query.role || "all";
     const offset = (page - 1) * limit;
 
-    // ✅ Total count — sab roles (Excluding deleted)
-    const [[{ total }]] = await db.execute(
-      `SELECT COUNT(*) as total FROM users WHERE role != 'pandit' AND is_deleted = 0`,
+    let whereClause = "WHERE u.role != 'pandit' AND u.is_deleted = 0";
+    const params = [];
+
+    if (role !== "all") {
+      whereClause += " AND u.role = ?";
+      params.push(role);
+    }
+
+    if (search) {
+      whereClause += " AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)";
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    // ✅ Total count with filters
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) as total FROM users u ${whereClause}`,
+      params
     );
 
-    // ✅ WHERE role='user' hata diya — sab roles aayenge
-    const [users] = await db.execute(
+    // ✅ Get users with filters and pagination
+    const [users] = await db.query(
       `SELECT 
         u.id, u.name, u.email, u.phone, u.role, u.created_at,
         COUNT(pr.id) as total_bookings
        FROM users u
-LEFT JOIN puja_requests pr ON pr.user_id = u.id
-WHERE u.role != 'pandit' AND u.is_deleted = 0
-GROUP BY u.id
+       LEFT JOIN puja_requests pr ON pr.user_id = u.id
+       ${whereClause}
+       GROUP BY u.id
        ORDER BY u.created_at DESC
-       LIMIT ${limit} OFFSET ${offset}`,
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
     );
 
     res.json({
@@ -282,8 +299,8 @@ GROUP BY u.id
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false });
+    console.error("getAllUsers Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -933,11 +950,11 @@ export const getAllServices = async (req, res) => {
 
     // ✅ Step 1: Get paginated service IDs with ORDER BY columns included
     const [serviceIds] = await db.query(
-      `SELECT s.id, s.is_featured, s.priority, s.created_at
+      `SELECT s.id, s.is_featured, s.priority, s.created_at, s.updated_at, s.updated_by
        FROM services s
        LEFT JOIN temples t ON s.id = t.service_id
        ${whereClause}
-       GROUP BY s.id, s.is_featured, s.priority, s.created_at
+       GROUP BY s.id, s.is_featured, s.priority, s.created_at, s.updated_at, s.updated_by
        ORDER BY s.is_featured DESC, s.priority DESC, s.created_at DESC
        LIMIT ? OFFSET ?`,
       [...params, limit, offset],
@@ -1123,6 +1140,10 @@ export const updateService = async (req, res) => {
       fields.push("is_featured=?");
       vals.push(is_featured);
     }
+
+    // Always update modified info
+    fields.push("updated_by=?");
+    vals.push(req.admin?.name || "admin");
 
     if (fields.length > 0) {
       vals.push(id);
@@ -2386,7 +2407,15 @@ export const getPageBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const [rows] = await db.query(`SELECT * FROM pages WHERE slug = ?`, [slug]);
+    let query = `SELECT * FROM pages WHERE slug = ?`;
+    const params = [slug];
+
+    // If NOT admin (req.user is undefined for public routes in server.js), check is_active
+    if (!req.user) {
+      query += ` AND is_active = 1`;
+    }
+
+    const [rows] = await db.query(query, params);
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -2661,30 +2690,56 @@ export const updatePersonalInfoStatus = async (req, res) => {
     const { id } = req.params;
     const { is_active } = req.body;
 
-    // validation
     if (is_active === undefined)
-      return res.status(400).json({
-        success: false,
-        error: "is_active is required.",
-      });
+      return res.status(400).json({ success: false, error: "is_active is required." });
 
     if (is_active !== 0 && is_active !== 1)
-      return res.status(400).json({
-        success: false,
-        error: "is_active must be 0 or 1.",
-      });
+      return res.status(400).json({ success: false, error: "is_active must be 0 or 1." });
 
-    await db.execute("UPDATE personal_info SET is_active = ? WHERE id = ?", [
-      is_active,
-      id,
-    ]);
+    await db.execute("UPDATE personal_info SET is_active = ? WHERE id = ?", [is_active, id]);
 
-    return res.status(200).json({
-      success: true,
-      message: "Status updated successfully.",
-    });
+    return res.status(200).json({ success: true, message: "Status updated successfully." });
   } catch (error) {
     console.error("❌ updatePersonalInfoStatus Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const updateServiceStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+    if (is_active === undefined) return res.status(400).json({ success: false, error: "is_active is required." });
+    await db.execute("UPDATE services SET is_active = ? WHERE id = ?", [is_active, id]);
+    return res.status(200).json({ success: true, message: "Service status updated successfully." });
+  } catch (error) {
+    console.error("❌ updateServiceStatus Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const updatePageStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+    if (is_active === undefined) return res.status(400).json({ success: false, error: "is_active is required." });
+    await db.execute("UPDATE pages SET is_active = ? WHERE id = ?", [is_active, id]);
+    return res.status(200).json({ success: true, message: "Page status updated successfully." });
+  } catch (error) {
+    console.error("❌ updatePageStatus Error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const updateContributionStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+    if (is_active === undefined) return res.status(400).json({ success: false, error: "is_active is required." });
+    await db.execute("UPDATE contribution_types SET is_active = ? WHERE id = ?", [is_active, id]);
+    return res.status(200).json({ success: true, message: "Contribution status updated successfully." });
+  } catch (error) {
+    console.error("❌ updateContributionStatus Error:", error);
     return res.status(500).json({ success: false, error: error.message });
   }
 };

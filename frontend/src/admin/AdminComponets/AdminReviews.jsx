@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Star, MessageSquare, Trash2, Edit2, Plus } from "lucide-react";
+import { Star, MessageSquare, Trash2, Edit2, Plus, AlertTriangle, Loader2 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -241,17 +241,42 @@ const AdminReviews = () => {
         </div>
       )}
 
-      {/* Delete Modal */}
-      {modal === "delete" && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-           <div className="bg-[#0f1117] border border-red-500/20 rounded-2xl p-6 max-w-sm text-center">
-             <div className="text-4xl mb-3">🗑️</div>
-             <h2 className="text-white font-bold mb-4">Delete Review?</h2>
-             <div className="flex gap-3">
-               <button onClick={closeModal} className="flex-1 py-2 rounded border border-white/[0.08] text-white">Cancel</button>
-               <button onClick={handleDelete} className="flex-1 py-2 rounded bg-red-600 text-white font-bold">Delete</button>
-             </div>
-           </div>
+      {/* Delete Confirmation Modal (Service Style) */}
+      {modal === "delete" && selected && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[110] p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-[#131e32] border border-slate-700/50 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-500 ring-1 ring-rose-500/20">
+                <AlertTriangle size={40} />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+                Remove Review?
+              </h3>
+              <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
+                You are about to delete the review from <span className="text-orange-400 font-bold">"{selected.name}"</span>. 
+                This testimonial will be removed from the public website permanently.
+              </p>
+            </div>
+            <div className="flex gap-px bg-slate-800">
+              <button
+                onClick={closeModal}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-slate-400 hover:text-white transition-colors text-[11px] font-black uppercase tracking-widest"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={saving}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-rose-500 hover:bg-rose-500/5 transition-all text-[11px] font-black uppercase tracking-widest disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="animate-spin mx-auto" size={16} />
+                ) : (
+                  "Delete Review"
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

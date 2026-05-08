@@ -6,7 +6,8 @@ import {
   CheckCircle2,
   XCircle,
   HeartHandshake,
-  Loader2
+  Loader2,
+  Power
 } from "lucide-react";
 import { API } from "../../services/adminApi";
 
@@ -80,6 +81,17 @@ const AdminContributions = () => {
     }
   };
 
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      await API.patch(`/contributions/status/${id}`, {
+        is_active: currentStatus === 1 ? 0 : 1,
+      });
+      fetchContributions();
+    } catch (err) {
+      console.error("Status Toggle Error:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen p-2 md:p-0">
       {/* Header */}
@@ -102,7 +114,7 @@ const AdminContributions = () => {
               <th className="px-6 py-4 text-left font-bold">Name</th>
               <th className="px-6 py-4 text-left font-bold">Description</th>
               <th className="px-6 py-4 text-center font-bold">Price</th>
-              {/* <th className="px-6 py-4 text-center font-bold">Status</th> */}
+              <th className="px-6 py-4 text-center font-bold">Status</th>
               <th className="px-6 py-4 text-right font-bold">Actions</th>
             </tr>
           </thead>
@@ -138,24 +150,35 @@ const AdminContributions = () => {
                   <td className="px-6 py-4 text-center font-mono text-emerald-400 font-bold text-sm">
                     ₹{item.price}
                   </td>
-                  {/* <td className="px-6 py-4 text-center">
-                    <span
+                  <td className="px-6 py-4 text-center">
+                    <div
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase ${
-                        item.is_active
+                        item.is_active === 1
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                           : "bg-rose-500/10 text-rose-400 border-rose-500/20"
                       }`}
                     >
-                      {item.is_active ? (
+                      {item.is_active === 1 ? (
                         <CheckCircle2 size={10} />
                       ) : (
                         <XCircle size={10} />
                       )}
-                      {item.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td> */}
+                      {item.is_active === 1 ? "Active" : "Inactive"}
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => toggleStatus(item.id, item.is_active)}
+                        className={`p-2 rounded-xl transition-all ${
+                          item.is_active === 1
+                            ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white"
+                            : "bg-slate-500/10 text-slate-400 hover:bg-slate-500 hover:text-white"
+                        }`}
+                        title={item.is_active === 1 ? "Click to Deactivate" : "Click to Activate"}
+                      >
+                        <Power size={15} />
+                      </button>
                       <button
                         onClick={() => {
                           setEditData(item);

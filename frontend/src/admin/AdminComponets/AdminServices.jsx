@@ -458,7 +458,9 @@ import {
   Layers,
   Star,
   Search,
-  X,
+  AlertTriangle,
+  Loader2,
+  Power,
 } from "lucide-react";
 import ServiceModal from "./ServiceModel";
 import { API } from "../../services/adminApi";
@@ -477,10 +479,28 @@ const AdminServices = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "Never";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(date);
+  };
+
   const fetchServices = async () => {
     try {
       const { data } = await API.get(`/services`, {
-        params: { page, limit: 10, category: category || undefined },
+        params: { 
+          page, 
+          limit: 10, 
+          category: category || undefined,
+          search: search || undefined 
+        },
       });
       if (data.success) {
         setServices(data.services);
@@ -492,12 +512,28 @@ const AdminServices = () => {
   };
 
   useEffect(() => {
-    fetchServices();
-  }, [page, category]);
+    setPage(1);
+  }, [category, search]);
 
-  const filteredServices = services.filter((s) =>
-    s.puja_name?.toLowerCase().includes(search.toLowerCase()),
-  );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchServices();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [page, category, search]);
+
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      await API.patch(`/services/status/${id}`, {
+        is_active: currentStatus === 1 ? 0 : 1,
+      });
+      fetchServices();
+    } catch (err) {
+      console.error("Status Toggle Error:", err);
+    }
+  };
+
+
 
   const openDeleteModal = (service) => {
     setDeleteTarget({ id: service.id, name: service.puja_name });
@@ -608,13 +644,14 @@ const AdminServices = () => {
               <th className="px-6 py-4 text-center font-bold">Category</th>
               <th className="px-6 py-4 text-center font-bold">Priority</th>
               <th className="px-6 py-4 text-center font-bold">Status</th>
+              <th className="px-6 py-4 text-center font-bold">Last Updated</th>
               <th className="px-6 py-4 text-center font-bold">Pricing Tier</th>
               <th className="px-6 py-4 text-right font-bold">Actions</th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-slate-800/50">
-            {filteredServices.length === 0 ? (
+            {services.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-20 text-center text-slate-600">
                   <LayoutGrid size={40} className="mx-auto mb-3 opacity-20" />
@@ -622,7 +659,7 @@ const AdminServices = () => {
                 </td>
               </tr>
             ) : (
-              filteredServices.map((service) => (
+              services.map((service) => (
                 <tr
                   key={service.id}
                   className="hover:bg-[#1a2744] transition-colors group"
@@ -676,24 +713,31 @@ const AdminServices = () => {
 
                   {/* ✅ Fixed Status Cell - show only if status exists */}
                   <td className="px-6 py-4 text-center">
-                    {service.status ? (
-                      <div
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase ${
-                          service.status.toLowerCase() === "active"
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                        }`}
-                      >
-                        {service.status.toLowerCase() === "active" ? (
-                          <CheckCircle2 size={10} />
-                        ) : (
-                          <XCircle size={10} />
-                        )}
-                        {service.status}
-                      </div>
-                    ) : (
-                      <span className="text-slate-600 text-[10px]">—</span>
-                    )}
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase ${
+                        service.is_active === 1
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                      }`}
+                    >
+                      {service.is_active === 1 ? (
+                        <CheckCircle2 size={10} />
+                      ) : (
+                        <XCircle size={10} />
+                      )}
+                      {service.is_active === 1 ? "Active" : "Inactive"}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-slate-300 font-bold text-[10px]">
+                        {formatDate(service.updated_at || service.created_at)}
+                      </span>
+                      <span className="text-[8px] text-slate-500 font-black uppercase tracking-widest">
+                        {service.updated_by ? `By ${service.updated_by}` : "System Sync"}
+                      </span>
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 text-center">
@@ -718,6 +762,17 @@ const AdminServices = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => toggleStatus(service.id, service.is_active)}
+                        className={`p-2 rounded-xl transition-all ${
+                          service.is_active === 1
+                            ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white"
+                            : "bg-slate-500/10 text-slate-400 hover:bg-slate-500 hover:text-white"
+                        }`}
+                        title={service.is_active === 1 ? "Click to Deactivate" : "Click to Activate"}
+                      >
+                        <Power size={15} />
+                      </button>
                       <button
                         onClick={() => {
                           setEditData(service);
@@ -749,13 +804,13 @@ const AdminServices = () => {
 
       {/* ── Card List — Mobile only ── */}
       <div className="md:hidden flex flex-col gap-3">
-        {filteredServices.length === 0 ? (
+        {services.length === 0 ? (
           <div className="py-20 text-center text-slate-600 bg-[#131e32] rounded-2xl border border-slate-800">
             <LayoutGrid size={40} className="mx-auto mb-3 opacity-20" />
             <p className="text-sm">No services found</p>
           </div>
         ) : (
-          filteredServices.map((service) => (
+          services.map((service) => (
             <div
               key={service.id}
               className="bg-[#131e32] rounded-2xl border border-slate-800 p-4 flex flex-col gap-3"
@@ -818,23 +873,31 @@ const AdminServices = () => {
                   P: {service.priority || 0}
                 </span>
 
-                {/* ✅ Fixed Status Badge - show only if exists */}
                 {service.status && (
-                  <div
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-bold text-[10px] uppercase ${
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter border ${
                       service.status.toLowerCase() === "active"
                         ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                         : "bg-slate-500/10 text-slate-400 border-slate-500/20"
                     }`}
                   >
                     {service.status.toLowerCase() === "active" ? (
-                      <CheckCircle2 size={9} />
+                      <CheckCircle2 size={10} />
                     ) : (
-                      <XCircle size={9} />
+                      <XCircle size={10} />
                     )}
                     {service.status}
-                  </div>
+                  </span>
                 )}
+
+                <div className="flex items-center gap-1.5 ml-auto">
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                    {service.updated_by ? `By ${service.updated_by}:` : "Last Sync:"}
+                  </span>
+                  <span className="text-[10px] text-slate-300 font-black">
+                    {formatDate(service.updated_at || service.created_at)}
+                  </span>
+                </div>
 
                 {service.prices?.length > 0 && (
                   <span className="text-emerald-400 font-mono text-[11px] font-bold ml-auto">
@@ -859,49 +922,41 @@ const AdminServices = () => {
         />
       )}
 
+      {/* Delete Confirmation Modal (Service Style) */}
       {deleteModal && deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div
-            className="bg-[#0f1117] border border-red-500/20 rounded-2xl p-6 max-w-md w-full shadow-2xl"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          >
-            <div className="text-center mb-5">
-              <div className="text-5xl mb-3">🗑️</div>
-              <h2 className="text-gray-100 font-bold text-lg m-0">
-                Do you want to delete the service?
-              </h2>
-              <p className="text-gray-500 text-sm mt-2">
-                "<span className="text-orange-400">{deleteTarget.name}</span>"
-                It will be permanently deleted. This action cannot be undone.
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[110] p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-[#131e32] border border-slate-700/50 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-500 ring-1 ring-rose-500/20">
+                <AlertTriangle size={40} />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+                Remove Service?
+              </h3>
+              <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
+                You are about to delete <span className="text-orange-400">"{deleteTarget.name}"</span>. 
+                This will purge the service and all its pricing data permanently.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-px bg-slate-800">
               <button
                 onClick={() => {
                   setDeleteModal(false);
                   setDeleteTarget(null);
                 }}
-                disabled={deleting}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold border border-white/[0.08] text-gray-300 hover:border-white/20 transition-all bg-transparent cursor-pointer"
+                className="flex-1 px-4 py-5 bg-[#131e32] text-slate-400 hover:text-white transition-colors text-[11px] font-black uppercase tracking-widest"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
-                style={{ background: deleting ? "#7f1d1d" : "#dc2626" }}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-rose-500 hover:bg-rose-500/5 transition-all text-[11px] font-black uppercase tracking-widest disabled:opacity-50"
               >
                 {deleting ? (
-                  <>
-                    <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full inline-block" />{" "}
-                    Deleting...
-                  </>
+                  <Loader2 className="animate-spin mx-auto" size={16} />
                 ) : (
-                  <>
-                    <Trash2 size={14} />
-                    Yes, Delete it
-                  </>
+                  "Delete Service"
                 )}
               </button>
             </div>

@@ -146,6 +146,9 @@ const Users = () => {
       if (filterRole !== "all") {
         url += `&role=${filterRole}`;
       }
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
       const res = await API.get(url);
       setUsers(res.data.users);
       setTotalPages(res.data.totalPages);
@@ -158,16 +161,17 @@ const Users = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [page, filterRole]);
+    setPage(1);
+  }, [filterRole, search]);
 
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch = `${u.name} ${u.email} ${u.phone}`
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesRole = filterRole === "all" || u.role === filterRole;
-    return matchesSearch && matchesRole;
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [page, filterRole, search]);
+
+
 
   const deleteUser = (user) => {
     setDeleteTarget({ id: user.id, name: user.name });
@@ -303,7 +307,7 @@ const Users = () => {
           <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
             Current
           </span>
-          <span className="text-lg font-black">{filteredUsers.length}</span>
+          <span className="text-lg font-black">{users.length}</span>
         </div>
       </div>
 
@@ -340,7 +344,7 @@ const Users = () => {
                 Accessing Records...
               </span>
             </div>
-          ) : filteredUsers.length === 0 ? (
+          ) : users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-600">
               <UsersIcon size={48} className="mb-3 opacity-20" />
               <p className="text-xs font-bold uppercase tracking-widest">
@@ -363,7 +367,7 @@ const Users = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {filteredUsers.map((u, i) => (
+                {users.map((u, i) => (
                   <tr
                     key={u.id}
                     className={`transition-colors ${

@@ -16,6 +16,7 @@ import {
   Info,
   Navigation,
   Edit,
+  AlertTriangle,
 } from "lucide-react";
 import RichTextEditor from "../../Components/RichTextEditor";
 
@@ -58,6 +59,8 @@ const AdminEventsAartis = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -229,7 +232,7 @@ const AdminEventsAartis = () => {
   };
 
   const deleteItem = async (id) => {
-    if (!window.confirm("Permanent delete?")) return;
+    setIsDeleting(true);
     try {
       const url =
         activeTab === "mandir"
@@ -238,8 +241,11 @@ const AdminEventsAartis = () => {
       await axios.delete(url);
       showToast("Record removed");
       fetchData();
+      setDeleteConfirmId(null);
     } catch (err) {
       showToast("Delete failed", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -252,11 +258,10 @@ const AdminEventsAartis = () => {
     <div className="bg-transparent min-h-screen font-sans p-2">
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-[60] px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 border animate-in slide-in-from-right-5 ${
-            toast.type === "error"
+          className={`fixed bottom-6 right-6 z-[60] px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 border animate-in slide-in-from-right-5 ${toast.type === "error"
               ? "bg-rose-950/40 text-rose-400 border-rose-800/50 backdrop-blur-md"
               : "bg-emerald-950/40 text-emerald-400 border-emerald-800/50 backdrop-blur-md"
-          }`}
+            }`}
         >
           {toast.type === "error" ? (
             <XCircle size={16} />
@@ -388,7 +393,7 @@ const AdminEventsAartis = () => {
                             <Edit size={14} />
                           </button>
                           <button
-                            onClick={() => deleteItem(item.id || item._id)}
+                            onClick={() => setDeleteConfirmId(item.id || item._id)}
                             className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-500 transition-all"
                           >
                             <Trash2 size={14} />
@@ -554,6 +559,45 @@ const AdminEventsAartis = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal (Service Style) */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[110] p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-[#131e32] border border-slate-700/50 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-500 ring-1 ring-rose-500/20">
+                <AlertTriangle size={40} />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+                Remove {activeTab}?
+              </h3>
+              <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
+                This action will permanently delete this {activeTab} content. This
+                operation cannot be reversed once executed.
+              </p>
+            </div>
+            <div className="flex gap-px bg-slate-800">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-slate-400 hover:text-white transition-colors text-[11px] font-black uppercase tracking-widest"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteItem(deleteConfirmId)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-5 bg-[#131e32] text-rose-500 hover:bg-rose-500/5 transition-all text-[11px] font-black uppercase tracking-widest disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <Loader2 className="animate-spin mx-auto" size={16} />
+                ) : (
+                  "Confirm Delete"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

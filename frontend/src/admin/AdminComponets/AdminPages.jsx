@@ -7,6 +7,9 @@ import {
   X,
   Plus,
   Trash2,
+  Power,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { API } from "../../services/adminApi";
 import RichTextEditor from "../../Components/RichTextEditor";
@@ -59,7 +62,7 @@ const extractContentSnippet = (sections) => {
 };
 
 // ─── Page Card ────────────────────────────────────────────────────────────────
-const PageCard = ({ page, onEdit }) => {
+const PageCard = ({ page, onEdit, onToggleStatus }) => {
   const snippet = extractContentSnippet(page.sections);
 
   return (
@@ -77,6 +80,18 @@ const PageCard = ({ page, onEdit }) => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => onToggleStatus(page.id, page.is_active)}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all text-xs font-black ${
+              page.is_active === 1
+                ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white"
+                : "bg-slate-500/10 text-slate-400 hover:bg-slate-500 hover:text-white"
+            }`}
+            title={page.is_active === 1 ? "Deactivate Page" : "Activate Page"}
+          >
+            <Power size={14} />
+            <span className="hidden sm:inline">{page.is_active === 1 ? "Active" : "Inactive"}</span>
+          </button>
           <button
             onClick={() => onEdit(page)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white transition-all text-xs font-black shadow-lg shadow-orange-500/5 group"
@@ -121,29 +136,15 @@ const EditModal = ({ page, onClose, onSaved }) => {
   const [uploadingImageIdx, setUploadingImageIdx] = useState(null);
   const [uploadLoading, setUploadLoading] = useState(false);
 
-  const handleAddSection = async () => {
+  const handleAddSection = () => {
     // Limit to 4 sections for home-hero page
     if (page.slug === "home-hero" && sections.length >= 4) {
       alert("Maximum 4 sections allowed for the home hero slider.");
       return;
     }
 
-    const newSections = [{ title: "", content: "", img: "" }, ...sections];
-    setSections(newSections);
-    
-    // Save to database immediately
-    try {
-      const sectionsJson = JSON.stringify(newSections);
-      await API.put(`/pages/${page.slug}`, {
-        title: pageTitle,
-        sections: sectionsJson,
-      });
-    } catch (error) {
-      console.error("Failed to save new section:", error);
-      // Revert the change if save failed
-      setSections(sections);
-      alert("Failed to add section. Please try again.");
-    }
+    // Add new empty box at the END (bottom) — no auto-save, user clicks "Save All Boxes"
+    setSections([...sections, { title: "", content: "", img: "" }]);
   };
 
   const handleRemoveSection = async (idx) => {
@@ -535,6 +536,17 @@ const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, s
     fetchPages();
   }, []);
 
+  const togglePageStatus = async (id, currentStatus) => {
+    try {
+      await API.patch(`/pages/status/${id}`, {
+        is_active: currentStatus === 1 ? 0 : 1,
+      });
+      fetchPages();
+    } catch (err) {
+      console.error("Status Toggle Error:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen p-2 md:p-0">
       <div className="flex justify-between items-center mb-6">
@@ -563,7 +575,14 @@ const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, s
         <div className="flex flex-col items-center justify-center py-32"><Loader2 className="animate-spin text-orange-500" size={32} /></div>
       ) : pages.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {pages.map((page) => <PageCard key={page.id} page={page} onEdit={setEditPage} />)}
+          {pages.map((page) => (
+            <PageCard
+              key={page.id}
+              page={page}
+              onEdit={setEditPage}
+              onToggleStatus={togglePageStatus}
+            />
+          ))}
         </div>
       ) : (
         <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-10 text-center text-slate-400">

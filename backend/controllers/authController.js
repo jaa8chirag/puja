@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
 import fetch from "node-fetch";
+import { sendPaymentReceipt, sendResetCodeEmail } from "../utils/mailService.js";
 
 
 // =============================
@@ -490,37 +491,36 @@ export const getReferralRewards = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch rewards" });
   }
 };
-
 // =============================
-// FORGOT PASSWORD
+// 4️⃣ FORGOT PASSWORD
 // =============================
 export const forgotPassword = async (req, res) => {
   try {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ message: "Phone number is required" });
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
 
-    const [rows] = await db.query("SELECT id FROM users WHERE phone = ? AND is_deleted = 0", [phone]);
+    const [rows] = await db.query("SELECT id FROM users WHERE email = ? AND is_deleted = 0", [email]);
     if (rows.length === 0) {
-      return res.status(404).json({ message: "No account found with this phone number" });
+      return res.status(404).json({ message: "No account found with this email address" });
     }
 
-    // Generate a 6-digit numeric reset code (instead of a complex token for easier UX)
+    // Generate a 6-digit numeric reset code
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
     await db.query(
-      "UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE phone = ?",
-      [resetCode, expiry, phone]
+      "UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE email = ?",
+      [resetCode, expiry, email]
     );
 
-    // In a real app, send this code via SMS
-    console.log(`Password reset code for ${phone}: ${resetCode}`);
+    // Send code via Email
+    const emailSent = await sendResetCodeEmail(email, resetCode);
 
     res.status(200).json({ 
       success: true, 
-      message: "Reset code sent successfully",
-      // Only for demo purposes, we'll return it so the frontend can pre-fill or user can see it
-      debug_code: resetCode 
+      message: emailSent 
+        ? "Reset code sent successfully to your email." 
+        : "Reset code generated. Please check your email or contact support.",
     });
   } catch (error) {
     res.status(500).json({ message: "Error in forgot password", error: error.message });
@@ -528,19 +528,19 @@ export const forgotPassword = async (req, res) => {
 };
 
 // =============================
-// RESET PASSWORD
+// 5️⃣ RESET PASSWORD
 // =============================
 export const resetPassword = async (req, res) => {
   try {
-    const { phone, resetCode, newPassword } = req.body;
+    const { email, resetCode, newPassword } = req.body;
 
-    if (!phone || !resetCode || !newPassword) {
+    if (!email || !resetCode || !newPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const [rows] = await db.query(
-      "SELECT * FROM users WHERE phone = ? AND reset_token = ? AND reset_token_expires > NOW() AND is_deleted = 0",
-      [phone, resetCode]
+      "SELECT * FROM users WHERE email = ? AND reset_token = ? AND reset_token_expires > NOW() AND is_deleted = 0",
+      [email, resetCode]
     );
 
     if (rows.length === 0) {
@@ -549,8 +549,8 @@ export const resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await db.query(
-      "UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE phone = ?",
-      [hashedPassword, phone]
+      "UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE email = ?",
+      [hashedPassword, email]
     );
 
     res.status(200).json({ success: true, message: "Password updated successfully" });

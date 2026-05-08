@@ -52,7 +52,7 @@ const ProfileSection = () => {
   }, [token, navigate]);
 
   const copyToClipboard = () => {
-    const codeToCopy = personalData.referral_code || "SRIVEDIC";
+    const codeToCopy = personalData.referral_code || "Generating...";
     navigator.clipboard.writeText(codeToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -136,6 +136,10 @@ const ProfileSection = () => {
   const handlePersonalSubmit = async () => {
     if (!personalData.name.trim()) {
       alert("Name is required");
+      return;
+    }
+    if (!personalData.email?.trim()) {
+      alert("Email is required for all users");
       return;
     }
     if (personalData.phone && personalData.phone.length !== 10) {
@@ -405,7 +409,7 @@ const ProfileSection = () => {
                     <span className="text-xs font-bold text-gray-600">Referral Code</span>
                     <div className="flex items-center gap-2">
                        <span className="text-sm font-black text-orange-600 tracking-wider">
-                        {personalData.referral_code || "SRIVEDIC"}
+                        {personalData.referral_code || "Generating..."}
                       </span>
                       <button 
                         type="button"
@@ -514,20 +518,23 @@ const ProfileSection = () => {
                 </div>
                 <div>
                   <label className={labelStyle}>Type</label>
-                  <select
-                    value={addressData.address_type}
-                    onChange={(e) =>
-                      setAddressData({
-                        ...addressData,
-                        address_type: e.target.value,
-                      })
-                    }
-                    className={inputStyle}
-                  >
-                    <option value="home">Home</option>
-                    <option value="work">Work</option>
-                    <option value="other">Other</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={addressData.address_type}
+                      onChange={(e) =>
+                        setAddressData({
+                          ...addressData,
+                          address_type: e.target.value,
+                        })
+                      }
+                      className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
+                    >
+                      <option value="home">Home</option>
+                      <option value="work">Work</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 

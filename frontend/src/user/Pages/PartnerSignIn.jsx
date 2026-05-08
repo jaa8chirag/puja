@@ -147,6 +147,9 @@ const PartnerSignIn = () => {
                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                  </button>
                </div>
+               <div className="flex justify-end pr-2">
+                 <Link to="/forgot-password" size={14} className="text-[11px] font-bold text-orange-600 hover:underline">Forgot Password?</Link>
+               </div>
              </div>
 
             <button

@@ -65,12 +65,22 @@ import {
   addPanditPayout,
   getAllKundliRequests,
   deleteKundliRequest,
+  updateServiceStatus,
+  updatePageStatus,
+  updateContributionStatus,
 } from "../controllers/adminController.js";
 
 import { verifyToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
+
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 router.post(
   "/replace-checklist",
@@ -79,6 +89,21 @@ router.post(
   pdfUpload.single("pdf"),
   (req, res) => {
     if (!req.file) return res.status(400).json({ error: "File nahi mili" });
+
+    // ✅ Sync to dist folder if it exists (for live server)
+    try {
+      const publicPath = req.file.path;
+      const distPath = path.join(__dirname, "../../frontend/dist/pdf/Puja_Samagri_Checklist.pdf");
+      
+      if (fs.existsSync(path.dirname(distPath))) {
+        fs.copyFileSync(publicPath, distPath);
+        console.log("✅ PDF synced to dist folder");
+      }
+    } catch (err) {
+      console.error("❌ Sync to dist failed:", err);
+      // Don't fail the request, but log the error
+    }
+
     res.json({ success: true, message: "Checklist successfully update ho gayi ✅" });
   }
 );
@@ -117,6 +142,7 @@ router.put(
   updateService,
 );
 router.delete("/services/:id", verifyToken, adminOnly, deleteService);
+router.patch("/services/status/:id", verifyToken, adminOnly, updateServiceStatus);
 
 // ── Pages Routes (About Us & Privacy Policy)
 router.get("/pages", verifyToken, adminOnly, getPages);
@@ -130,12 +156,14 @@ router.post(
   upload.single("image"),
   uploadPageImage,
 );
+router.patch("/pages/status/:id", verifyToken, adminOnly, updatePageStatus);
 
 //contributionn
 router.get("/contributions", verifyToken, adminOnly, getAllContributions);
 router.post("/createContribution", verifyToken, adminOnly, addContribution);
 router.put("/contributions/:id", verifyToken, adminOnly, updateContribution);
 router.delete("/contributions/:id", verifyToken, adminOnly, deleteUser); // Logic wise deleteContribution hoga
+router.patch("/contributions/status/:id", verifyToken, adminOnly, updateContributionStatus);
 
 // booking management routes for admin can be added here
 router.get("/bookings", verifyToken, adminOnly, getAllBookings);

@@ -9,11 +9,12 @@ import { Link, useNavigate } from 'react-router-dom';
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const INDIAN_STATES = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
-    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
-    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
-    "Uttarakhand", "West Bengal", "Delhi"
+    "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
+    "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", 
+    "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", 
+    "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", 
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", 
+    "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
 ];
 
 const StepIndicator = ({ currentStep }) => {
@@ -110,10 +111,10 @@ const PartnerSignUp = () => {
     };
 
     const handleNextToPayment = () => {
-        if (!formData.name || !formData.phone || !formData.city ||
+        if (!formData.name || !formData.email || !formData.phone || !formData.city ||
             !formData.state || !formData.address ||
             !formData.pincode || !formData.document) {
-            setError("Please fill all details and upload the document.");
+            setError("Please fill all details (including email) and upload the document.");
             return;
         }
         setError("");
@@ -283,11 +284,19 @@ const PartnerSignUp = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">Pandit Type</label>
-                                    <select name="panditType" value={formData.panditType} onChange={handleChange} className="w-full p-3 rounded-xl border border-gray-300 bg-white text-gray-700 outline-none font-bold text-[13px]">
-                                        <option value="Standard">Standard Pandit</option>
-                                        <option value="Senior">Senior Pandit</option>
-                                        <option value="Acharya">Acharya</option>
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            name="panditType"
+                                            value={formData.panditType}
+                                            onChange={handleChange}
+                                            className="w-full p-3 rounded-xl border border-gray-300 bg-[#FBF9F7] text-[#3D2B1D] outline-none font-bold text-[13px] appearance-none cursor-pointer focus:border-orange-500 transition-all pr-10"
+                                        >
+                                            <option value="Standard">Standard Pandit</option>
+                                            <option value="Senior">Senior Pandit</option>
+                                            <option value="Acharya">Acharya</option>
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
+                                    </div>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">Upload Cert/ID</label>
@@ -316,15 +325,37 @@ const PartnerSignUp = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="space-y-1 relative" ref={stateListRef}>
                                     <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">State</label>
-                                    <div onClick={() => setShowStateList(!showStateList)} className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl cursor-pointer py-3 px-3 justify-between items-center">
-                                        <span className="text-xs font-bold text-[#3D2B1D] truncate">{formData.state || 'State'}</span>
-                                        <ChevronDown size={14} className={`text-gray-300 transition-transform ${showStateList ? 'rotate-180' : ''}`} />
+                                    <div className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl focus-within:border-orange-500 transition-all overflow-hidden relative">
+                                        <input
+                                            className="w-full px-3 py-3 bg-transparent outline-none text-xs font-bold text-[#3D2B1D] pr-8"
+                                            placeholder="Search state..."
+                                            value={formData.state}
+                                            onFocus={() => setShowStateList(true)}
+                                            onChange={(e) => {
+                                                setFormData({ ...formData, state: e.target.value });
+                                                setShowStateList(true);
+                                            }}
+                                        />
+                                        <ChevronDown size={14} className={`absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none transition-transform ${showStateList ? 'rotate-180' : ''}`} />
                                     </div>
                                     {showStateList && (
                                         <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
-                                            {INDIAN_STATES.map(state => (
-                                                <div key={state} onClick={() => { setFormData({ ...formData, state }); setShowStateList(false); }} className="px-4 py-2.5 hover:bg-orange-50 cursor-pointer text-xs font-bold text-[#3D2B1D] border-b border-gray-50">{state}</div>
-                                            ))}
+                                            {INDIAN_STATES.filter(s => s.toLowerCase().includes(formData.state.toLowerCase())).length > 0 ? (
+                                                INDIAN_STATES.filter(s => s.toLowerCase().includes(formData.state.toLowerCase())).map(state => (
+                                                    <div
+                                                        key={state}
+                                                        onClick={() => {
+                                                            setFormData({ ...formData, state });
+                                                            setShowStateList(false);
+                                                        }}
+                                                        className="px-4 py-2.5 hover:bg-orange-50 cursor-pointer text-xs font-bold text-[#3D2B1D] border-b border-gray-50"
+                                                    >
+                                                        {state}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="px-4 py-3 text-xs text-gray-400 italic">No states found</div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -412,11 +443,11 @@ const PartnerSignUp = () => {
                                         <Lock className="ml-3 my-auto text-gray-300" size={16} />
                                         <input type={showPassword ? "text" : "password"} name="password" className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] pr-10" placeholder="••••••••" value={formData.password} onChange={handleChange} />
                                         <button
-                                          type="button"
-                                          onClick={() => setShowPassword(!showPassword)}
-                                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-orange-500"
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-orange-500"
                                         >
-                                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                         </button>
                                     </div>
                                 </div>
@@ -426,11 +457,11 @@ const PartnerSignUp = () => {
                                         <Lock className="ml-3 my-auto text-gray-300" size={16} />
                                         <input type={showPassword ? "text" : "password"} name="confirmPassword" className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D] pr-10" placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} />
                                         <button
-                                          type="button"
-                                          onClick={() => setShowPassword(!showPassword)}
-                                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500"
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500"
                                         >
-                                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                         </button>
                                     </div>
                                 </div>

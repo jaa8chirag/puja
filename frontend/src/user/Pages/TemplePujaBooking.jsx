@@ -240,19 +240,22 @@ const MemberSelectModal = ({
             {/* Relation */}
             <div>
               <label className={labelClass}>Relation *</label>
-              <select
-                name="relation"
-                value={form.relation}
-                onChange={handleFormChange}
-                className={inputClass}
-              >
-                <option value="">Select relation</option>
-                {RELATIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  name="relation"
+                  value={form.relation}
+                  onChange={handleFormChange}
+                  className={`${inputClass} appearance-none pr-10 cursor-pointer`}
+                >
+                  <option value="">Select relation</option>
+                  {RELATIONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none" />
+              </div>
             </div>
 
             {/* Name & Gotra */}

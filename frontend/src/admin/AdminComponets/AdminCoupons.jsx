@@ -8,6 +8,7 @@ import {
   Percent, 
   Loader2, 
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   X 
 } from "lucide-react";
@@ -354,27 +355,32 @@ const AdminCoupons = () => {
         </div>
       )}
 
-      {/* DELETE CONFIRM MODAL */}
+      {/* Delete Confirmation Modal (Service Style) */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
-          <div className="w-full max-w-sm bg-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-6 text-center">
-            <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
-              <Trash2 size={32} className="text-rose-400" />
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[110] p-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-[#131e32] border border-slate-700/50 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-500 ring-1 ring-rose-500/20">
+                <AlertTriangle size={40} />
+              </div>
+              <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+                Purge Coupon?
+              </h3>
+              <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
+                Are you sure you want to permanently delete <span className="text-orange-400 font-bold">"{deleteTarget.code}"</span>? 
+                This action will invalidate the code for all future transactions.
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Delete Coupon?</h3>
-            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-              Are you sure you want to permanently delete <span className="text-rose-400 font-black">"{deleteTarget.code}"</span>? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
+            <div className="flex gap-px bg-slate-800">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+                className="flex-1 px-4 py-5 bg-[#131e32] text-slate-400 hover:text-white transition-colors text-[11px] font-black uppercase tracking-widest"
               >
-                Cancel
+                Discard
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-500 transition shadow-lg shadow-rose-900/20 flex items-center justify-center"
+                className="flex-1 px-4 py-5 bg-[#131e32] text-rose-500 hover:bg-rose-500/5 transition-all text-[11px] font-black uppercase tracking-widest"
               >
                 Delete Now
               </button>

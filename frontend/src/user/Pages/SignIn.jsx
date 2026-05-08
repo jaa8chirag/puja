@@ -246,22 +246,13 @@ const SignIn = () => {
           </div>
 
           {/* Social Auth Buttons */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4">
             <button 
               onClick={() => handleSocialAuth('Google')}
-              className="flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+              className="flex items-center justify-center gap-3 py-4 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95 w-full"
             >
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              <span className="text-sm font-bold text-gray-700">Google</span>
-            </button>
-            <button 
-              onClick={() => handleSocialAuth('Apple')}
-              className="flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 384 512" fill="currentColor">
-                <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-31.4-57.3-114.3-1.7-142zM262.1 69c4.2-30 33-51.5 61.1-53 4.2 30-33 51.5-61.1 53z" />
-              </svg>
-              <span className="text-sm font-bold text-gray-700">Apple</span>
+              <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Continue with Google</span>
             </button>
           </div>
 

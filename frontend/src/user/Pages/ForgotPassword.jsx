@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { ArrowLeft, Loader2, Phone, Key, Lock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, Mail, Key, Lock, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
-  const [step, setStep] = useState(1); // 1: Phone, 2: Reset Code & New Password
-  const [phone, setPhone] = useState("");
+  const [step, setStep] = useState(1); // 1: Email, 2: Reset Code & New Password
+  const [email, setEmail] = useState("");
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -17,8 +17,8 @@ const ForgotPassword = () => {
 
   const handleSendCode = async (e) => {
     e.preventDefault();
-    if (phone.length !== 10) {
-      setError("Please enter a valid 10-digit phone number");
+    if (!email.includes("@")) {
+      setError("Please enter a valid email address");
       return;
     }
 
@@ -28,13 +28,11 @@ const ForgotPassword = () => {
       const response = await fetch(`${API_BASE_URL}/user/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ email }),
       });
       const data = await response.json();
       if (response.ok) {
         setStep(2);
-        // For demo purposes, we alert the code
-        alert(`Your reset code is: ${data.debug_code}`);
       } else {
         setError(data.message || "Failed to send reset code.");
       }
@@ -66,7 +64,7 @@ const ForgotPassword = () => {
       const response = await fetch(`${API_BASE_URL}/user/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, resetCode, newPassword }),
+        body: JSON.stringify({ email, resetCode, newPassword }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -121,7 +119,7 @@ const ForgotPassword = () => {
             </h2>
             <p className="text-gray-500 text-sm">
               {step === 1 
-                ? "Enter your registered mobile number to receive a reset code." 
+                ? "Enter your registered email address to receive a reset code." 
                 : "Enter the code we sent and set your new password."}
             </p>
           </div>
@@ -136,23 +134,22 @@ const ForgotPassword = () => {
             <form onSubmit={handleSendCode} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                  <Phone size={14} className="text-orange-500" /> Mobile Number
+                  <Mail size={14} className="text-orange-500" /> Email Address
                 </label>
                 <div className="flex border border-gray-300 rounded-2xl overflow-hidden bg-white shadow-sm focus-within:border-orange-500 transition-all">
-                  <span className="bg-gray-50 px-4 py-4 text-gray-500 border-r border-gray-100 font-bold">+91</span>
                   <input
-                    type="tel"
+                    type="email"
                     className="w-full px-4 py-4 outline-none text-gray-700 font-bold"
-                    placeholder="9876543210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="yourname@gmail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                disabled={phone.length < 10 || isLoading}
+                disabled={!email.includes("@") || isLoading}
                 className="w-full py-4 bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50 h-14 uppercase tracking-widest text-xs"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : "Send Reset Code"}
@@ -208,7 +205,7 @@ const ForgotPassword = () => {
                 {isLoading ? <Loader2 className="animate-spin" /> : "Update Password"}
               </button>
               
-              <button onClick={() => setStep(1)} className="w-full text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-orange-500 transition-colors">Change Phone Number</button>
+              <button onClick={() => setStep(1)} className="w-full text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-orange-500 transition-colors">Change Email Address</button>
             </form>
           )}
         </div>
