@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import Razorpay from "razorpay";
 import { sendPaymentReceipt } from "../utils/mailService.js";
 
+//PUJATEST6859
 
 
 dotenv.config();
@@ -14,36 +15,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Helper to grant referral reward to the referrer upon friend's first booking
-const processReferrerReward = async (userId, connection) => {
-  try {
-    // 1. Check if user was referred by someone
-    const [userRows] = await connection.query("SELECT referred_by FROM users WHERE id = ?", [userId]);
-    if (userRows.length === 0 || !userRows[0].referred_by) {
-      return; // Not referred by anyone
-    }
-    const referrerId = userRows[0].referred_by;
 
-    // 2. Check if this is their first booking
-    const [bookingRows] = await connection.query("SELECT COUNT(*) as bookingCount FROM puja_requests WHERE user_id = ?", [userId]);
-    if (bookingRows[0].bookingCount === 1) { // Current booking is their 1st
-      // 3. Get reward percentage from settings
-      const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'referral_reward_referrer'");
-      const rewardPercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 10;
-      
-      if (rewardPercentage > 0) {
-        // 4. Grant reward to the referrer
-        await connection.query(
-          "INSERT INTO user_referral_rewards (user_id, discount_percentage) VALUES (?, ?)",
-          [referrerId, rewardPercentage]
-        );
-        console.log(`[Referral Reward] Granted ${rewardPercentage}% reward to referrer ${referrerId} for user ${userId}'s first booking.`);
-      }
-    }
-  } catch (err) {
-    console.error("[Referral Reward Error] Failed to process reward:", err);
-  }
-};
 
 export const getServicesByType = async (req, res) => {
   try {
@@ -225,15 +197,15 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       const absoluteMinimumPrice = basePrice * 0.70; // Assumes max 30% discount
 
       if (Number(total_price) < absoluteMinimumPrice) {
-         return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
+        return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
       }
 
       // 3. Enforce Dynamic Minimum Advance
       const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'advance_payment_percentage'");
       const advancePercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 25;
-      
+
       if (actualPaidAmount < (Number(total_price) * (advancePercentage / 100)) - 2) {
-         return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
+        return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
       }
     } catch (rzpErr) {
       console.error("Razorpay/Security Validation Error:", rzpErr);
@@ -243,13 +215,13 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
 
     const userId = req.user.id;
     const { referralRewardId } = req.body;
-    
+
     if (referralRewardId) {
       const [rewardRows] = await connection.query(
         "SELECT id, discount_percentage FROM user_referral_rewards WHERE id = ? AND user_id = ? AND status = 'pending'",
         [referralRewardId, userId]
       );
-      
+
       if (rewardRows.length === 0) {
         return res.status(400).json({ success: false, message: "Invalid or already used referral reward" });
       }
@@ -259,7 +231,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
         "UPDATE user_referral_rewards SET status = 'used', used_at = CURRENT_TIMESTAMP WHERE id = ?",
         [referralRewardId]
       );
-      
+
       console.log(`[Referral Reward] Applied reward ID ${referralRewardId} with ${rewardRows[0].discount_percentage}% discount`);
     }
 
@@ -369,7 +341,7 @@ export const homeORKathaPujaBookingDetails = async (req, res) => {
       [totalDonationAmount, pujaRequestId],
     );
 
-    await processReferrerReward(userId, connection);
+
     await connection.commit();
     console.log(`✅ [Booking Success] Home/Katha Puja stored. ID: ${pujaRequestId}`);
 
@@ -566,15 +538,15 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       const absoluteMinimumPrice = basePrice * 0.70; // Assumes max 30% discount
 
       if (Number(total_price) < absoluteMinimumPrice) {
-         return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
+        return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
       }
 
       // 3. Enforce Dynamic Minimum Advance
       const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'advance_payment_percentage'");
       const advancePercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 25;
-      
+
       if (actualPaidAmount < (Number(total_price) * (advancePercentage / 100)) - 2) {
-         return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
+        return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
       }
     } catch (rzpErr) {
       console.error("Razorpay/Security Validation Error:", rzpErr);
@@ -584,13 +556,13 @@ export const onlinePinddanBookingDetails = async (req, res) => {
 
     const userId = req.user.id;
     const { referralRewardId } = req.body;
-    
+
     if (referralRewardId) {
       const [rewardRows] = await connection.query(
         "SELECT id, discount_percentage FROM user_referral_rewards WHERE id = ? AND user_id = ? AND status = 'pending'",
         [referralRewardId, userId]
       );
-      
+
       if (rewardRows.length === 0) {
         return res.status(400).json({ success: false, message: "Invalid or already used referral reward" });
       }
@@ -600,7 +572,7 @@ export const onlinePinddanBookingDetails = async (req, res) => {
         "UPDATE user_referral_rewards SET status = 'used', used_at = CURRENT_TIMESTAMP WHERE id = ?",
         [referralRewardId]
       );
-      
+
       console.log(`[Referral Reward] Applied reward ID ${referralRewardId} with ${rewardRows[0].discount_percentage}% discount`);
     }
 
@@ -710,7 +682,7 @@ export const onlinePinddanBookingDetails = async (req, res) => {
       }
     }
 
-    await processReferrerReward(userId, connection);
+
     await connection.commit();
     console.log(`✅ [Booking Success] Online Pind Dan stored. ID: ${pujaRequestId}`);
 
@@ -809,15 +781,15 @@ export const bookingDetails = async (req, res) => {
       const absoluteMinimumPrice = basePrice * 0.70; // Assumes max 30% discount
 
       if (Number(total_price) < absoluteMinimumPrice) {
-         return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
+        return res.status(400).json({ success: false, message: "Security Error: Total price manipulation detected." });
       }
 
       // 3. Enforce Dynamic Minimum Advance
       const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'advance_payment_percentage'");
       const advancePercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 25;
-      
+
       if (actualPaidAmount < (Number(total_price) * (advancePercentage / 100)) - 2) {
-         return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
+        return res.status(400).json({ success: false, message: `Minimum ${advancePercentage}% advance required.` });
       }
     } catch (rzpErr) {
       console.error("Razorpay/Security Validation Error:", rzpErr);
@@ -827,13 +799,13 @@ export const bookingDetails = async (req, res) => {
 
     const userId = req.user.id;
     const { referralRewardId } = req.body;
-    
+
     if (referralRewardId) {
       const [rewardRows] = await connection.query(
         "SELECT id, discount_percentage FROM user_referral_rewards WHERE id = ? AND user_id = ? AND status = 'pending'",
         [referralRewardId, userId]
       );
-      
+
       if (rewardRows.length === 0) {
         return res.status(400).json({ success: false, message: "Invalid or already used referral reward" });
       }
@@ -843,7 +815,7 @@ export const bookingDetails = async (req, res) => {
         "UPDATE user_referral_rewards SET status = 'used', used_at = CURRENT_TIMESTAMP WHERE id = ?",
         [referralRewardId]
       );
-      
+
       console.log(`[Referral Reward] Applied reward ID ${referralRewardId} with ${rewardRows[0].discount_percentage}% discount`);
     }
 
@@ -1060,7 +1032,7 @@ export const payRemainingAmount = async (req, res) => {
     const currentPaid = Number(bookingRows[0].paid_amount);
     const totalAmount = Number(bookingRows[0].total_price);
     const newPaidAmount = currentPaid + Number(amount);
-    
+
     // Determine new status (with small buffer for floating point)
     const newStatus = (newPaidAmount >= totalAmount - 0.01) ? 'fully_paid' : 'partially_paid';
 

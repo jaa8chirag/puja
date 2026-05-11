@@ -15,25 +15,29 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ storage });
-
-// ✅ Naya — PDF replace ke liye alag storage
-const pdfStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Frontend public/pdf folder ka path
-    const pdfPath = path.join(__dirname, "../../frontend/public/pdf");
-    cb(null, pdfPath);
-  },
-  filename: function (req, file, cb) {
-    // Hamesha same naam — purani file replace ho jayegi
-    cb(null, "Puja_Samagri_Checklist.pdf");
-  },
+// ✅ General Upload (Images etc) - 10MB Limit
+export const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only Images (JPG, PNG, WEBP) are allowed!"), false);
+    }
+  }
 });
 
+// ✅ PDF Checklist Upload - 10MB Limit & PDF Only
 export const pdfUpload = multer({
-  storage: pdfStorage,
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") cb(null, true);
-    else cb(new Error("Sirf PDF file allowed hai"));
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed!"), false);
+    }
   },
 });

@@ -88,25 +88,53 @@ router.post(
   adminOnly,
   pdfUpload.single("pdf"),
   (req, res) => {
-    if (!req.file) return res.status(400).json({ error: "File nahi mili" });
+    if (!req.file) return res.status(400).json({ error: "File not found" });
 
-    // ✅ Sync to dist folder if it exists (for live server)
+    // ✅ Sync to a fixed location in uploads for backend serving
     try {
-      const publicPath = req.file.path;
+      const uploadedPath = req.file.path;
+      const uploadsPdfPath = path.join(__dirname, "../uploads/Puja_Samagri_Checklist.pdf");
+      const publicPath = path.join(__dirname, "../../frontend/public/pdf/Puja_Samagri_Checklist.pdf");
       const distPath = path.join(__dirname, "../../frontend/dist/pdf/Puja_Samagri_Checklist.pdf");
       
+      console.log(`[PDF Update] Uploaded to: ${uploadedPath}`);
+
+      // 1. Copy to uploads/Puja_Samagri_Checklist.pdf (Backend Source of Truth)
+      fs.copyFileSync(uploadedPath, uploadsPdfPath);
+      console.log("✅ PDF saved to backend uploads source");
+
+      // 2. Try to sync to public (for dev)
+      if (fs.existsSync(path.dirname(publicPath))) {
+        fs.copyFileSync(uploadedPath, publicPath);
+        console.log("✅ PDF synced to public folder");
+      }
+
+      // 3. Try to sync to dist (for live server if writable)
       if (fs.existsSync(path.dirname(distPath))) {
-        fs.copyFileSync(publicPath, distPath);
+        fs.copyFileSync(uploadedPath, distPath);
         console.log("✅ PDF synced to dist folder");
       }
+
     } catch (err) {
-      console.error("❌ Sync to dist failed:", err);
-      // Don't fail the request, but log the error
+      console.error("❌ PDF Sync failed:", err);
     }
 
-    res.json({ success: true, message: "Checklist successfully update ho gayi ✅" });
+    res.json({ success: true, message: "PDF updated successfully!" });
   }
 );
+
+// ✅ New Route: Download latest Samagri Checklist
+router.get("/download-checklist", (req, res) => {
+  const filePath = path.join(__dirname, "../uploads/Puja_Samagri_Checklist.pdf");
+  if (fs.existsSync(filePath)) {
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'attachment; filename="Puja_Samagri_Checklist.pdf"');
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ message: "Checklist not found" });
+  }
+});
+
 // Admin Authentication Routes
 router.post("/login", AdminLogin);
 

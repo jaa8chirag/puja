@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { ShieldCheck, Lock, Loader2, Phone, Eye, EyeOff, Mail } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { COUNTRY_CODES } from "../../utils/countryCodes";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const AdminLogin = () => {
   const [mobileNumber, setMobileNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,8 +19,8 @@ const AdminLogin = () => {
     e.preventDefault();
     
     const isEmail = mobileNumber.includes("@");
-    if (!isEmail && mobileNumber.replace(/\D/g, "").length !== 10) {
-      setError("Please enter a valid 10-digit mobile number or email.");
+    if (!isEmail && mobileNumber.replace(/\D/g, "").length < 7) {
+      setError("Please enter a valid mobile number or email.");
       return;
     }
     
@@ -31,7 +33,8 @@ const AdminLogin = () => {
     setError("");
     try {
       const response = await axios.post(`${API_BASE_URL}/admin/login`, {
-        phone: mobileNumber,
+        phone: isEmail ? mobileNumber : mobileNumber.replace(/\D/g, ""),
+        country_code: isEmail ? null : countryCode,
         password: password,
       });
 
@@ -86,26 +89,25 @@ const AdminLogin = () => {
               <label className="text-slate-300 text-xs font-bold uppercase ml-1 tracking-widest">
                 Admin {mobileNumber.includes("@") ? "Email" : "Mobile"}
               </label>
-              <div className="relative group">
+              <div className="flex bg-[#0f172a]/50 border border-slate-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-orange-500/40 focus-within:border-orange-500 transition-all">
                 {!mobileNumber.includes("@") && mobileNumber.length > 0 && /^\d+$/.test(mobileNumber) && (
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold border-r border-slate-700 pr-3">
-                    +91
-                  </span>
+                  <select
+                    className="bg-transparent text-slate-400 font-bold border-r border-slate-700 px-3 outline-none cursor-pointer text-sm w-[100px]"
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.isoCode} value={c.code} className="bg-[#1e293b]">{c.isoCode} ({c.code})</option>
+                    ))}
+                  </select>
                 )}
                 <input
                   type="text"
                   disabled={loading}
                   value={mobileNumber}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^\d+$/.test(val)) {
-                      setMobileNumber(val.slice(0, 10));
-                    } else {
-                      setMobileNumber(val);
-                    }
-                  }}
-                  placeholder="Email or 10-digit number"
-                  className={`w-full bg-[#0f172a]/50 border border-slate-700 text-white rounded-xl ${!mobileNumber.includes("@") && mobileNumber.length > 0 && /^\d+$/.test(mobileNumber) ? 'pl-16' : 'pl-4'} pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all text-lg tracking-wider disabled:opacity-50`}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  placeholder="Email or Phone"
+                  className="w-full bg-transparent text-white px-4 py-4 focus:outline-none text-lg tracking-wider disabled:opacity-50"
                 />
               </div>
             </div>
@@ -138,7 +140,7 @@ const AdminLogin = () => {
 
             <button
               type="submit"
-              disabled={mobileNumber.length < 10 || password.length < 6 || loading}
+              disabled={mobileNumber.length < 3 || password.length < 6 || loading}
               className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300
                 ${
                   !loading

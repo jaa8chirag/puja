@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { API } from "../../services/adminApi";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 import {
   Search,
   Plus,
@@ -569,7 +570,7 @@ const PersonalInfo = () => {
               <p className="text-slate-500 text-xs">Current file</p>
             </div>
             <a
-              href="/pdf/Puja_Samagri_Checklist.pdf"
+              href={`${API_BASE_URL}/admin/download-checklist?t=${Date.now()}`}
               target="_blank"
               className="text-orange-400 text-xs hover:underline"
             >
@@ -615,7 +616,7 @@ const PersonalInfo = () => {
             ) : (
               <FileUp size={14} />
             )}
-            {pdfLoading ? "Uploading..." : "Replace Karo"}
+            {pdfLoading ? "Uploading..." : "Replace PDF"}
           </button>
 
           {/* Messages */}

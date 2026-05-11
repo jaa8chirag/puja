@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import Pagination from "../../Components/Pagination";
+import { COUNTRY_CODES } from "../../utils/countryCodes";
 
 // ✅ Component ke BAHAR — re-render fix
 const ModalWrapper = ({ children, onClose }) => (
@@ -116,6 +117,7 @@ const Users = () => {
     name: "",
     email: "",
     phone: "",
+    country_code: "+91",
     password: "",
     role: "user",
   });
@@ -214,7 +216,7 @@ const Users = () => {
       await API.post(`/createUser`, newUser);
       showToast("User created");
       setShowAddModal(false);
-      setNewUser({ name: "", email: "", phone: "", password: "", role: "user" });
+      setNewUser({ name: "", email: "", phone: "", country_code: "+91", password: "", role: "user" });
       await fetchUsers();
     } catch {
       showToast("Failed to create user", "error");
@@ -240,11 +242,10 @@ const Users = () => {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-[60] px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 border animate-in slide-in-from-right-5 ${
-            toast.type === "error"
+          className={`fixed bottom-6 right-6 z-[60] px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-3 border animate-in slide-in-from-right-5 ${toast.type === "error"
               ? "bg-rose-950/40 text-rose-400 border-rose-800/50 backdrop-blur-md"
               : "bg-emerald-950/40 text-emerald-400 border-emerald-800/50 backdrop-blur-md"
-          }`}
+            }`}
         >
           {toast.type === "error" ? (
             <XCircle size={16} />
@@ -370,11 +371,10 @@ const Users = () => {
                 {users.map((u, i) => (
                   <tr
                     key={u.id}
-                    className={`transition-colors ${
-                      actionLoading === u.id
+                    className={`transition-colors ${actionLoading === u.id
                         ? "opacity-30 pointer-events-none"
                         : "hover:bg-[#1a2744]"
-                    } ${i % 2 !== 0 ? "bg-[#0f172a]/30" : ""}`}
+                      } ${i % 2 !== 0 ? "bg-[#0f172a]/30" : ""}`}
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -394,21 +394,20 @@ const Users = () => {
                           {u.email || "No Email"}
                         </p>
                         <p className="text-orange-500/80 font-mono text-[10px]">
-                          {u.phone}
+                          {u.country_code || "+91"} {u.phone}
                         </p>
                       </div>
                     </td>
                     <td className="px-5 py-4 text-center">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${
-                          u.role === "admin"
+                        className={`inline-block px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${u.role === "admin"
                             ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
                             : u.role === "superAdmin"
                               ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
                               : u.role === "customerCare"
                                 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                                 : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                        } shadow-sm shadow-black/50`}
+                          } shadow-sm shadow-black/50`}
                       >
                         {u.role}
                       </span>
@@ -519,33 +518,52 @@ const Users = () => {
                   : setEditingUser({ ...editingUser, email: e.target.value })
               }
             />
-              <ModalField
-                icon={Phone}
-                placeholder="Phone Number *"
-                type="tel"
-                maxLength={10}
-                value={showAddModal ? newUser.phone : editingUser?.phone}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+            <div className="flex gap-2">
+              <select
+                className="w-[100px] px-2 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all cursor-pointer"
+                value={showAddModal ? newUser.country_code : editingUser?.country_code}
+                onChange={(e) =>
                   showAddModal
-                    ? setNewUser({ ...newUser, phone: val })
-                    : setEditingUser({ ...editingUser, phone: val });
-                }}
-              />
+                    ? setNewUser({ ...newUser, country_code: e.target.value })
+                    : setEditingUser({ ...editingUser, country_code: e.target.value })
+                }
+              >
+                {COUNTRY_CODES.map(c => (
+                  <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
+                ))}
+              </select>
+              <div className="flex-1">
+                <ModalField
+                  icon={Phone}
+                  placeholder="Phone Number *"
+                  type="tel"
+                  value={showAddModal ? newUser.phone : editingUser?.phone}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    showAddModal
+                      ? setNewUser({ ...newUser, phone: val })
+                      : setEditingUser({ ...editingUser, phone: val });
+                  }}
+                />
+              </div>
+            </div>
 
-             {(showAddModal || editingUser) && (
-               <ModalField
-                 icon={Lock}
-                 placeholder={showAddModal ? "Set Password *" : "Set New Password (optional)"}
-                 type="password"
-                 value={showAddModal ? newUser.password : editingUser?.password || ""}
-                 onChange={(e) =>
-                   showAddModal
-                     ? setNewUser({ ...newUser, password: e.target.value })
-                     : setEditingUser({ ...editingUser, password: e.target.value })
-                 }
-               />
-             )}
+            {(showAddModal || editingUser) && (
+              <div className="space-y-1">
+                <ModalField
+                  icon={Lock}
+                  placeholder={showAddModal ? "Set Password *" : "Set New Password (optional)"}
+                  type="password"
+                  value={showAddModal ? newUser.password : editingUser?.password || ""}
+                  onChange={(e) =>
+                    showAddModal
+                      ? setNewUser({ ...newUser, password: e.target.value })
+                      : setEditingUser({ ...editingUser, password: e.target.value })
+                  }
+                />
+                <p className="text-[10px] text-slate-500 ml-1">Minimum 6 characters required</p>
+              </div>
+            )}
 
             {/* ✅ Role Dropdown */}
             <ModalSelect
@@ -589,7 +607,7 @@ const Users = () => {
           </div>
         </ModalWrapper>
       )}
-      
+
       {/* DELETE CONFIRM MODAL */}
       {deleteTarget && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">

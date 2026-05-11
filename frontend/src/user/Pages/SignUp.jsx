@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, User, Mail, Loader2, Lock, Smartphone, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { COUNTRY_CODES } from '../../utils/countryCodes';
 
 const SignUp = () => {
     const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -14,6 +15,7 @@ const SignUp = () => {
         gotra: '',
         email: '',
         phone: '',
+        country_code: '+91',
         password: '',
         confirmPassword: '',
         role: 'user',
@@ -23,14 +25,20 @@ const SignUp = () => {
     const navigate = useNavigate();
 
     const isStep1Valid = formData.name.trim().length >= 3;
-    const isStep2Valid = formData.phone.length === 10 && formData.email.trim() !== '' && formData.password.length >= 6 && formData.password === formData.confirmPassword;
+
+    // Password requirement checks
+    const pwChecks = {
+      length: formData.password.length >= 6,
+      match: formData.password === formData.confirmPassword && formData.confirmPassword.length > 0,
+    };
+    const isStep2Valid = formData.phone.length >= 7 && formData.email.trim() !== '' && pwChecks.length && pwChecks.match;
 
     const handleRegister = async () => {
         if (!isStep2Valid) {
-            if (formData.phone.length !== 10) setError("Please enter a valid 10-digit phone number.");
+            if (formData.phone.length < 7) setError("Please enter a valid phone number.");
             else if (formData.email.trim() === '') setError("Email is required for all users.");
-            else if (formData.password.length < 6) setError("Password must be at least 6 characters.");
-            else if (formData.password !== formData.confirmPassword) setError("Passwords do not match.");
+            else if (!pwChecks.length) setError("Password must be at least 6 characters.");
+            else if (!pwChecks.match) setError("Passwords do not match.");
             return;
         }
         setIsLoading(true);
@@ -175,14 +183,21 @@ const SignUp = () => {
                                         <Smartphone size={12} className="text-[#E79A37]" /> Mobile Number
                                     </label>
                                     <div className="flex border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#FFB347] transition-all">
-                                        <span className="bg-gray-50 px-3 py-4 text-gray-500 border-r border-gray-200 font-bold text-sm">+91</span>
+                                        <select
+                                            className="bg-gray-50 px-2 py-4 text-gray-700 border-r border-gray-200 font-bold text-sm outline-none cursor-pointer w-[100px]"
+                                            value={formData.country_code}
+                                            onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
+                                        >
+                                            {COUNTRY_CODES.map(c => (
+                                                <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
+                                            ))}
+                                        </select>
                                         <input
                                             type="tel"
-                                            maxLength={10}
                                             className="w-full px-4 py-4 outline-none text-sm text-gray-700 bg-[#FFFCF5]/50 font-medium"
-                                            placeholder="9876543210"
+                                            placeholder="Phone Number"
                                             value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
                                         />
                                     </div>
                                 </div>
@@ -244,6 +259,24 @@ const SignUp = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Password Requirements - Real-time Checklist */}
+                                {formData.password.length > 0 && (
+                                    <div className="bg-[#FFFCF5] border border-orange-100 rounded-xl p-3 space-y-1.5">
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Password Requirements</p>
+                                        {[
+                                            { ok: pwChecks.length, label: "At least 6 characters" },
+                                            { ok: pwChecks.match, label: "Passwords match" },
+                                        ].map((rule, i) => (
+                                            <div key={i} className="flex items-center gap-2">
+                                                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${rule.ok ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400"}`}>
+                                                    {rule.ok ? "✓" : ""}
+                                                </div>
+                                                <span className={`text-[11px] font-medium ${rule.ok ? "text-green-700" : "text-gray-400"}`}>{rule.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
 
                                 <button
                                     onClick={handleRegister}

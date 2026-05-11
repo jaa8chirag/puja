@@ -100,8 +100,8 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-5 py-6 md:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-8">
           {/* 1. BRAND & SOCIALS */}
-          <div className="lg:col-span-3 flex flex-row lg:flex-col justify-between items-center lg:items-start border-b border-orange-300/30 pb-4 lg:border-0 lg:pb-0">
-            <div className="flex items-center gap-2">
+          <div className="lg:col-span-3 flex flex-col justify-between items-center lg:items-start border-b border-orange-300/30 pb-6 lg:border-0 lg:pb-0">
+            <div className="flex items-center gap-2 mb-3 lg:mb-2">
               <img
                 src="/img/download.jpg"
                 alt="Logo"
@@ -113,11 +113,13 @@ const Footer = () => {
               </span>
             </div>
 
-            <p className="hidden lg:block text-[12px] text-gray-600 mt-1 leading-relaxed max-w-[240px]">
-              Sri Vedic Puja Authentic rituals, simplified. We connect you with 100% verified Pandits for offline (across Delhi NCR) and online pujas. Your devotion, our dedication.
+            <p className="text-[12px] text-gray-600 mt-2 leading-relaxed max-w-[320px] text-center lg:text-left">
+              <span className="font-bold text-gray-800 block mb-1">Sacred Traditions, Seamlessly Delivered.</span>
+              Experience authentic rituals led by 100% verified Pandits. From traditional <span className="font-semibold text-gray-700">Offline Pujas across Delhi NCR to Online Pujas reaching devotees worldwide</span>, we bridge the gap between ancient tradition and modern convenience.
+              <span className="font-bold text-orange-600 block mt-2 italic">Your devotion, our dedication.</span>
             </p>
 
-            <div className="flex gap-2 lg:mt-4">
+            <div className="flex gap-4 mt-4">
               <a
                 href="https://www.facebook.com/people/Sri-Vedic-Puja/61586142146173/?mibextid=wwXIfr&rdid=6Kgef2miIOxPDI49&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1CToPuZ42o%2F%3Fmibextid%3DwwXIfr%26ref%3D1"
                 target="_blank"

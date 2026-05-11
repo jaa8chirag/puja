@@ -531,17 +531,6 @@ const AdminDashboard = () => {
                     label="Dispatch Pending"
                   />
                 </div>
-                <div className="bg-green-500/[0.06] border border-green-500/20 rounded-xl p-4 md:p-5 mb-5 flex items-start gap-2.5">
-                  <span className="text-green-400 text-lg mt-0.5">⚠</span>
-                  <div>
-                    <div className="text-green-400 font-semibold text-sm">
-                      All Clear – No At-Risk Bookings
-                    </div>
-                    <div className="text-gray-500 text-[13px] mt-0.5">
-                      All upcoming bookings have pandits assigned. Great job!
-                    </div>
-                  </div>
-                </div>
                 <RecentBookings bookings={stats.recentBookings || []} />
               </>
             )}

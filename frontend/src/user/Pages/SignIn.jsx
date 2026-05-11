@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { ArrowLeft, Loader2, Lock, Phone, Eye, EyeOff, Mail, X, Smartphone } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
+import { COUNTRY_CODES } from "../../utils/countryCodes";
 
 const SignIn = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +15,7 @@ const SignIn = () => {
   // Google Phone Modal States
   const [showGooglePhoneModal, setShowGooglePhoneModal] = useState(false);
   const [googlePhone, setGooglePhone] = useState("");
+  const [googleCountryCode, setGoogleCountryCode] = useState("+91");
   const [googlePhoneError, setGooglePhoneError] = useState("");
   const [pendingGoogleToken, setPendingGoogleToken] = useState(null);
 
@@ -25,8 +28,8 @@ const SignIn = () => {
     if (e) e.preventDefault();
     
     const isEmail = phoneNumber.includes("@");
-    if (!isEmail && phoneNumber.replace(/\D/g, "").length !== 10) {
-      setError("Please enter a valid 10-digit mobile number or email.");
+    if (!isEmail && phoneNumber.replace(/\D/g, "").length < 7) {
+      setError("Please enter a valid mobile number or email.");
       return;
     }
     
@@ -41,7 +44,11 @@ const SignIn = () => {
       const response = await fetch(`${API_BASE_URL}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneNumber, password: password }),
+        body: JSON.stringify({ 
+          phone: isEmail ? phoneNumber : phoneNumber.replace(/\D/g, ""), 
+          country_code: isEmail ? null : countryCode,
+          password: password 
+        }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -66,7 +73,11 @@ const SignIn = () => {
       const response = await fetch(`${API_BASE_URL}/user/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: accessToken, phone }),
+        body: JSON.stringify({ 
+          idToken: accessToken, 
+          phone: phone,
+          country_code: phone ? googleCountryCode : null
+        }),
       });
       const data = await response.json();
 
@@ -86,7 +97,9 @@ const SignIn = () => {
         setPendingGoogleToken(null);
         navigate(from, { replace: true });
       } else {
-        setError(data.message || "Google authentication failed.");
+        const errorMsg = data.message || (response.status === 503 ? "Server is currently unavailable (503). Please check if backend is running." : "Google authentication failed.");
+        setError(errorMsg);
+        console.error("Google Login Error Details:", data);
       }
     } catch (err) {
       setError("Network error during Google login.");
@@ -116,8 +129,8 @@ const SignIn = () => {
 
   // User submitted phone from modal — retry with phone
   const handleGooglePhoneContinue = async () => {
-    if (googlePhone.replace(/\D/g, "").length !== 10) {
-      setGooglePhoneError("Please enter a valid 10-digit mobile number.");
+    if (googlePhone.replace(/\D/g, "").length < 7) {
+      setGooglePhoneError("Please enter a valid mobile number.");
       return;
     }
     setGooglePhoneError("");
@@ -175,24 +188,23 @@ const SignIn = () => {
                 {phoneNumber.includes("@") ? <Mail size={14} className="text-orange-500" /> : <Phone size={14} className="text-orange-500" />} Email or Mobile Number
               </label>
               <div className="flex border border-gray-300 rounded-xl overflow-hidden bg-white shadow-sm focus-within:border-orange-500 transition-all">
-                {!phoneNumber.includes("@") && phoneNumber.length > 0 && /^\d+$/.test(phoneNumber) && (
-                  <span className="bg-gray-50 px-4 py-3 text-gray-500 border-r border-gray-100 font-bold">
-                    +91
-                  </span>
+                {(!phoneNumber.includes("@") && phoneNumber.length > 0 && /^\+?\d+$/.test(phoneNumber.replace(/\s/g, ""))) && (
+                  <select
+                    className="bg-gray-50 px-2 py-3 text-gray-700 border-r border-gray-100 font-bold text-sm outline-none cursor-pointer w-[100px]"
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
+                    ))}
+                  </select>
                 )}
                 <input
                   type="text"
                   className="w-full px-4 py-3 outline-none text-gray-700 font-medium"
-                  placeholder="Email or 10-digit number"
+                  placeholder="Email or Mobile Number"
                   value={phoneNumber}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^\d+$/.test(val)) {
-                      setPhoneNumber(val.slice(0, 10));
-                    } else {
-                      setPhoneNumber(val);
-                    }
-                  }}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                 />
               </div>
             </div>
@@ -224,7 +236,7 @@ const SignIn = () => {
 
             <button
               type="submit"
-              disabled={phoneNumber.length < 10 || password.length < 6 || isLoading}
+              disabled={phoneNumber.length < 3 || password.length < 6 || isLoading}
               className="w-full py-4 bg-gradient-to-l from-[#f7c06f] to-[#e79a37] text-white font-bold rounded-xl shadow-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center disabled:grayscale disabled:opacity-50"
             >
               {isLoading ? (
@@ -322,21 +334,28 @@ const SignIn = () => {
               )}
 
               <div className="flex border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-orange-500 transition-all">
-                <span className="bg-gray-50 px-4 py-3.5 text-gray-500 border-r border-gray-200 font-bold text-sm">+91</span>
+                <select
+                  className="bg-gray-50 px-2 py-3.5 text-gray-700 border-r border-gray-200 font-bold text-sm outline-none cursor-pointer w-[100px]"
+                  value={googleCountryCode}
+                  onChange={(e) => setGoogleCountryCode(e.target.value)}
+                >
+                  {COUNTRY_CODES.map(c => (
+                    <option key={c.isoCode} value={c.code} className="bg-[#1e293b]">{c.isoCode} ({c.code})</option>
+                  ))}
+                </select>
                 <input
                   type="tel"
-                  maxLength={10}
-                  className="w-full px-4 py-3.5 outline-none text-gray-700 font-bold text-lg tracking-wider"
-                  placeholder="9876543210"
+                  className="w-full px-4 py-3 outline-none text-gray-700 font-medium"
+                  placeholder="Phone Number"
                   value={googlePhone}
-                  onChange={(e) => setGooglePhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  onChange={(e) => setGooglePhone(e.target.value.replace(/\D/g, ""))}
                   autoFocus
                 />
               </div>
 
               <button
                 onClick={handleGooglePhoneContinue}
-                disabled={googlePhone.length !== 10 || isLoading}
+                disabled={googlePhone.length < 7 || isLoading}
                 className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-200 hover:shadow-orange-300 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:shadow-none"
               >
                 {isLoading ? <Loader2 className="animate-spin" size={20} /> : (

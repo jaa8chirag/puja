@@ -21,7 +21,7 @@ import HTMLContent from "../../Components/HTMLContent";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 import { LotusIcon } from "../Components/Icons";
-const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
+const SAMAGRI_PDF_URL = `${API_BASE_URL}/admin/download-checklist?t=${Date.now()}`;
 
 // ═══════════════════════════════════════════════════════════
 // HELPER: Icon Mapper - Benefit names ke basis pe icons assign

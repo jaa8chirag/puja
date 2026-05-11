@@ -7,7 +7,6 @@ import {
   X,
   Plus,
   Trash2,
-  Power,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
@@ -62,7 +61,7 @@ const extractContentSnippet = (sections) => {
 };
 
 // ─── Page Card ────────────────────────────────────────────────────────────────
-const PageCard = ({ page, onEdit, onToggleStatus }) => {
+const PageCard = ({ page, onEdit }) => {
   const snippet = extractContentSnippet(page.sections);
 
   return (
@@ -80,18 +79,6 @@ const PageCard = ({ page, onEdit, onToggleStatus }) => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => onToggleStatus(page.id, page.is_active)}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all text-xs font-black ${
-              page.is_active === 1
-                ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white"
-                : "bg-slate-500/10 text-slate-400 hover:bg-slate-500 hover:text-white"
-            }`}
-            title={page.is_active === 1 ? "Deactivate Page" : "Activate Page"}
-          >
-            <Power size={14} />
-            <span className="hidden sm:inline">{page.is_active === 1 ? "Active" : "Inactive"}</span>
-          </button>
           <button
             onClick={() => onEdit(page)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white transition-all text-xs font-black shadow-lg shadow-orange-500/5 group"
@@ -394,69 +381,11 @@ const EditModal = ({ page, onClose, onSaved }) => {
   );
 };
 
-// ─── Create Page Modal ────────────────────────────────────────────────────────
-const CreateModal = ({ onClose, onSaved, defaultTitle = "", defaultSlug = "", fixedSlug = false }) => {
-  const [title, setTitle] = useState(defaultTitle);
-  const [slug, setSlug] = useState(defaultSlug);
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!title || !slug) return alert("Title and Slug required!");
-    setSubmitting(true);
-    try {
-      await API.post("/pages", {
-        title,
-        slug,
-        sections: JSON.stringify([{ title: "Welcome", content: "New page content..." }]),
-      });
-      onSaved();
-      onClose();
-    } catch (err) {
-      console.error("Create Error:", err);
-      alert("Error creating page.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#0f172a] border border-slate-800 rounded-3xl w-full max-w-md shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
-          <h2 className="text-lg font-black text-white uppercase tracking-wider">New Page</h2>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white transition-colors"><X size={16} /></button>
-        </div>
-        <div className="p-6 space-y-6">
-          <div>
-            <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block">Page Title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#131e32] border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 transition-all font-bold" />
-          </div>
-          <div>
-            <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block">Slug</label>
-            <input
-              value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/ /g, "-"))}
-              disabled={fixedSlug}
-              className="w-full bg-[#131e32] border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 transition-all font-mono text-sm disabled:opacity-50"
-            />
-          </div>
-        </div>
-        <div className="p-6 border-t border-slate-800 flex gap-4">
-          <button onClick={onClose} className="flex-1 py-3 text-sm font-bold text-slate-500 hover:text-white transition-colors">Cancel</button>
-          <button onClick={handleSubmit} disabled={submitting} className="flex-[2] bg-orange-600 hover:bg-orange-700 text-white font-black rounded-xl py-3 text-sm transition-all flex items-center justify-center gap-2">
-            {submitting ? <Loader2 className="animate-spin" size={16} /> : <><Plus size={16} /> Create</>}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, subtitle = null }) => {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editPage, setEditPage] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const createDefaultPage = async () => {
     const defaultSections = [
@@ -536,16 +465,6 @@ const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, s
     fetchPages();
   }, []);
 
-  const togglePageStatus = async (id, currentStatus) => {
-    try {
-      await API.patch(`/pages/status/${id}`, {
-        is_active: currentStatus === 1 ? 0 : 1,
-      });
-      fetchPages();
-    } catch (err) {
-      console.error("Status Toggle Error:", err);
-    }
-  };
 
   return (
     <div className="min-h-screen p-2 md:p-0">
@@ -557,14 +476,6 @@ const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, s
           <p className="text-[12px] text-slate-500 font-medium">{subtitle || "Manage About Us & Policies"}</p>
         </div>
         <div className="flex items-center gap-4">
-          {!defaultSlug && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-orange-500 text-white rounded-xl px-4 py-2 text-sm font-semibold hover:bg-orange-400 transition-all"
-            >
-              <Plus size={14} /> New Page
-            </button>
-          )}
           <div className="bg-[#131e32] border border-slate-800 rounded-xl px-4 py-2">
             <span className="text-slate-400 text-[11px] font-bold">{pages.length} Page{pages.length === 1 ? "" : "s"}</span>
           </div>
@@ -580,7 +491,6 @@ const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, s
               key={page.id}
               page={page}
               onEdit={setEditPage}
-              onToggleStatus={togglePageStatus}
             />
           ))}
         </div>
@@ -592,27 +502,10 @@ const AdminPages = ({ defaultSlug = null, defaultTitle = null, heading = null, s
               ? "Home Hero page will be created automatically. Refresh after a moment if it does not appear."
               : "Use the button above to add a new page."}
           </p>
-          {!defaultSlug && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 bg-orange-500 text-white rounded-xl px-4 py-2 text-sm font-semibold hover:bg-orange-400 transition-all"
-            >
-              <Plus size={14} /> Create {defaultTitle || "Page"}
-            </button>
-          )}
         </div>
       )}
 
       {editPage && <EditModal page={editPage} onClose={() => setEditPage(null)} onSaved={fetchPages} />}
-      {showCreateModal && (
-        <CreateModal
-          onClose={() => setShowCreateModal(false)}
-          onSaved={fetchPages}
-          defaultTitle={defaultTitle || ""}
-          defaultSlug={defaultSlug || ""}
-          fixedSlug={Boolean(defaultSlug)}
-        />
-      )}
     </div>
   );
 };

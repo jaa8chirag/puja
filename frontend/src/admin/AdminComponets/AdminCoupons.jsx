@@ -26,7 +26,8 @@ const AdminCoupons = () => {
     discount_percentage: "",
     usage_limit: "",
     expiry_date: "",
-    is_public: false
+    is_public: false,
+    max_discount: ""
   });
 
   const fetchData = async () => {
@@ -54,7 +55,7 @@ const AdminCoupons = () => {
       const res = await adminCreateCoupon(formData);
       if (res.data.success) {
         setShowModal(false);
-        setFormData({ code: "", discount_percentage: "", usage_limit: "", expiry_date: "", is_public: false });
+        setFormData({ code: "", discount_percentage: "", usage_limit: "", expiry_date: "", is_public: false, max_discount: "" });
         fetchData();
       }
     } catch (err) {
@@ -159,6 +160,7 @@ const AdminCoupons = () => {
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Expiry</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Public</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Max Cap</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
@@ -216,6 +218,13 @@ const AdminCoupons = () => {
                       <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
                         <X size={12} /> No
                       </span>
+                    )}
+                  </td>
+                   <td className="px-6 py-5">
+                    {coupon.max_discount ? (
+                      <span className="text-orange-400 font-bold text-sm">₹{coupon.max_discount}</span>
+                    ) : (
+                      <span className="text-gray-600 text-xs italic">No Limit</span>
                     )}
                   </td>
                   <td className="px-6 py-5 text-right">
@@ -299,6 +308,20 @@ const AdminCoupons = () => {
                         className="w-full bg-white/[0.03] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-orange-500 transition-all font-bold"
                         value={formData.usage_limit}
                         onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Max Discount (Rs) - Optional</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600 font-bold text-xs">₹</span>
+                      <input 
+                        type="number"
+                        placeholder="No Limit"
+                        min="1"
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-orange-500 transition-all font-bold"
+                        value={formData.max_discount}
+                        onChange={(e) => setFormData({ ...formData, max_discount: e.target.value })}
                       />
                     </div>
                   </div>

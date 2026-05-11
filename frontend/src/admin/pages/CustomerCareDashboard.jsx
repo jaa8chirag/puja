@@ -1625,7 +1625,7 @@ const CustomerCareDashboard = () => {
                               {puja.user_name}
                             </p>
                             <div className="flex items-center gap-1 mt-0.5 text-[10px] text-slate-500">
-                              <Phone size={9} /> {puja.user_phone}
+                              <Phone size={9} /> {puja.country_code} {puja.user_phone}
                             </div>
                           </td>
                           <td className="px-4 md:px-5 py-4">
@@ -1765,7 +1765,7 @@ const CustomerCareDashboard = () => {
                             <td className="px-4 md:px-5 py-4">
                               <div className="flex items-center gap-1 text-[11px] text-slate-300 font-medium">
                                 <Phone size={9} className="text-slate-500" />{" "}
-                                {person.phone}
+                                {person.country_code || "+91"} {person.phone}
                               </div>
                               <div className="flex items-center gap-1 mt-0.5 text-[10px] text-slate-500">
                                 <Mail size={9} /> {person.email || "—"}
@@ -2074,7 +2074,7 @@ const CustomerCareDashboard = () => {
                                     </p>
                                     <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-white/[0.04]">
                                       <span className="flex items-center gap-1 text-[10px] text-slate-500">
-                                        <Phone size={9} /> {q.user_phone || "—"}
+                                        <Phone size={9} /> {q.country_code} {q.user_phone || "—"}
                                       </span>
                                       <span className="flex items-center gap-1 text-[10px] text-slate-500">
                                         <Mail size={9} /> {q.user_email || "—"}

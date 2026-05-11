@@ -434,7 +434,7 @@ const InvoiceModal = ({ booking, onClose }) => {
               <h3 className="text-[9px] font-black text-orange-500 uppercase tracking-[0.2em]">Devotee Details</h3>
               <div>
                 <p className="text-base font-black text-gray-900 leading-tight mb-0.5">{booking.user_name}</p>
-                <p className="text-[12px] text-gray-500 font-bold mb-1">{booking.user_phone}</p>
+                <p className="text-[12px] text-gray-500 font-bold mb-1">{(booking.country_code || "+91")} {booking.user_phone || booking.phone}</p>
                 <p className="text-[11px] text-gray-600 font-medium leading-relaxed max-w-[240px]">{booking.address || "Devotee's Location"}</p>
               </div>
             </div>

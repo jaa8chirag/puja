@@ -3,15 +3,15 @@ import db from "../config/db.js";
 // ── Admin: Create Coupon ──────────────────────────────────────────────────────
 export const adminCreateCoupon = async (req, res) => {
   try {
-    const { code, discount_percentage, usage_limit, expiry_date, is_public } = req.body;
+    const { code, discount_percentage, usage_limit, expiry_date, is_public, max_discount } = req.body;
 
     if (!code || !discount_percentage) {
       return res.status(400).json({ success: false, message: "Code and Percentage are required" });
     }
 
     const [result] = await db.query(
-      `INSERT INTO coupons (code, discount_percentage, usage_limit, expiry_date, is_public) VALUES (?, ?, ?, ?, ?)`,
-      [code.toUpperCase(), discount_percentage, usage_limit || 100, expiry_date || null, is_public ? 1 : 0]
+      `INSERT INTO coupons (code, discount_percentage, usage_limit, expiry_date, is_public, max_discount) VALUES (?, ?, ?, ?, ?, ?)`,
+      [code.toUpperCase(), discount_percentage, usage_limit || 100, expiry_date || null, is_public ? 1 : 0, max_discount || null]
     );
 
     res.status(201).json({ success: true, message: "Coupon created successfully", id: result.insertId });
@@ -93,7 +93,8 @@ export const validateCoupon = async (req, res) => {
       data: {
         id: coupon.id,
         code: coupon.code,
-        discount_percentage: coupon.discount_percentage
+        discount_percentage: coupon.discount_percentage,
+        max_discount: coupon.max_discount
       }
     });
 
@@ -106,7 +107,7 @@ export const validateCoupon = async (req, res) => {
 export const getPublicCoupons = async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT code, discount_percentage FROM coupons WHERE is_active = 1 AND is_public = 1 AND (expiry_date IS NULL OR expiry_date > NOW()) AND used_count < usage_limit"
+      "SELECT code, discount_percentage, max_discount FROM coupons WHERE is_active = 1 AND is_public = 1 AND (expiry_date IS NULL OR expiry_date > NOW()) AND used_count < usage_limit"
     );
     res.json({ success: true, data: rows });
   } catch (error) {

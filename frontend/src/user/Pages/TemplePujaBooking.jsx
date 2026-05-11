@@ -557,6 +557,8 @@ const TemplePujaBooking = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [referralDiscountPercent, setReferralDiscountPercent] = useState(10);
+  const [referralRewardMax, setReferralRewardMax] = useState(null);
+  const [referralDiscountMax, setReferralDiscountMax] = useState(null);
   const [isApplying, setIsApplying] = useState(false);
   const [publicCoupons, setPublicCoupons] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -566,10 +568,15 @@ const TemplePujaBooking = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        // Fetch Settings
         const settingsRes = await fetch(`${API_BASE_URL}/settings/referral_reward_referrer`);
         const settingsData = await settingsRes.json();
         if (settingsData.success) setReferralDiscountPercent(settingsData.value);
+
+        const refMaxRes = await fetch(`${API_BASE_URL}/settings/referral_reward_max_discount`);
+        const refMaxData = await refMaxRes.json();
+        if (refMaxData.success) {
+          setReferralRewardMax(refMaxData.value ? Number(refMaxData.value) : null);
+        }
 
         // Fetch Rewards
         const rewardsRes = await fetch(`${API_BASE_URL}/user/referral-rewards`, {
@@ -1019,34 +1026,51 @@ const TemplePujaBooking = () => {
     const templeDonation = donations["Temple Donation"] ? getPrice("Temple Donation") : 0;
 
     const subtotal = base + extra + templeDonation;
-    const couponDiscount = appliedCoupon
-      ? Math.floor((subtotal * appliedCoupon.discount_percentage) / 100)
+    let couponDiscount = appliedCoupon
+      ? Math.floor((base * appliedCoupon.discount_percentage) / 100)
       : 0;
+    if (appliedCoupon?.max_discount && couponDiscount > appliedCoupon.max_discount) {
+      couponDiscount = appliedCoupon.max_discount;
+    }
 
     const selectedReward = referralRewards.find(r => r.id === selectedRewardId);
-    const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : referralDiscountPercent;
+    const activeReferralRate = selectedReward ? selectedReward.discount_percentage : 0;
+    const activeMaxLimit = selectedReward ? referralRewardMax : null;
 
-    const referralDiscountAmount = useReferralDiscount
-      ? Math.floor(((subtotal - couponDiscount) * activeReferralRate) / 100)
+    let referralDiscountAmount = useReferralDiscount
+      ? Math.floor((base * activeReferralRate) / 100)
       : 0;
+    
+    if (useReferralDiscount && activeMaxLimit && referralDiscountAmount > activeMaxLimit) {
+      referralDiscountAmount = activeMaxLimit;
+    }
 
     return subtotal - couponDiscount - referralDiscountAmount;
   };
 
-  const subtotalForRef = (tickets.find((t) => t.label === selectedTicket)?.price || 0) +
+  const basePriceForDiscount = (tickets.find((t) => t.label === selectedTicket)?.price || 0);
+  const subtotalForRef = basePriceForDiscount +
     contributionList.reduce((acc, item) => (donations[item.id] ? acc + item.price : acc), 0) +
     (donations["Temple Donation"] ? Number(getPrice("Temple Donation") || 0) : 0);
 
-  const couponDiscountValue = appliedCoupon
-    ? Math.floor((subtotalForRef * appliedCoupon.discount_percentage) / 100)
+  let couponDiscountValue = appliedCoupon
+    ? Math.floor((basePriceForDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
+  if (appliedCoupon?.max_discount && couponDiscountValue > appliedCoupon.max_discount) {
+    couponDiscountValue = appliedCoupon.max_discount;
+  }
 
   const selectedRewardData = referralRewards.find(r => r.id === selectedRewardId);
-  const activeReferralRate = selectedRewardData ? selectedRewardData.discount_percentage : referralDiscountPercent;
+  const activeReferralRateVal = selectedRewardData ? selectedRewardData.discount_percentage : 0;
+  const activeMaxLimitVal = selectedRewardData ? referralRewardMax : null;
 
-  const referralDiscountValue = useReferralDiscount
-    ? Math.floor(((subtotalForRef - couponDiscountValue) * activeReferralRate) / 100)
+  let referralDiscountValue = useReferralDiscount
+    ? Math.floor((basePriceForDiscount * activeReferralRateVal) / 100)
     : 0;
+  
+  if (useReferralDiscount && activeMaxLimitVal && referralDiscountValue > activeMaxLimitVal) {
+    referralDiscountValue = activeMaxLimitVal;
+  }
 
   const discountAmount = couponDiscountValue + referralDiscountValue;
   const grandTotalBeforeDiscount = subtotalForRef;
@@ -1626,6 +1650,9 @@ const TemplePujaBooking = () => {
                       couponError={couponError}
                       publicCoupons={publicCoupons}
                     />
+                    <p className="text-[9px] text-gray-500 mt-2 font-medium">
+                      Note: Discounts and coupons are applicable on base price only.
+                    </p>
                   </div>
 
                 </div>
@@ -1926,6 +1953,9 @@ const MobileSummarySection = ({
           couponError={couponError}
           publicCoupons={publicCoupons}
         />
+        <p className="text-[9px] text-gray-500 mt-2 font-medium">
+          Note: Discounts and coupons are applicable on base price only.
+        </p>
       </div>
 
       <div className="flex justify-between items-center pt-1 px-1">

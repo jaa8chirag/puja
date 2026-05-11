@@ -25,7 +25,7 @@ import { LotusIcon } from "../Components/Icons";
 import HTMLContent from "../../Components/HTMLContent";
 // const SERVICE_ID = 48; // Online Pind Dan service ID
 
-const SAMAGRI_PDF_URL = "/pdf/Puja_Samagri_Checklist.pdf";
+const SAMAGRI_PDF_URL = `${API_BASE_URL}/admin/download-checklist?t=${Date.now()}`;
 
 // ── Fallback benefits agar backend se nahi aaye ──
 const FALLBACK_BENEFITS = [

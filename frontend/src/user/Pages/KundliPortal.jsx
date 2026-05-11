@@ -180,29 +180,45 @@ function AnalysisText({ text }) {
       ⚠️ Analysis not available — see Raw tab.
     </div>
   );
+
+  const formatLine = (l) => {
+    // Basic bold support: **text** -> <b>text</b>
+    const parts = l.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <b key={i} className="text-stone-900 font-bold">{part.slice(2, -2)}</b>;
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="space-y-1 text-sm leading-relaxed">
       {text.split('\n').map((raw, i) => {
         const l = raw.trim();
         if (!l) return <div key={i} className="h-2" />;
-        if (l.startsWith('## ')) return <h2 key={i} className="text-amber-800 font-bold text-lg mt-5 mb-2 border-b border-amber-200 pb-1">{l.slice(3)}</h2>;
-        if (l.startsWith('### ')) return <h3 key={i} className="text-amber-700 font-semibold text-base mt-4 mb-1">{l.slice(4)}</h3>;
-        if (l.startsWith('#### ')) return <h4 key={i} className="text-amber-600 font-medium mt-3">{l.slice(5)}</h4>;
+        
+        if (l.startsWith('## ')) return <h2 key={i} className="text-amber-800 font-bold text-lg mt-5 mb-2 border-b border-amber-200 pb-1">{formatLine(l.slice(3))}</h2>;
+        if (l.startsWith('### ')) return <h3 key={i} className="text-amber-700 font-semibold text-base mt-4 mb-1">{formatLine(l.slice(4))}</h3>;
+        if (l.startsWith('#### ')) return <h4 key={i} className="text-amber-600 font-medium mt-3">{formatLine(l.slice(5))}</h4>;
+        
         if (/^[-*•]/.test(l)) return (
           <div key={i} className="flex items-start gap-2 ml-4 my-1">
             <span className="text-amber-500 mt-0.5 shrink-0 text-xs">◆</span>
-            <span className="text-stone-700">{l.replace(/^[-*•]\s+/, '')}</span>
+            <span className="text-stone-700">{formatLine(l.replace(/^[-*•]\s+/, ''))}</span>
           </div>
         );
+        
         if (/^\d+\./.test(l)) {
           const num = l.match(/^(\d+)/)[1], rest = l.replace(/^\d+\.\s*/, '');
           return (
             <div key={i} className="flex items-start gap-3 ml-4 my-1">
-              <span className="bg-amber-100 text-amber-700 border border-amber-300 rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 font-bold">{num}</span>
-              <span className="text-stone-700">{rest}</span>
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold shrink-0 mt-0.5">{num}</span>
+              <span className="text-stone-700">{formatLine(rest)}</span>
             </div>
           );
         }
+        
         if (l === '---') return <hr key={i} className="border-amber-200 my-3" />;
         const color = l.includes('GOOD') ? 'text-green-700' : l.includes('CHALLENGING') ? 'text-red-600' : l.includes('MIXED') ? 'text-amber-700' : '';
         return <p key={i} className={`my-1 ${color || 'text-stone-700'}`}>{l}</p>;
@@ -494,7 +510,7 @@ function DoshaCard({ d, matchedPuja }) {
 
       {matchedPuja && (
         <div className="mt-3 pt-3 border-t border-current/20">
-          <div 
+          <div
             className={`group block w-full rounded-2xl overflow-hidden shadow-md relative ${matchedPuja.isDummy ? 'opacity-75 cursor-default' : 'cursor-pointer'}`}
           >
             <div className="relative w-full h-40 overflow-hidden"
@@ -511,7 +527,7 @@ function DoshaCard({ d, matchedPuja }) {
                 </div>
               )}
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.02) 30%, rgba(0,0,0,0.6) 100%)' }} />
-              
+
               {matchedPuja.isDummy && (
                 <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
                   Placeholder

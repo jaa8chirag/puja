@@ -105,6 +105,8 @@ const HomePujaPaymentDetails = () => {
   const [selectedRewardId, setSelectedRewardId] = useState(null);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
   const [referralDiscountPercent, setReferralDiscountPercent] = useState(10);
+  const [referralRewardMax, setReferralRewardMax] = useState(null);
+  const [referralDiscountMax, setReferralDiscountMax] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const token = localStorage.getItem("token");
@@ -141,11 +143,17 @@ const HomePujaPaymentDetails = () => {
         if (data.success) {
           setAdvancePercentage(Number(data.value));
         }
-        
+
         const refRes = await fetch(`${API_BASE_URL}/settings/referral_reward_referrer`);
         const refData = await refRes.json();
         if (refData.success) {
           setReferralDiscountPercent(Number(refData.value));
+        }
+
+        const refMaxRes = await fetch(`${API_BASE_URL}/settings/referral_reward_max_discount`);
+        const refMaxData = await refMaxRes.json();
+        if (refMaxData.success) {
+          setReferralRewardMax(refMaxData.value ? Number(refMaxData.value) : null);
         }
       } catch (err) {
         console.error("Error fetching settings:", err);
@@ -407,16 +415,24 @@ const HomePujaPaymentDetails = () => {
   const today = new Date().toISOString().split("T")[0];
 
   const grandTotalBeforeDiscount = basePrice + samagriPrice + dharmicTotal;
-  const couponDiscount = appliedCoupon
-    ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
+  let couponDiscount = appliedCoupon
+    ? Math.floor((basePrice * appliedCoupon.discount_percentage) / 100)
     : 0;
+  if (appliedCoupon?.max_discount && couponDiscount > appliedCoupon.max_discount) {
+    couponDiscount = appliedCoupon.max_discount;
+  }
 
   const selectedReward = referralRewards.find(r => r.id === selectedRewardId);
-  const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : referralDiscountPercent;
+  const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : 0;
+  const activeMaxLimit = selectedReward ? referralRewardMax : null;
 
-  const referralDiscount = useReferralDiscount
-    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * activeReferralPercent) / 100)
+  let referralDiscount = useReferralDiscount
+    ? Math.floor((basePrice * activeReferralPercent) / 100)
     : 0;
+  
+  if (useReferralDiscount && activeMaxLimit && referralDiscount > activeMaxLimit) {
+    referralDiscount = activeMaxLimit;
+  }
 
   const discountAmount = couponDiscount + referralDiscount;
   const grandTotal = grandTotalBeforeDiscount - discountAmount;
@@ -864,59 +880,57 @@ const HomePujaPaymentDetails = () => {
                         </p>
                       </div>
 
-                    {/* Individual Rewards Selection - Desktop */}
-                    {referralRewards.length > 0 && (
-                      <div className="py-3 border-y border-dashed border-orange-100 my-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Sparkles size={14} className="text-orange-500" />
-                            <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Rewards</span>
-                          </div>
-                          <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                            {referralRewards.length} Available
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 mt-3">
-                          {referralRewards.map((reward) => (
-                            <div 
-                              key={reward.id}
-                              onClick={() => {
-                                if (selectedRewardId === reward.id) {
-                                  setSelectedRewardId(null);
-                                  setUseReferralDiscount(false);
-                                } else {
-                                  setSelectedRewardId(reward.id);
-                                  setUseReferralDiscount(true);
-                                }
-                              }}
-                              className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                                selectedRewardId === reward.id 
-                                  ? "border-orange-500 bg-orange-50" 
-                                  : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                  selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                                }`}>
-                                  {selectedRewardId === reward.id && <CheckCircle size={10} className="text-white" />}
-                                </div>
-                                <span className={`text-[11px] font-bold ${selectedRewardId === reward.id ? "text-orange-700" : "text-gray-800"}`}>
-                                  {reward.discount_percentage}% OFF Reward
-                                </span>
-                              </div>
-                              {selectedRewardId === reward.id && (
-                                <span className="text-[10px] font-black text-orange-600">SELECTED</span>
-                              )}
+                      {/* Individual Rewards Selection - Desktop */}
+                      {referralRewards.length > 0 && (
+                        <div className="py-3 border-y border-dashed border-orange-100 my-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Sparkles size={14} className="text-orange-500" />
+                              <span className="text-[11px] font-bold text-gray-700 uppercase">Referral Rewards</span>
                             </div>
-                          ))}
+                            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                              {referralRewards.length} Available
+                            </span>
+                          </div>
+
+                          <div className="space-y-2 mt-3">
+                            {referralRewards.map((reward) => (
+                              <div
+                                key={reward.id}
+                                onClick={() => {
+                                  if (selectedRewardId === reward.id) {
+                                    setSelectedRewardId(null);
+                                    setUseReferralDiscount(false);
+                                  } else {
+                                    setSelectedRewardId(reward.id);
+                                    setUseReferralDiscount(true);
+                                  }
+                                }}
+                                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedRewardId === reward.id
+                                    ? "border-orange-500 bg-orange-50"
+                                    : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                                  }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                                    }`}>
+                                    {selectedRewardId === reward.id && <CheckCircle size={10} className="text-white" />}
+                                  </div>
+                                  <span className={`text-[11px] font-bold ${selectedRewardId === reward.id ? "text-orange-700" : "text-gray-800"}`}>
+                                    {reward.discount_percentage}% OFF Reward
+                                  </span>
+                                </div>
+                                {selectedRewardId === reward.id && (
+                                  <span className="text-[10px] font-black text-orange-600">SELECTED</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-[9px] text-gray-400 mt-2 italic leading-tight">
+                            * Once used, this specific referral reward will be marked as used in your account.
+                          </p>
                         </div>
-                        <p className="text-[9px] text-gray-400 mt-2 italic leading-tight">
-                          * Once used, this specific referral reward will be marked as used in your account.
-                        </p>
-                      </div>
-                    )}
+                      )}
 
                       {/* 🎟️ Premium Coupon Section */}
                       <div className="py-2 border-y border-dashed border-orange-100 my-2">
@@ -930,6 +944,9 @@ const HomePujaPaymentDetails = () => {
                           couponError={couponError}
                           publicCoupons={publicCoupons}
                         />
+                        <p className="text-[9px] text-gray-500 mt-2 font-medium">
+                          Note: Discounts and coupons are applicable on base price only.
+                        </p>
                       </div>
 
                       {discountAmount > 0 && (
@@ -1147,7 +1164,7 @@ const MobileSummaryInline = ({
 
           <div className="space-y-2 mt-3">
             {referralRewards.map((reward) => (
-              <div 
+              <div
                 key={reward.id}
                 onClick={() => {
                   if (selectedRewardId === reward.id) {
@@ -1158,16 +1175,14 @@ const MobileSummaryInline = ({
                     setUseReferralDiscount(true);
                   }
                 }}
-                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                  selectedRewardId === reward.id 
-                    ? "border-orange-500 bg-orange-50" 
+                className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedRewardId === reward.id
+                    ? "border-orange-500 bg-orange-50"
                     : "border-gray-100 bg-gray-50 hover:border-orange-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
-                  }`}>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedRewardId === reward.id ? "border-orange-500 bg-orange-500" : "border-gray-300 bg-white"
+                    }`}>
                     {selectedRewardId === reward.id && <CheckCircle size={10} className="text-white" />}
                   </div>
                   <span className={`text-[11px] font-bold ${selectedRewardId === reward.id ? "text-orange-700" : "text-gray-800"}`}>
@@ -1196,6 +1211,9 @@ const MobileSummaryInline = ({
           couponError={couponError}
           publicCoupons={publicCoupons}
         />
+        <p className="text-[9px] text-gray-500 mt-2 font-medium">
+          Note: Discounts and coupons are applicable on base price only.
+        </p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />

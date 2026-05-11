@@ -322,6 +322,9 @@ const PartnerDashboard = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [profileError, setProfileError] = useState("");
+  // Toast/Modal states (replaces native alert/confirm)
+  const [toastModal, setToastModal] = useState({ show: false, type: "success", message: "" });
+  const [completeConfirm, setCompleteConfirm] = useState({ show: false, id: null });
   const profileStateRef = useRef(null);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -369,7 +372,12 @@ const PartnerDashboard = () => {
   };
 
   const handleMarkAsComplete = async (id) => {
-    if (!window.confirm("Is this puja completed?")) return;
+    setCompleteConfirm({ show: true, id });
+  };
+
+  const confirmComplete = async () => {
+    const id = completeConfirm.id;
+    setCompleteConfirm({ show: false, id: null });
     try {
       const res = await axios.put(
         `${API_BASE_URL}/partner/complete-puja/${id}`,
@@ -377,11 +385,11 @@ const PartnerDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (res.data.success) {
-        alert("Puja marked as completed!");
+        setToastModal({ show: true, type: "success", message: "Puja marked as completed!" });
         fetchMyPujas();
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Error updating status");
+      setToastModal({ show: true, type: "error", message: error.response?.data?.message || "Error updating status" });
     }
   };
 
@@ -425,7 +433,7 @@ const PartnerDashboard = () => {
 
   const handleNextToPayment = () => {
     if (!profile.name || !profile.city || !profile.state) {
-      setProfileError("Kripya Name, City aur State bharen.");
+      setProfileError("Please fill Name, City and State.");
       return;
     }
     if (profile.pincode && profile.pincode.length !== 6) {
@@ -470,7 +478,7 @@ const PartnerDashboard = () => {
       setEditing(false);
       setProfileError("");
       setProfileStep(1);
-      alert("Profile Updated Successfully");
+      setToastModal({ show: true, type: "success", message: "Profile Updated Successfully" });
     } catch (e) {
       setProfileError(e.response?.data?.message || "Error updating profile");
     }
@@ -1250,6 +1258,66 @@ const PartnerDashboard = () => {
           🎧 Call Support
         </button>
       </div>
+
+      {/* ── COMPLETE CONFIRMATION MODAL ── */}
+      {completeConfirm.show && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-[#FDFAF4] w-full max-w-sm rounded-3xl shadow-2xl border border-[#EDE8DC] p-8 text-center animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-green-200">
+              <CheckCircle size={32} className="text-green-500" />
+            </div>
+            <h3 className="text-lg font-serif font-black text-[#1a1208] mb-2">Mark as Completed?</h3>
+            <p className="text-sm text-[#6b5840] mb-6">Are you sure this puja has been completed successfully?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCompleteConfirm({ show: false, id: null })}
+                className="flex-1 py-3 rounded-xl font-bold text-[14px] text-[#6b5840] bg-[#EDE8DC] hover:bg-[#e3dcce] transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmComplete}
+                className="flex-1 py-3 rounded-xl font-bold text-[14px] text-white bg-green-600 hover:bg-green-700 transition shadow-md"
+              >
+                Yes, Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TOAST / NOTIFICATION MODAL ── */}
+      {toastModal.show && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+          <div className="bg-[#FDFAF4] w-full max-w-sm rounded-3xl shadow-2xl border border-[#EDE8DC] p-8 text-center animate-in zoom-in-95 duration-200">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 border ${
+              toastModal.type === "success"
+                ? "bg-green-50 border-green-200"
+                : "bg-red-50 border-red-200"
+            }`}>
+              {toastModal.type === "success" ? (
+                <CheckCircle size={32} className="text-green-500" />
+              ) : (
+                <X size={32} className="text-red-500" />
+              )}
+            </div>
+            <h3 className="text-lg font-serif font-black text-[#1a1208] mb-2">
+              {toastModal.type === "success" ? "Success!" : "Error"}
+            </h3>
+            <p className="text-sm text-[#6b5840] mb-6">{toastModal.message}</p>
+            <button
+              onClick={() => setToastModal({ show: false, type: "success", message: "" })}
+              className={`w-full py-3 rounded-xl font-bold text-[14px] text-white transition shadow-md ${
+                toastModal.type === "success"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

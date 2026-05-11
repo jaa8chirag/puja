@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Loader2, ArrowLeft, ShieldCheck, Lock, Phone, Eye, EyeOff, Mail } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { COUNTRY_CODES } from '../../utils/countryCodes';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const PartnerSignIn = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,8 +19,8 @@ const PartnerSignIn = () => {
     e.preventDefault();
     
     const isEmail = phoneNumber.includes("@");
-    if (!isEmail && phoneNumber.replace(/\D/g, "").length !== 10) {
-      setError("Please enter a valid 10-digit mobile number or email.");
+    if (!isEmail && phoneNumber.replace(/\D/g, "").length < 7) {
+      setError("Please enter a valid mobile number or email.");
       return;
     }
     if (password.length < 6) {
@@ -32,7 +34,12 @@ const PartnerSignIn = () => {
       const res = await fetch(`${API_BASE_URL}/user/login`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneNumber, password: password, role: 'pandit' })
+        body: JSON.stringify({ 
+          phone: isEmail ? phoneNumber : phoneNumber.replace(/\D/g, ""), 
+          country_code: isEmail ? null : countryCode,
+          password: password, 
+          role: 'pandit' 
+        })
       });
       const data = await res.json();
       if (res.ok) {
@@ -108,21 +115,22 @@ const PartnerSignIn = () => {
                </label>
                <div className="flex bg-[#F9F7F4] border border-[#EBE6DF] rounded-2xl overflow-hidden focus-within:border-orange-500 transition-all shadow-sm">
                  {!phoneNumber.includes("@") && phoneNumber.length > 0 && /^\d+$/.test(phoneNumber) && (
-                   <span className="px-5 py-4 text-gray-400 font-bold border-r border-[#EBE6DF] text-sm">+91</span>
+                   <select
+                     className="bg-gray-50 px-2 py-4 text-gray-700 border-r border-[#EBE6DF] font-bold text-xs outline-none cursor-pointer"
+                     value={countryCode}
+                     onChange={(e) => setCountryCode(e.target.value)}
+                   >
+                     {COUNTRY_CODES.map(c => (
+                       <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                     ))}
+                   </select>
                  )}
                  <input
                    type="text"
                    className="w-full px-4 py-4 bg-transparent outline-none text-gray-700 font-bold text-lg"
-                   placeholder="Email or 10-digit number"
+                   placeholder="Email or Phone Number"
                    value={phoneNumber}
-                   onChange={(e) => {
-                     const val = e.target.value;
-                     if (/^\d+$/.test(val)) {
-                       setPhoneNumber(val.slice(0, 10));
-                     } else {
-                       setPhoneNumber(val);
-                     }
-                   }}
+                   onChange={(e) => setPhoneNumber(e.target.value)}
                  />
                </div>
              </div>
@@ -154,7 +162,7 @@ const PartnerSignIn = () => {
 
             <button
               type="submit"
-              disabled={phoneNumber.length < 10 || password.length < 6 || isLoading}
+              disabled={phoneNumber.length < 3 || password.length < 6 || isLoading}
               className="w-full py-4 bg-orange-500 text-white font-bold rounded-2xl shadow-[0_10px_25px_-5px_rgba(249,115,22,0.4)] hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="animate-spin" /> : "Sign In to Portal"}

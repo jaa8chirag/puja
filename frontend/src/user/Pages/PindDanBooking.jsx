@@ -127,6 +127,9 @@ const PindDanBooking = () => {
   const [advancePercentage, setAdvancePercentage] = useState(25);
   const [pendingRewards, setPendingRewards] = useState(0);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
+  const [referralDiscountPercent, setReferralDiscountPercent] = useState(10);
+  const [referralRewardMax, setReferralRewardMax] = useState(null);
+  const [referralDiscountMax, setReferralDiscountMax] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const sections = {
@@ -155,10 +158,20 @@ const PindDanBooking = () => {
           setPublicCoupons(publicCouponsData.data);
         }
 
-        const settingsRes = await fetch(`${API_BASE_URL}/settings/advance_payment_percentage`);
-        const settingsData = await settingsRes.json();
         if (settingsData.success) {
           setAdvancePercentage(Number(settingsData.value));
+        }
+
+        const refRes = await fetch(`${API_BASE_URL}/settings/referral_reward_referrer`);
+        const refData = await refRes.json();
+        if (refData.success) {
+          setReferralDiscountPercent(Number(refData.value));
+        }
+
+        const refMaxRes = await fetch(`${API_BASE_URL}/settings/referral_reward_max_discount`);
+        const refMaxData = await refMaxRes.json();
+        if (refMaxData.success) {
+          setReferralRewardMax(refMaxData.value ? Number(refMaxData.value) : null);
         }
       } catch (err) {
         console.error(err);
@@ -418,13 +431,24 @@ const PindDanBooking = () => {
   };
 
   const grandTotalBeforeDiscount = calculateTotal();
-  const couponDiscount = appliedCoupon
-    ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
+  const basePriceForDiscount = Number(service?.standard_price) || 0;
+  let couponDiscount = appliedCoupon
+    ? Math.floor((basePriceForDiscount * appliedCoupon.discount_percentage) / 100)
     : 0;
+  if (appliedCoupon?.max_discount && couponDiscount > appliedCoupon.max_discount) {
+    couponDiscount = appliedCoupon.max_discount;
+  }
 
-  const referralDiscount = useReferralDiscount
-    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * 10) / 100)
+  // Pind Dan only allows earned rewards now
+  const activeMaxLimit = useReferralDiscount ? referralRewardMax : null; 
+
+  let referralDiscount = useReferralDiscount
+    ? Math.floor((basePriceForDiscount * referralDiscountPercent) / 100)
     : 0;
+  
+  if (useReferralDiscount && referralRewardMax && referralDiscount > referralRewardMax) {
+    referralDiscount = referralRewardMax;
+  }
 
   const discountAmount = couponDiscount + referralDiscount;
   const finalTotal = grandTotalBeforeDiscount - discountAmount;
@@ -896,6 +920,9 @@ const PindDanBooking = () => {
                       couponError={couponError}
                       publicCoupons={publicCoupons}
                     />
+                    <p className="text-[9px] text-gray-500 mt-2 font-medium">
+                      Note: Discounts and coupons are applicable on base price only.
+                    </p>
                   </div>
 
                   <PaymentOptionSelector
@@ -1143,6 +1170,9 @@ const MobileSummarySection = ({
           couponError={couponError}
           publicCoupons={publicCoupons}
         />
+        <p className="text-[9px] text-gray-500 mt-2 font-medium">
+          Note: Discounts and coupons are applicable on base price only.
+        </p>
       </div>
 
       <PaymentOptionSelector

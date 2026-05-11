@@ -59,16 +59,25 @@ export const deleteContribution = async (req, res) => {
 // Admin Login (Password Based)
 export const AdminLogin = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const { phone, country_code, password } = req.body;
+    const isEmail = phone && phone.includes("@");
 
     if (!phone || !password) {
       return res.status(400).json({ message: "Email/Phone and Password are required" });
     }
 
-    const [rows] = await db.query(
-      "SELECT * FROM users WHERE (phone = ? OR email = ?) AND (role = 'admin' OR role = 'superAdmin') AND is_deleted = 0",
-      [phone, phone],
-    );
+    let rows;
+    if (isEmail) {
+      [rows] = await db.query(
+        "SELECT * FROM users WHERE email = ? AND (role = 'admin' OR role = 'superAdmin') AND is_deleted = 0",
+        [phone],
+      );
+    } else {
+      [rows] = await db.query(
+        "SELECT * FROM users WHERE phone = ? AND (country_code = ? OR country_code IS NULL) AND (role = 'admin' OR role = 'superAdmin') AND is_deleted = 0",
+        [phone, country_code || "+91"],
+      );
+    }
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Admin account not found with this Email or Phone." });
@@ -280,7 +289,7 @@ export const getAllUsers = async (req, res) => {
     // ✅ Get users with filters and pagination
     const [users] = await db.query(
       `SELECT 
-        u.id, u.name, u.email, u.phone, u.role, u.created_at,
+        u.id, u.name, u.email, u.phone, u.country_code, u.role, u.created_at,
         COUNT(pr.id) as total_bookings
        FROM users u
        LEFT JOIN puja_requests pr ON pr.user_id = u.id
@@ -330,7 +339,7 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, role } = req.body;
+    const { name, email, phone, country_code, role } = req.body;
     const requesterRole = req.user.role;
 
     // Check if target user is superadmin
@@ -355,8 +364,15 @@ export const updateUser = async (req, res) => {
       fields.push("phone=?");
       values.push(phone);
     }
+    if (country_code !== undefined) {
+      fields.push("country_code=?");
+      values.push(country_code);
+    }
 
     if (req.body.password) {
+      if (req.body.password.length < 6) {
+        return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
+      }
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
       fields.push("password=?");
       values.push(hashedPassword);
@@ -370,7 +386,7 @@ export const updateUser = async (req, res) => {
           .status(400)
           .json({ success: false, message: "Invalid role" });
       }
-      
+
       // Only superAdmin can promote someone to superAdmin
       if (role === 'superAdmin' && requesterRole !== 'superAdmin') {
         return res.status(403).json({ success: false, message: "Only SuperAdmin can assign SuperAdmin role." });
@@ -427,18 +443,17 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// Admin Create User (Admin, CustomerCare, etc.)
 export const adminCreateUser = async (req, res) => {
   try {
-    const { name, phone, password, role } = req.body;
+    const { name, email, phone, country_code, password, role } = req.body;
     const requesterRole = req.user.role;
 
     if (!name || !phone || !password || !role) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
-    if (phone.length !== 10) {
-      return res.status(400).json({ success: false, message: "Phone number must be exactly 10 digits" });
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
     }
 
     // Security: Only superAdmin can create another superAdmin
@@ -449,9 +464,9 @@ export const adminCreateUser = async (req, res) => {
     }
 
     // Check if user already exists
-    const [existing] = await db.execute("SELECT id FROM users WHERE phone = ?", [phone]);
+    const [existing] = await db.execute("SELECT id FROM users WHERE phone = ? AND (country_code = ? OR country_code IS NULL)", [phone, country_code || "+91"]);
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: "User with this phone already exists" });
+      return res.status(400).json({ success: false, message: "User with this phone and country code already exists" });
     }
 
     // Hash password
@@ -459,8 +474,8 @@ export const adminCreateUser = async (req, res) => {
 
     // Insert user
     const [result] = await db.execute(
-      "INSERT INTO users (name, phone, password, role, is_verified) VALUES (?, ?, ?, ?, 1)",
-      [name, phone, hashedPassword, role]
+      "INSERT INTO users (name, email, phone, country_code, password, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, 1)",
+      [name, email || null, phone, country_code || "+91", hashedPassword, role]
     );
 
     res.status(201).json({
@@ -517,6 +532,7 @@ export const createPandit = async (req, res) => {
       name,
       email,
       phone,
+      country_code,
       pandit_type,
       gotra,
       // Address fields
@@ -543,9 +559,9 @@ export const createPandit = async (req, res) => {
 
     // 1. Insert into users table
     const [userResult] = await connection.query(
-      `INSERT INTO users (name,gotra, email, phone, role, is_blocked)
-       VALUES (?, ?, ?, ?, 'pandit', 0)`,
-      [name, gotra, email || null, phone],
+      `INSERT INTO users (name,gotra, email, phone, country_code, role, is_blocked)
+       VALUES (?, ?, ?, ?, ?, 'pandit', 0)`,
+      [name, gotra, email || null, phone, country_code || "+91"],
     );
 
     const newUserId = userResult.insertId;
@@ -620,9 +636,9 @@ export const getAllPandits = async (req, res) => {
       params,
     );
 
-     const [rows] = await db.query(
-       `SELECT 
-         u.id, u.name, u.email, u.phone, u.is_blocked, u.created_at,
+    const [rows] = await db.query(
+      `SELECT 
+         u.id, u.name, u.email, u.phone, u.country_code, u.is_blocked, u.created_at,
          p.pandit_type, p.document_url,
          ppd.id as payment_id,
          ppd.payment_method,
@@ -645,8 +661,8 @@ export const getAllPandits = async (req, res) => {
         ${whereClause}
         ORDER BY u.created_at DESC
         LIMIT ? OFFSET ?`,
-       [...params, limit, offset],
-     );
+      [...params, limit, offset],
+    );
 
     res.json({
       success: true,
@@ -702,6 +718,7 @@ export const updatePandit = async (req, res) => {
       name,
       email,
       phone,
+      country_code,
       pandit_type,
       document_url,
       // Address fields
@@ -722,8 +739,8 @@ export const updatePandit = async (req, res) => {
 
     // 1. Update basic info in users
     await connection.query(
-      `UPDATE users SET name=?, email=?, phone=? WHERE id=? AND role='pandit'`,
-      [name, email, phone, id],
+      `UPDATE users SET name=?, email=?, phone=?, country_code=? WHERE id=? AND role='pandit'`,
+      [name, email, phone, country_code || "+91", id],
     );
 
     // 2. Update or Insert extended info in pandits

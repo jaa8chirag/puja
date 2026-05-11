@@ -139,22 +139,54 @@ Health  : agree/disagree with A — why
 }
 
 function parseSections(raw) {
-  const get = (s, e) => {
-    const si = raw.indexOf(s), ei = raw.indexOf(e);
-    return si!==-1 && ei>si ? raw.slice(si+s.length, ei).trim() : null;
+  const get = (startTag, endTag) => {
+    // Regex to match tags even with varying whitespace/newlines
+    const startRegex = new RegExp(`${startTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+    const endRegex = new RegExp(`${endTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+    
+    const startMatch = raw.match(startRegex);
+    const endMatch = raw.match(endRegex);
+    
+    if (startMatch && endMatch && endMatch.index > startMatch.index) {
+      return raw.slice(startMatch.index + startMatch[0].length, endMatch.index).trim();
+    }
+    return null;
   };
-  const A = get('<<OPTION_A_START>>', '<<OPTION_A_END>>');
-  const B = get('<<OPTION_B_START>>', '<<OPTION_B_END>>');
-  const V = get('<<VERDICT_START>>',  '<<VERDICT_END>>');
 
-  if (!A && !B && !V) {
-    const t = Math.floor(raw.length/3);
-    return { optionA:raw.slice(0,t), optionB:raw.slice(t,t*2), finalVerdict:raw.slice(t*2), fallback:true };
+  let A = get('<<OPTION_A_START>>', '<<OPTION_A_END>>');
+  let B = get('<<OPTION_B_START>>', '<<OPTION_B_END>>');
+  let V = get('<<VERDICT_START>>',  '<<VERDICT_END>>');
+
+  // Fallback 1: Try to find sections by standard Markdown headers if tags are missing
+  if (!A || !B || !V) {
+    const parts = raw.split(/##\s+(OPTION A|OPTION B|FINAL VERDICT|PARASHARI|KP\/JAIMINI|VERDICT)/i);
+    // When splitting with capture groups, even indices are content, odd indices are the captured headers
+    for (let i = 1; i < parts.length; i += 2) {
+      const header = parts[i].toUpperCase();
+      const content = parts[i + 1]?.trim();
+      if (!content) continue;
+
+      if (!A && (header.includes('OPTION A') || header.includes('PARASHARI'))) A = content;
+      else if (!B && (header.includes('OPTION B') || header.includes('KP/JAIMINI'))) B = content;
+      else if (!V && (header.includes('VERDICT'))) V = content;
+    }
   }
+
+  // Fallback 2: If we STILL have nothing (no tags and no headers), DO NOT split into thirds.
+  // Instead, provide the full text in Option A and show warnings in others.
+  if (!A && !B && !V) {
+    return {
+      optionA      : raw,
+      optionB      : '⚠️ Analysis could not be separated into sections automatically. Please refer to Option A or the Technical Details (Raw) tab.',
+      finalVerdict : '⚠️ Analysis could not be separated into sections automatically. Please refer to Option A or the Technical Details (Raw) tab.',
+      fallback     : true,
+    };
+  }
+
   return {
-    optionA      : A || '⚠️ Option A not parsed — see Raw tab',
-    optionB      : B || '⚠️ Option B not parsed — see Raw tab',
-    finalVerdict : V || '⚠️ Verdict not parsed — see Raw tab',
+    optionA      : A || '⚠️ Option A content missing — see Raw tab',
+    optionB      : B || '⚠️ Option B content missing — see Raw tab',
+    finalVerdict : V || '⚠️ Verdict content missing — see Raw tab',
     fallback     : false,
   };
 }
@@ -177,7 +209,7 @@ RULES:
   // ── 1. Gemini Primary ──────────────────────────────────────
   try {
     console.log('🔱 Kundli Analysis: Trying Gemini...');
-    const model  = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
+    const model  = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(`${SYSTEM_PROMPT}\n\n${prompt}`);
     const raw    = result.response.text();
     if (!raw) throw new Error('Gemini returned empty response');

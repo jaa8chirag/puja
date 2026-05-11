@@ -34,6 +34,7 @@ import {
 import { API } from "../../services/adminApi.js";
 import Pagination from "../../Components/Pagination.jsx";
 import { useNavigate } from "react-router-dom";
+import { COUNTRY_CODES } from "../../utils/countryCodes.js";
 
 const INDIAN_STATES = [
   "Andhra Pradesh",
@@ -100,6 +101,7 @@ const Pandits = () => {
     name: "",
     email: "",
     phone: "",
+    country_code: "+91",
     pandit_type: "",
     document: null,
     // Address
@@ -235,6 +237,7 @@ const Pandits = () => {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          country_code: formData.country_code,
           pandit_type: formData.pandit_type,
           document_url: formData.document_url,
           address: formData.address,
@@ -255,6 +258,7 @@ const Pandits = () => {
         payload.append("name", formData.name);
         payload.append("email", formData.email || "");
         payload.append("phone", formData.phone);
+        payload.append("country_code", formData.country_code || "+91");
         payload.append("pandit_type", formData.pandit_type || "");
         payload.append("address", formData.address || "");
         payload.append("city", formData.city || "");
@@ -323,6 +327,7 @@ const Pandits = () => {
       name: p.name,
       email: p.email || "",
       phone: p.phone,
+      country_code: p.country_code || "+91",
       pandit_type: p.pandit_type || "",
       document_url: p.document_url || "",
       // Pre-fill Address from API data
@@ -350,6 +355,7 @@ const Pandits = () => {
       name: "",
       email: "",
       phone: "",
+      country_code: "+91",
       pandit_type: "",
       document_url: "",
       address: "",
@@ -423,11 +429,10 @@ const Pandits = () => {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${
-            toast.type === "error"
+          className={`fixed bottom-6 right-6 z-[150] px-5 py-3 rounded-2xl shadow-2xl text-[11px] font-black uppercase tracking-wider flex items-center gap-3 border ${toast.type === "error"
               ? "bg-rose-950 border-rose-800 text-rose-400"
               : "bg-emerald-950 border-emerald-800 text-emerald-400"
-          }`}
+            }`}
         >
           {toast.type === "error" ? (
             <XCircle size={16} />
@@ -535,9 +540,8 @@ const Pandits = () => {
                 {pandits.map((p) => (
                   <tr
                     key={p.id}
-                    className={`group hover:bg-emerald-500/[0.02] transition-colors ${
-                      actionLoading === p.id ? "opacity-30" : ""
-                    }`}
+                    className={`group hover:bg-emerald-500/[0.02] transition-colors ${actionLoading === p.id ? "opacity-30" : ""
+                      }`}
                   >
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
@@ -562,7 +566,7 @@ const Pandits = () => {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
                           <Phone size={12} className="text-emerald-500" />{" "}
-                          {p.phone}
+                          {p.country_code || "+91"} {p.phone}
                         </div>
                         {p.email && (
                           <div className="flex items-center gap-2 text-[10px] text-slate-500">
@@ -726,18 +730,28 @@ const Pandits = () => {
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                       Contact Number
                     </label>
-                    <div className="relative group">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
-                      <input
-                        type="tel"
-                        maxLength={10}
-                        placeholder="10-digit mobile"
-                        value={formData.phone}
-                        onChange={(e) =>
-                          setFormData({ ...formData, phone: e.target.value })
-                        }
-                        className={inputCls}
-                      />
+                    <div className="flex gap-2">
+                      <select
+                        className="w-[100px] px-2 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                        value={formData.country_code}
+                        onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
+                      >
+                        {COUNTRY_CODES.map(c => (
+                          <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
+                        ))}
+                      </select>
+                      <div className="relative group flex-1">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
+                        <input
+                          type="tel"
+                          placeholder="Phone Number"
+                          value={formData.phone}
+                          onChange={(e) =>
+                            setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })
+                          }
+                          className={inputCls}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -986,11 +1000,10 @@ const Pandits = () => {
                       onClick={() =>
                         setFormData({ ...formData, paymentMethod: "bank" })
                       }
-                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
-                        formData.paymentMethod === "bank"
+                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${formData.paymentMethod === "bank"
                           ? "bg-slate-700 text-emerald-400 shadow"
                           : "text-slate-500 hover:text-slate-300"
-                      }`}
+                        }`}
                     >
                       <Building2 size={12} /> Bank Account
                     </button>
@@ -998,11 +1011,10 @@ const Pandits = () => {
                       onClick={() =>
                         setFormData({ ...formData, paymentMethod: "upi" })
                       }
-                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
-                        formData.paymentMethod === "upi"
+                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${formData.paymentMethod === "upi"
                           ? "bg-slate-700 text-emerald-400 shadow"
                           : "text-slate-500 hover:text-slate-300"
-                      }`}
+                        }`}
                     >
                       <Smartphone size={12} /> UPI
                     </button>
@@ -1096,17 +1108,16 @@ const Pandits = () => {
                                   e.target.value.replace(/\D/g, ""),
                               })
                             }
-                            className={`${inputCls} ${
-                              formData.confirmBankAccountNumber &&
-                              formData.bankAccountNumber !==
+                            className={`${inputCls} ${formData.confirmBankAccountNumber &&
+                                formData.bankAccountNumber !==
                                 formData.confirmBankAccountNumber
                                 ? "border-rose-500 focus:border-rose-500"
                                 : ""
-                            }`}
+                              }`}
                           />
                           {formData.confirmBankAccountNumber &&
                             formData.bankAccountNumber ===
-                              formData.confirmBankAccountNumber && (
+                            formData.confirmBankAccountNumber && (
                               <CheckCircle2
                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400"
                                 size={16}
@@ -1115,7 +1126,7 @@ const Pandits = () => {
                         </div>
                         {formData.confirmBankAccountNumber &&
                           formData.bankAccountNumber !==
-                            formData.confirmBankAccountNumber && (
+                          formData.confirmBankAccountNumber && (
                             <p className="text-[9px] text-rose-500 font-bold ml-1">
                               Account numbers match nahi kar rahe
                             </p>

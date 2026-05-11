@@ -102,6 +102,19 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // ── DYNAMIC PAGE TITLE ──────────────────────────────────────────────────
+    const role = localStorage.getItem("role");
+    if (location.pathname.startsWith("/admin")) {
+      document.title = "Sri Vedic Puja | Admin Panel";
+    } else if (location.pathname.startsWith("/partner") || location.pathname.includes("partner-sign")) {
+      document.title = "Sri Vedic Puja | Partner Dashboard";
+    } else if (location.pathname.startsWith("/customer-care")) {
+      document.title = "Sri Vedic Puja | Customer Care";
+    } else {
+      document.title = "Sri Vedic Puja";
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     // Helper function to check if token is valid and not expired
     const isTokenValid = (t) => {
       if (!t) return false;

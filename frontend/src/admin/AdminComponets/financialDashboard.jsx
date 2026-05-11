@@ -1169,7 +1169,9 @@ const DonationsTab = () => {
 const SettingsTab = () => {
   const [advancePercent, setAdvancePercent] = useState("");
   const [referrerPercent, setReferrerPercent] = useState("");
+  const [referrerMax, setReferrerMax] = useState("");
   const [friendPercent, setFriendPercent] = useState("");
+  const [friendMax, setFriendMax] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -1191,18 +1193,32 @@ const SettingsTab = () => {
       })
       .catch(err => console.error(err));
 
+    fetch(`${API_BASE_URL}/settings/referral_reward_max_discount`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setReferrerMax(data.value);
+      })
+      .catch(err => console.error(err));
+
     fetch(`${API_BASE_URL}/settings/referral_discount_friend`)
       .then(res => res.json())
       .then(data => {
         if (data.success) setFriendPercent(data.value);
       })
       .catch(err => console.error(err));
+
+    fetch(`${API_BASE_URL}/settings/referral_discount_max_discount`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setFriendMax(data.value);
+      })
+      .catch(err => console.error(err));
   }, []);
 
   const handleUpdate = async (key, value) => {
-    const numericValue = Number(value);
-    if (value === "" || isNaN(numericValue) || numericValue < 0 || numericValue > 100) {
-      setMsg("Invalid percentage (0-100)");
+    const numericValue = value === "" ? null : Number(value);
+    if (value !== "" && (isNaN(numericValue) || numericValue < 0)) {
+      setMsg("Invalid value");
       return;
     }
     setLoading(true);
@@ -1293,7 +1309,31 @@ const SettingsTab = () => {
                 {loading ? "Saving..." : "Save"}
               </button>
             </div>
+
+            <div className="mt-4">
+              <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider mb-1.5 block ml-1">Max Discount Amount (Rs) - Optional</label>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    value={referrerMax}
+                    onChange={(e) => setReferrerMax(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                    placeholder="e.g. 500 (Blank for no limit)"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 font-bold">₹</span>
+                </div>
+                <button
+                  onClick={() => handleUpdate("referral_reward_max_discount", referrerMax)}
+                  disabled={loading}
+                  className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-bold px-6 py-3 rounded-xl border border-orange-500/20 transition-all active:scale-95"
+                >
+                  Set Limit
+                </button>
+              </div>
+            </div>
           </div>
+
 
 
 
@@ -1317,6 +1357,9 @@ const SettingsTab = () => {
               </li>
               <li className="flex items-center gap-2 text-xs text-white/40">
                 <span className="text-emerald-400">✓</span> Financial dashboard reflects Paid vs Balance
+              </li>
+              <li className="flex items-center gap-2 text-xs text-white/40">
+                <span className="text-emerald-400">✓</span> Referrers earn rewards after friend's booking
               </li>
             </ul>
           </div>

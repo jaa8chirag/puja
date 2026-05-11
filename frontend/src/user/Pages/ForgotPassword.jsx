@@ -43,17 +43,23 @@ const ForgotPassword = () => {
     }
   };
 
+  // Password requirement checks
+  const pwChecks = {
+    length: newPassword.length >= 6,
+    match: newPassword === confirmPassword && confirmPassword.length > 0,
+  };
+
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (resetCode.length !== 6) {
       setError("Enter 6-digit reset code");
       return;
     }
-    if (newPassword.length < 6) {
+    if (!pwChecks.length) {
       setError("Password must be at least 6 characters");
       return;
     }
-    if (newPassword !== confirmPassword) {
+    if (!pwChecks.match) {
       setError("Passwords do not match");
       return;
     }
@@ -197,9 +203,27 @@ const ForgotPassword = () => {
                 />
               </div>
 
+              {/* Password Requirements - Real-time Checklist */}
+              {newPassword.length > 0 && (
+                <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 space-y-1.5">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Password Requirements</p>
+                  {[
+                    { ok: pwChecks.length, label: "At least 6 characters" },
+                    { ok: pwChecks.match, label: "Passwords match" },
+                  ].map((rule, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${rule.ok ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400"}`}>
+                        {rule.ok ? "✓" : ""}
+                      </div>
+                      <span className={`text-[11px] font-medium ${rule.ok ? "text-green-700" : "text-gray-400"}`}>{rule.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={isLoading || resetCode.length < 6 || newPassword.length < 6}
+                disabled={isLoading || resetCode.length < 6 || !pwChecks.length || !pwChecks.match}
                 className="w-full py-4 bg-[#2D1B0B] text-white font-bold rounded-2xl shadow-xl active:scale-[0.98] transition-all flex items-center justify-center h-14 uppercase tracking-widest text-xs"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : "Update Password"}

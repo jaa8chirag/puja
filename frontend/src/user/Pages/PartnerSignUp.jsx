@@ -5,15 +5,16 @@ import {
     CreditCard, Building2, Hash, Smartphone, CheckCircle2, Lock, Eye, EyeOff
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { COUNTRY_CODES } from '../../utils/countryCodes';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const INDIAN_STATES = [
-    "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
-    "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", 
-    "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", 
-    "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", 
-    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", 
+    "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
+    "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa",
+    "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
+    "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan",
     "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
 ];
 
@@ -62,7 +63,7 @@ const PartnerSignUp = () => {
     const [paymentMethod, setPaymentMethod] = useState('bank');
 
     const [formData, setFormData] = useState({
-        name: '', gotra: '', phone: '', email: '',
+        name: '', gotra: '', phone: '', country_code: '+91', email: '',
         address: '', city: '', state: '', pincode: '',
         role: 'pandit', panditType: 'Standard', document: null,
         accountHolderName: '',
@@ -114,7 +115,11 @@ const PartnerSignUp = () => {
         if (!formData.name || !formData.email || !formData.phone || !formData.city ||
             !formData.state || !formData.address ||
             !formData.pincode || !formData.document) {
-            setError("Please fill all details (including email) and upload the document.");
+            setError("Please fill all required fields and upload the document.");
+            return;
+        }
+        if (formData.phone.length < 7) {
+            setError("Please enter a valid phone number.");
             return;
         }
         setError("");
@@ -268,8 +273,16 @@ const PartnerSignUp = () => {
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">Mobile</label>
                                     <div className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl focus-within:border-orange-500 transition-all overflow-hidden">
-                                        <span className="pl-3 py-3 text-gray-400 font-black text-xs border-r border-gray-300 pr-2">+91</span>
-                                        <input className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D]" maxLength={10} placeholder="00000 00000" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })} />
+                                        <select
+                                            className="bg-gray-50 px-2 py-3 text-gray-700 border-r border-gray-300 font-bold text-sm outline-none cursor-pointer w-[100px]"
+                                            value={formData.country_code}
+                                            onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
+                                        >
+                                            {COUNTRY_CODES.map(c => (
+                                                <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
+                                            ))}
+                                        </select>
+                                        <input className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D]" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })} />
                                     </div>
                                 </div>
                                 <div className="space-y-1">
@@ -314,7 +327,7 @@ const PartnerSignUp = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="space-y-1 w-full">
                                 <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">Street Address</label>
                                 <div className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl focus-within:border-orange-500 transition-all">
                                     <Home className="ml-3 my-auto text-gray-300" size={16} />
@@ -322,7 +335,7 @@ const PartnerSignUp = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1 relative" ref={stateListRef}>
                                     <label className="text-[10px] font-black text-[#8C7A6B] uppercase tracking-wider">State</label>
                                     <div className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl focus-within:border-orange-500 transition-all overflow-hidden relative">
@@ -465,6 +478,24 @@ const PartnerSignUp = () => {
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* Password Requirements - Real-time Checklist */}
+                                {formData.password.length > 0 && (
+                                    <div className="bg-orange-50/50 border border-orange-100 rounded-xl p-3 space-y-1.5 mb-4">
+                                        <p className="text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Password Requirements</p>
+                                        {[
+                                            { ok: formData.password.length >= 6, label: "At least 6 characters" },
+                                            { ok: formData.password === formData.confirmPassword && formData.confirmPassword.length > 0, label: "Passwords match" },
+                                        ].map((rule, i) => (
+                                            <div key={i} className="flex items-center gap-2">
+                                                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${rule.ok ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400"}`}>
+                                                    {rule.ok ? "✓" : ""}
+                                                </div>
+                                                <span className={`text-[11px] font-medium ${rule.ok ? "text-green-700" : "text-gray-400"}`}>{rule.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="flex gap-3">
                                 <button onClick={() => setStep(2)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-black rounded-xl text-[10px] uppercase tracking-widest h-14">← Back</button>

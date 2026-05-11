@@ -104,15 +104,15 @@ export default function NameCorrectionDummy() {
               </div>
 
               <h2 className="text-[#7c2d00] font-black text-3xl mb-3" style={{ fontFamily: "'Georgia', serif" }}>
-                Exclusive Service Limit
+                Complete a Puja to Unlock
               </h2>
 
               <div className="max-w-md mx-auto">
                 <p className="text-amber-800 font-medium text-lg leading-relaxed mb-2">
-                  You've successfully used our Name Correction once!
+                  One Name Correction session is included with every completed puja.
                 </p>
                 <p className="text-orange-600/70 text-sm mb-8">
-                  To maintain the accuracy and quality of our sacred analysis, repeat requests require guidance from our expert numerologists.
+                  To continue using our AI-powered analysis, simply book or complete a puja service. This ensures your spiritual and numerological journey remains perfectly aligned.
                 </p>
               </div>
 

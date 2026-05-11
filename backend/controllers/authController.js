@@ -16,6 +16,7 @@ export const signup = async (req, res) => {
     const {
       name,
       phone,
+      country_code,
       email,
       gotra,
       password,
@@ -39,8 +40,17 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "Name, Phone and Password are required" });
     }
 
-    if (phone.length !== 10) {
-      return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
+    // Default to +91 if not provided
+    const finalCountryCode = country_code || "+91";
+
+    const [existing] = await db.query("SELECT id FROM users WHERE phone = ? AND country_code = ?", [phone, finalCountryCode]);
+    if (existing.length > 0) {
+      return res.status(409).json({ message: "Phone number already registered with this country code. Please Login." });
+    }
+
+    // Password strength validation
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
     if (role === "pandit" && paymentMethod === "upi" && upiId) {
@@ -48,11 +58,6 @@ export const signup = async (req, res) => {
       if (!upiRegex.test((upiId || "").trim())) {
         return res.status(400).json({ message: "Invalid UPI ID format (e.g. name@upi)." });
       }
-    }
-
-    const [existing] = await db.query("SELECT id FROM users WHERE phone = ?", [phone]);
-    if (existing.length > 0) {
-      return res.status(409).json({ message: "Phone number already registered. Please Login." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -71,8 +76,8 @@ export const signup = async (req, res) => {
     const uniqueReferralCode = 'PUJA' + (name ? name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') : 'USR') + Math.floor(1000 + Math.random() * 9000);
 
     const [userResult] = await connection.query(
-      "INSERT INTO users (name, phone, email, password, gotra, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, phone, email || null, hashedPassword, gotra || null, role || "user", uniqueReferralCode, referredBy],
+      "INSERT INTO users (name, phone, country_code, email, password, gotra, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, phone, finalCountryCode, email || null, hashedPassword, gotra || null, role || "user", uniqueReferralCode, referredBy],
     );
 
     const newUserId = userResult.insertId;
@@ -127,17 +132,25 @@ export const signup = async (req, res) => {
 // =============================
 export const login = async (req, res) => {
   try {
-    const { phone, password, role } = req.body;
+    const { phone, country_code, password, role } = req.body;
 
     if (!phone || !password) {
       return res.status(400).json({ message: "Email/Phone and Password are required" });
     }
 
-    // Lookup by phone OR email
-    const [rows] = await db.query(
-      "SELECT * FROM users WHERE (phone = ? OR email = ?) AND is_deleted = 0",
-      [phone, phone],
-    );
+    // Lookup by (phone AND country_code) OR email
+    let rows;
+    if (country_code) {
+      [rows] = await db.query(
+        "SELECT * FROM users WHERE ((phone = ? AND country_code = ?) OR email = ?) AND is_deleted = 0",
+        [phone, country_code, phone],
+      );
+    } else {
+      [rows] = await db.query(
+        "SELECT * FROM users WHERE (phone = ? OR email = ?) AND is_deleted = 0",
+        [phone, phone],
+      );
+    }
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Account not found with this Email or Phone." });
@@ -232,19 +245,17 @@ export const socialAuth = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email, gotra, phone } = req.body;
+    const { name, email, gotra, phone, country_code } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
 
-    if (phone && phone.length !== 10) {
-      return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
-    }
+    const finalCC = country_code || "+91";
 
     await db.query(
-      "UPDATE users SET name = ?, email = ?, gotra = ?, phone = ? WHERE id = ?",
-      [name, email?.trim() || null, gotra?.trim() || null, phone?.trim() || null, userId],
+      "UPDATE users SET name = ?, email = ?, gotra = ?, phone = ?, country_code = ? WHERE id = ?",
+      [name, email?.trim() || null, gotra?.trim() || null, phone?.trim() || null, finalCC, userId],
     );
 
     res.status(200).json({ message: "Profile updated successfully" });
@@ -262,7 +273,7 @@ export const getProfile = async (req, res) => {
     const userId = req.user.id;
 
     const [userRows] = await db.query(
-      "SELECT id, name, phone, email, gotra, role, referral_code, pending_referral_discounts FROM users WHERE id = ?",
+      "SELECT id, name, phone, country_code, email, gotra, role, referral_code, pending_referral_discounts FROM users WHERE id = ?",
       [userId],
     );
 
@@ -538,6 +549,11 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Password strength validation
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
     const [rows] = await db.query(
       "SELECT * FROM users WHERE email = ? AND reset_token = ? AND reset_token_expires > NOW() AND is_deleted = 0",
       [email, resetCode]
@@ -562,38 +578,72 @@ export const resetPassword = async (req, res) => {
 // =============================
 // GOOGLE LOGIN
 // =============================
+// =============================
+// GOOGLE LOGIN
+// =============================
 export const googleLogin = async (req, res) => {
+  // Add headers to help with Google popup issues (COOP/COEP)
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  
   try {
     const { idToken, phone } = req.body;
-    if (!idToken) return res.status(400).json({ message: "Token is required" });
+    console.log("📥 Google Login Request received", { hasToken: !!idToken, hasPhone: !!phone });
+
+    if (!idToken) {
+      return res.status(400).json({ success: false, message: "Token is required" });
+    }
 
     let email, name, picture, googleId;
 
-    // Check if it's an Access Token (starts with ya29) or an ID Token (JWT)
-    if (idToken.startsWith("ya29.") || !idToken.includes(".")) {
-      const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${idToken}`);
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error_description || "Invalid Access Token");
-      email = data.email;
-      name = data.name;
-      picture = data.picture;
-      googleId = data.sub;
-    } else {
-      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-      const ticket = await client.verifyIdToken({
-        idToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
+    // 1️⃣ Verify Token with Google
+    try {
+      // Check if it's an Access Token (starts with ya29) or an ID Token (JWT)
+      if (idToken.startsWith("ya29.") || !idToken.includes(".")) {
+        console.log("🔍 Verifying as Access Token via Google API...");
+        const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${idToken}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          console.error("❌ Google UserInfo API Error:", data);
+          throw new Error(data.error_description || "Invalid Access Token");
+        }
+        
+        email = data.email;
+        name = data.name;
+        picture = data.picture;
+        googleId = data.sub;
+      } else {
+        console.log("🔍 Verifying as ID Token (JWT) via google-auth-library...");
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        if (!clientId) {
+          throw new Error("GOOGLE_CLIENT_ID is not defined in server environment variables");
+        }
+        
+        const client = new OAuth2Client(clientId);
+        const ticket = await client.verifyIdToken({
+          idToken,
+          audience: clientId,
+        });
+        const payload = ticket.getPayload();
+        email = payload.email;
+        name = payload.name;
+        picture = payload.picture;
+        googleId = payload.sub;
+      }
+    } catch (verifyError) {
+      console.error("❌ Google Verification Failed:", verifyError.message);
+      return res.status(401).json({ 
+        success: false, 
+        message: "Google verification failed", 
+        error: verifyError.message 
       });
-      const payload = ticket.getPayload();
-      email = payload.email;
-      name = payload.name;
-      picture = payload.picture;
-      googleId = payload.sub;
     }
 
-    if (!email) throw new Error("Could not retrieve email from Google");
+    if (!email) throw new Error("Could not retrieve email from Google profile");
 
-    // Check if user exists with this email or google_id
+    console.log("✅ Google User Verified:", { email, name });
+
+    // 2️⃣ Check/Update User in Database
     let [users] = await db.query(
       "SELECT * FROM users WHERE (email = ? OR google_id = ?) AND is_deleted = 0",
       [email, googleId]
@@ -601,8 +651,9 @@ export const googleLogin = async (req, res) => {
 
     let user;
     if (users.length === 0) {
-      // New user — need phone before creating account
+      // New user — check if phone is provided
       if (!phone) {
+        console.log("⏳ New user detected, requesting phone number...");
         return res.status(200).json({
           success: false,
           needsPhone: true,
@@ -610,43 +661,54 @@ export const googleLogin = async (req, res) => {
           tempGoogle: { name, email, googleId, picture }
         });
       }
-      // Create new user with phone + google_id
+
+      // Generate a unique referral code for the new user
+      const uniqueReferralCode = 'PUJA' + (name ? name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') : 'USR') + Math.floor(1000 + Math.random() * 9000);
+
+      console.log("Creating new user...");
       const [result] = await db.query(
-        "INSERT INTO users (name, email, phone, google_id, role, avatar_url, is_verified) VALUES (?, ?, ?, ?, 'user', ?, 1)",
-        [name, email, phone, googleId || null, picture]
+        "INSERT INTO users (name, email, phone, google_id, role, avatar_url, is_verified, referral_code) VALUES (?, ?, ?, ?, 'user', ?, 1, ?)",
+        [name, email, phone, googleId || null, picture, uniqueReferralCode]
       );
       const [newUsers] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
       user = newUsers[0];
     } else {
       user = users[0];
-      // Existing user — check if phone missing
+      console.log("👤 Existing user found:", user.id);
+
+      // Check if phone missing in existing account
       if (!user.phone && !phone) {
         return res.status(200).json({
           success: false,
           needsPhone: true,
-          message: "Phone number required",
+          message: "Phone number required to link Google account",
           tempGoogle: { name, email, googleId, picture }
         });
       }
-      // Update missing fields
+
+      // Update missing fields (phone, google_id, avatar)
       const updates = [];
       const values = [];
       if (!user.phone && phone) { updates.push("phone = ?"); values.push(phone); }
       if (!user.google_id && googleId) { updates.push("google_id = ?"); values.push(googleId); }
       if (!user.avatar_url && picture) { updates.push("avatar_url = ?"); values.push(picture); }
+      
       if (updates.length > 0) {
+        console.log("🔄 Updating user profile fields...");
         values.push(user.id);
         await db.query(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, values);
         if (phone) user.phone = phone;
       }
     }
 
-    // Generate JWT for our app session
+    // 3️⃣ Generate JWT and Respond
     const token = jwt.sign(
-      { id: user.id, name: user.name, phone: user.phone, role: user.role },
+      { id: user.id, name: user.name, phone: user.phone, role: user.role, email: user.email },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "90d" }
     );
+
+    console.log("🚀 Google Login successful for user:", user.email);
 
     res.status(200).json({
       success: true,
@@ -661,12 +723,11 @@ export const googleLogin = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("❌ Google Login Error:", error);
+    console.error("❌ Google Login Fatal Error:", error);
     res.status(500).json({ 
       success: false, 
-      message: "Google Authentication failed", 
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: "Internal Server Error during Google Login", 
+      error: error.message
     });
   }
 };

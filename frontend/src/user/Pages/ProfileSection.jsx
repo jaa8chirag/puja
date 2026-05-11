@@ -8,10 +8,12 @@ import {
   MapPin,
   Check,
   Copy,
+  ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import { COUNTRY_CODES } from "../../utils/countryCodes";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -37,11 +39,13 @@ const ProfileSection = () => {
     name: decoded.name || "",
     email: decoded.email || "",
     phone: "",
+    country_code: "+91",
     gotra: "",
     referral_code: "",
     pending_referral_discounts: 0,
   });
   const [referralPercent, setReferralPercent] = useState(10);
+  const [referralMaxAmount, setReferralMaxAmount] = useState(null);
   const [referralRewards, setReferralRewards] = useState([]);
 
   // Redirect if no token
@@ -82,6 +86,7 @@ const ProfileSection = () => {
             name: data.user.name || "",
             email: data.user.email || "",
             phone: data.user.phone || "",
+            country_code: data.user.country_code || "+91",
             gotra: data.user.gotra || "",
             referral_code: data.user.referral_code || "",
             pending_referral_discounts: data.user.pending_referral_discounts || 0,
@@ -112,6 +117,9 @@ const ProfileSection = () => {
       try {
         const { data } = await axios.get(`${API_BASE_URL}/settings/referral_reward_referrer`);
         if (data.success) setReferralPercent(data.value);
+
+        const maxRes = await axios.get(`${API_BASE_URL}/settings/referral_reward_max_discount`);
+        if (maxRes.data.success) setReferralMaxAmount(maxRes.data.value ? Number(maxRes.data.value) : null);
       } catch (err) {
         console.error("Settings fetch error:", err);
       }
@@ -142,8 +150,8 @@ const ProfileSection = () => {
       alert("Email is required for all users");
       return;
     }
-    if (personalData.phone && personalData.phone.length !== 10) {
-      alert("Please enter a valid 10-digit phone number");
+    if (personalData.phone && personalData.phone.length < 7) {
+      alert("Please enter a valid phone number");
       return;
     }
     setLoading(true);
@@ -341,24 +349,32 @@ const ProfileSection = () => {
 
               <div>
                 <label className={labelStyle}>Mobile Number</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={personalData.phone}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      if (val.length <= 10) {
+                <div className="flex gap-2">
+                  <select
+                    className="w-[100px] bg-orange-50/30 border border-orange-100 rounded-xl px-2 py-2.5 text-sm font-medium focus:outline-none focus:border-orange-400 transition-all cursor-pointer"
+                    value={personalData.country_code}
+                    onChange={(e) => setPersonalData({ ...personalData, country_code: e.target.value })}
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
+                    ))}
+                  </select>
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={personalData.phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
                         setPersonalData({ ...personalData, phone: val });
-                      }
-                    }}
-                    maxLength={10}
-                    className={inputStyle}
-                    placeholder="Enter 10-digit mobile number"
-                  />
-                  <Phone
-                    size={16}
-                    className="absolute right-4 top-3 text-orange-300"
-                  />
+                      }}
+                      className={inputStyle}
+                      placeholder="Phone number"
+                    />
+                    <Phone
+                      size={16}
+                      className="absolute right-4 top-3 text-orange-300"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -431,7 +447,12 @@ const ProfileSection = () => {
                     <div className="mt-3 space-y-2">
                       {referralRewards.map((reward) => (
                         <div key={reward.id} className="flex justify-between items-center bg-white p-2 rounded-xl border border-orange-100">
-                          <span className="text-[10px] font-bold text-gray-700">{reward.discount_percentage}% OFF Reward</span>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-gray-700">{reward.discount_percentage}% OFF Reward</span>
+                            {referralMaxAmount && (
+                              <span className="text-[8px] text-gray-400 font-medium">Max Discount: ₹{referralMaxAmount}</span>
+                            )}
+                          </div>
                           <span className="text-[9px] text-emerald-500 font-black uppercase">Pending</span>
                         </div>
                       ))}
@@ -498,6 +519,7 @@ const ProfileSection = () => {
                   />
                 </div>
               </div>
+
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

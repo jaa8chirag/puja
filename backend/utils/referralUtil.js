@@ -1,6 +1,7 @@
 import db from "../config/db.js";
 
 export const processReferralReward = async (pujaRequestId) => {
+  let connection;
   try {
     console.log(`[Referral Reward] Starting process for pujaRequestId: ${pujaRequestId}`);
     
@@ -16,34 +17,42 @@ export const processReferralReward = async (pujaRequestId) => {
       return;
     }
 
-    // Check if the user was referred and hasn't been rewarded yet
-    const [userRows] = await db.query("SELECT referred_by, is_referral_rewarded FROM users WHERE id = ?", [userId]);
-    if (userRows.length === 0) {
-      console.log(`[Referral Reward] No user found with ID: ${userId}`);
-      return;
-    }
-    const user = userRows[0];
-    console.log(`[Referral Reward] User ${userId} status - referred_by: ${user.referred_by}, is_referral_rewarded: ${user.is_referral_rewarded}`);
+    connection = await db.getConnection();
+    await connection.beginTransaction();
 
-    if (user.referred_by && !user.is_referral_rewarded) {
-      // Fetch current reward percentage from settings
-      const [settingRows] = await db.query("SELECT setting_value FROM site_settings WHERE setting_key = 'referral_reward_referrer'");
+    // 1. Atomic update check: Set is_referral_rewarded = TRUE ONLY IF it's currently FALSE
+    // and the user was actually referred by someone.
+    const [updateResult] = await connection.query(`
+      UPDATE users 
+      SET is_referral_rewarded = TRUE 
+      WHERE id = ? AND referred_by IS NOT NULL AND is_referral_rewarded = FALSE
+    `, [userId]);
+
+    if (updateResult.affectedRows > 0) {
+      // 2. Fetch the referred_by ID to give them the reward
+      const [userRows] = await connection.query("SELECT referred_by FROM users WHERE id = ?", [userId]);
+      const referrerId = userRows[0].referred_by;
+
+      // 3. Fetch current reward percentage from settings
+      const [settingRows] = await connection.query("SELECT setting_value FROM site_settings WHERE setting_key = 'referral_reward_referrer'");
       const rewardPercentage = settingRows.length > 0 ? Number(settingRows[0].setting_value) : 10;
 
-      // Reward the referrer by inserting a record with the CURRENT percentage
-      await db.query(`
+      // 4. Reward the referrer
+      await connection.query(`
         INSERT INTO user_referral_rewards (user_id, discount_percentage, earned_from_user_id)
         VALUES (?, ?, ?)
-      `, [user.referred_by, rewardPercentage, userId]);
+      `, [referrerId, rewardPercentage, userId]);
       
-      // Mark as rewarded
-      await db.query("UPDATE users SET is_referral_rewarded = TRUE WHERE id = ?", [userId]);
-      
-      console.log(`[Referral Reward] SUCCESS: Referral reward (${rewardPercentage}%) given to referrer ${user.referred_by} for referred user ${userId}`);
+      await connection.commit();
+      console.log(`[Referral Reward] SUCCESS: Referral reward (${rewardPercentage}%) given to referrer ${referrerId} for referred user ${userId}`);
     } else {
-      console.log(`[Referral Reward] SKIPPED: User ${userId} does not meet reward criteria (either not referred or already rewarded).`);
+      await connection.rollback();
+      console.log(`[Referral Reward] SKIPPED: User ${userId} already rewarded or not eligible.`);
     }
   } catch (error) {
+    if (connection) await connection.rollback();
     console.error("[Referral Reward] ERROR processing referral reward: ", error);
+  } finally {
+    if (connection) connection.release();
   }
 };

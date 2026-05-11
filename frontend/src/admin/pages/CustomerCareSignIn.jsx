@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { COUNTRY_CODES } from '../../utils/countryCodes';
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerCareSignIn = () => {
@@ -9,14 +10,18 @@ const CustomerCareSignIn = () => {
 
   const [formData, setFormData] = useState({
     phone: '',
+    country_code: '+91',
     password: '',
     role: 'customerCare',
   });
 
   const handleChange = (e) => {
     let value = e.target.value;
-    // We allow email or phone for login
-    setFormData({ ...formData, [e.target.name]: value });
+    if (e.target.name === 'phone' && /^\d+$/.test(value)) {
+      setFormData({ ...formData, [e.target.name]: value });
+    } else {
+      setFormData({ ...formData, [e.target.name]: value });
+    }
   };
 
   const handleLogin = async (e) => {
@@ -71,12 +76,23 @@ const CustomerCareSignIn = () => {
             <div>
               <label className="text-xs font-semibold uppercase text-slate-500">Email or Phone</label>
               <div className="flex mt-1">
+                {formData.phone && !formData.phone.includes('@') && /^\d+$/.test(formData.phone) && (
+                  <select
+                    className="bg-[#0f172a] border border-slate-700 border-r-0 rounded-l-lg px-2 py-2.5 text-sm font-bold text-slate-400 outline-none cursor-pointer w-[100px]"
+                    value={formData.country_code}
+                    onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
+                    ))}
+                  </select>
+                )}
                 <input
                   type="text"
                   name="phone"
                   required
                   onChange={handleChange}
-                  className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+                  className={`w-full bg-[#0f172a] border border-slate-700 ${formData.phone && !formData.phone.includes('@') && /^\d+$/.test(formData.phone) ? 'rounded-r-lg' : 'rounded-lg'} px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white`}
                   placeholder="Enter email or phone number"
                 />
               </div>

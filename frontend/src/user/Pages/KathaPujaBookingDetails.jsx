@@ -110,6 +110,8 @@ const KathaPujaPaymentDetails = () => {
   const [selectedRewardId, setSelectedRewardId] = useState(null);
   const [useReferralDiscount, setUseReferralDiscount] = useState(false);
   const [referralDiscountPercent, setReferralDiscountPercent] = useState(10);
+  const [referralRewardMax, setReferralRewardMax] = useState(null);
+  const [referralDiscountMax, setReferralDiscountMax] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
@@ -142,6 +144,12 @@ const KathaPujaPaymentDetails = () => {
         const refData = await refRes.json();
         if (refData.success) {
           setReferralDiscountPercent(Number(refData.value));
+        }
+
+        const refMaxRes = await fetch(`${API_BASE_URL}/settings/referral_reward_max_discount`);
+        const refMaxData = await refMaxRes.json();
+        if (refMaxData.success) {
+          setReferralRewardMax(refMaxData.value ? Number(refMaxData.value) : null);
         }
       } catch (err) {
         console.error("Error fetching settings:", err);
@@ -411,16 +419,24 @@ const KathaPujaPaymentDetails = () => {
   const today = new Date().toISOString().split("T")[0];
 
   const grandTotalBeforeDiscount = basePrice + samagriPrice + dharmicTotal;
-  const couponDiscount = appliedCoupon
-    ? Math.floor((grandTotalBeforeDiscount * appliedCoupon.discount_percentage) / 100)
+  let couponDiscount = appliedCoupon
+    ? Math.floor((basePrice * appliedCoupon.discount_percentage) / 100)
     : 0;
+  if (appliedCoupon?.max_discount && couponDiscount > appliedCoupon.max_discount) {
+    couponDiscount = appliedCoupon.max_discount;
+  }
 
   const selectedReward = referralRewards.find(r => r.id === selectedRewardId);
-  const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : referralDiscountPercent;
+  const activeReferralPercent = selectedReward ? selectedReward.discount_percentage : 0;
+  const activeMaxLimit = selectedReward ? referralRewardMax : null;
 
-  const referralDiscount = useReferralDiscount
-    ? Math.floor(((grandTotalBeforeDiscount - couponDiscount) * activeReferralPercent) / 100)
+  let referralDiscount = useReferralDiscount
+    ? Math.floor((basePrice * activeReferralPercent) / 100)
     : 0;
+  
+  if (useReferralDiscount && activeMaxLimit && referralDiscount > activeMaxLimit) {
+    referralDiscount = activeMaxLimit;
+  }
 
   const discountAmount = couponDiscount + referralDiscount;
   const grandTotal = grandTotalBeforeDiscount - discountAmount;
@@ -885,8 +901,8 @@ const KathaPujaPaymentDetails = () => {
                                 }
                               }}
                               className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedRewardId === reward.id
-                                  ? "border-orange-500 bg-orange-50"
-                                  : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                                ? "border-orange-500 bg-orange-50"
+                                : "border-gray-100 bg-gray-50 hover:border-orange-200"
                                 }`}
                             >
                               <div className="flex items-center gap-2">
@@ -922,6 +938,9 @@ const KathaPujaPaymentDetails = () => {
                         couponError={couponError}
                         publicCoupons={publicCoupons}
                       />
+                      <p className="text-[9px] text-gray-500 mt-2 font-medium">
+                        Note: Discounts and coupons are applicable on base price only.
+                      </p>
                     </div>
 
                     {discountAmount > 0 && (
@@ -1140,8 +1159,8 @@ const MobileSummaryInline = ({
                   }
                 }}
                 className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedRewardId === reward.id
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-100 bg-gray-50 hover:border-orange-200"
+                  ? "border-orange-500 bg-orange-50"
+                  : "border-gray-100 bg-gray-50 hover:border-orange-200"
                   }`}
               >
                 <div className="flex items-center gap-2">
@@ -1175,6 +1194,9 @@ const MobileSummaryInline = ({
           couponError={couponError}
           publicCoupons={publicCoupons}
         />
+        <p className="text-[9px] text-gray-500 mt-2 font-medium">
+          Note: Discounts and coupons are applicable on base price only.
+        </p>
       </div>
 
       <div className="border-t border-dashed border-gray-300 w-full" />
