@@ -100,8 +100,8 @@ export default function Home() {
 
   return (
     <div className="w-full overflow-x-hidden bg-[#FFF4E1] flex flex-col items-center">
-      <SEO 
-        title="Sacred Rituals, Modern Convenience" 
+      <SEO
+        title="Vedic Rituals, Modern Convenience"
         description="Book verified Pandits for your sacred ceremonies. Traditional Vedic Pujas like Havan, Griha Pravesh, and Wedding Rituals at your doorstep."
         keywords="Book Pandit Online, Vedic Puja, Havan at home, Griha Pravesh Pandit, Sri Vedic Puja Home"
       />
@@ -115,7 +115,7 @@ export default function Home() {
             </span>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-black leading-tight font-serif text-[#3b2a1a]">
-              Sacred Rituals,
+              Sri Vedic Puja,
               <br className="" />
               <span className="text-orange-500">Modern Convenience</span>
             </h1>
@@ -209,19 +209,17 @@ export default function Home() {
             ) : rituals.map((item, i) => (
               <div
                 key={i}
-                className={`absolute inset-0 transition-all duration-[1200ms] ${
-                  i === index
+                className={`absolute inset-0 transition-all duration-[1200ms] ${i === index
                     ? "opacity-100 scale-100 z-20"
                     : "opacity-0 scale-110 z-10"
-                }`}
+                  }`}
               >
                 <img
                   src={item.img}
                   alt={item.title}
                   loading="lazy"
-                  className={`w-full h-full object-cover transition-transform duration-[6000ms] ${
-                    i === index ? "scale-110" : "scale-100"
-                  }`}
+                  className={`w-full h-full object-cover transition-transform duration-[6000ms] ${i === index ? "scale-110" : "scale-100"
+                    }`}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               </div>
@@ -256,10 +254,9 @@ export default function Home() {
                     className={`
                       h-2 rounded-full cursor-pointer 
                       transition-all duration-500 ease-in-out
-                      ${
-                        i === index
-                          ? "bg-orange-300 w-8" // Active dot: Lambi width (Pill shape)
-                          : "bg-white/50 w-2 hover:bg-white/80" // Inactive dot: Choti width (Circle)
+                      ${i === index
+                        ? "bg-orange-300 w-8" // Active dot: Lambi width (Pill shape)
+                        : "bg-white/50 w-2 hover:bg-white/80" // Inactive dot: Choti width (Circle)
                       }
                     `}
                   ></span>

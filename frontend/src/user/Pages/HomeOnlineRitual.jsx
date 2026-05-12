@@ -77,8 +77,8 @@ export default function HomeOnlineRitual() {
 
   return (
     <div className="min-h-screen bg-[#FFF4E1]">
-      <SEO 
-        title="Online Pind Daan & Pitra Dosh" 
+      <SEO
+        title="Online Pind Daan & Pitra Dosh"
         description="Book verified Pandits for sacred online rituals. Traditional Pind Daan and Pitra Dosh Shanti via live streaming with modern convenience."
         keywords="Online Pind Daan, Pitra Dosh Shanti, Sacred Online Rituals, Online Puja Booking, Sri Vedic Puja"
       />
@@ -94,7 +94,7 @@ export default function HomeOnlineRitual() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-[1px] w-12 bg-orange-300"></div>
             <span className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-orange-600 font-bold">
-              Sacred Luxury Rituals
+              Sri Vedic Puja
             </span>
             <div className="h-[1px] w-12 bg-orange-300"></div>
           </div>

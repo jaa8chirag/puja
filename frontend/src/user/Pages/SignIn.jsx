@@ -26,13 +26,13 @@ const SignIn = () => {
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
-    
+
     const isEmail = phoneNumber.includes("@");
     if (!isEmail && phoneNumber.replace(/\D/g, "").length < 7) {
       setError("Please enter a valid mobile number or email.");
       return;
     }
-    
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
       return;
@@ -44,10 +44,10 @@ const SignIn = () => {
       const response = await fetch(`${API_BASE_URL}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          phone: isEmail ? phoneNumber : phoneNumber.replace(/\D/g, ""), 
+        body: JSON.stringify({
+          phone: isEmail ? phoneNumber : phoneNumber.replace(/\D/g, ""),
           country_code: isEmail ? null : countryCode,
-          password: password 
+          password: password
         }),
       });
       const data = await response.json();
@@ -73,8 +73,8 @@ const SignIn = () => {
       const response = await fetch(`${API_BASE_URL}/user/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          idToken: accessToken, 
+        body: JSON.stringify({
+          idToken: accessToken,
           phone: phone,
           country_code: phone ? googleCountryCode : null
         }),
@@ -178,7 +178,7 @@ const SignIn = () => {
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
-               <p className="text-red-700 text-sm font-medium">{error}</p>
+              <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
           )}
 
@@ -230,7 +230,7 @@ const SignIn = () => {
                 </button>
               </div>
               <div className="flex justify-end">
-                 <Link to="/forgot-password" size={14} className="text-xs font-bold text-orange-600 hover:underline">Forgot Password?</Link>
+                <Link to="/forgot-password" size={14} className="text-xs font-bold text-orange-600 hover:underline">Forgot Password?</Link>
               </div>
             </div>
 
@@ -259,7 +259,7 @@ const SignIn = () => {
 
           {/* Social Auth Buttons */}
           <div className="flex flex-col gap-4">
-            <button 
+            <button
               onClick={() => handleSocialAuth('Google')}
               className="flex items-center justify-center gap-3 py-4 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95 w-full"
             >
@@ -289,7 +289,7 @@ const SignIn = () => {
             <span className="text-[120px] font-serif leading-none">ॐ</span>
           </div>
           <h2 className="text-4xl font-serif font-bold mb-6">
-            Sacred Rituals Made Simple
+            Sri Vedic Puja Made Simple
           </h2>
           <p className="text-white/90 text-lg leading-relaxed px-4">
             Book verified Pandits, get complete Samagri kits, and experience

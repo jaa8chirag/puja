@@ -23,7 +23,7 @@ axios.interceptors.request.use((config) => {
 const originalFetch = window.fetch;
 window.fetch = async function (...args) {
   let [resource, config] = args;
-  
+
   if (typeof resource === 'string') {
     const method = (config && config.method) ? config.method.toLowerCase() : 'get';
     if (method === 'get' && resource.startsWith('http')) {
@@ -102,18 +102,8 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ── DYNAMIC PAGE TITLE ──────────────────────────────────────────────────
-    const role = localStorage.getItem("role");
-    if (location.pathname.startsWith("/admin")) {
-      document.title = "Sri Vedic Puja | Admin Panel";
-    } else if (location.pathname.startsWith("/partner") || location.pathname.includes("partner-sign")) {
-      document.title = "Sri Vedic Puja | Partner Dashboard";
-    } else if (location.pathname.startsWith("/customer-care")) {
-      document.title = "Sri Vedic Puja | Customer Care";
-    } else {
-      document.title = "Sri Vedic Puja";
-    }
-    // ────────────────────────────────────────────────────────────────────────
+    // Page titles are handled by SEO components in individual pages.
+    // For admin/partner areas, SEO components should be added to their respective layouts/pages.
 
     // Helper function to check if token is valid and not expired
     const isTokenValid = (t) => {
@@ -189,134 +179,134 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* ... rest of routes ... */}
-          {/* ================= PUBLIC USER LAYOUT ================= */}
-          <Route element={<UserLayout />}>
-            <Route path="/" element={<Home />} />
+            {/* ================= PUBLIC USER LAYOUT ================= */}
+            <Route element={<UserLayout />}>
+              <Route path="/" element={<Home />} />
 
-            <Route path="/chat" element={<Chatwidget />} />
-            <Route path="/ai-pandit" element={<AIPanditBot />} />
+              <Route path="/chat" element={<Chatwidget />} />
+              <Route path="/ai-pandit" element={<AIPanditBot />} />
 
-            <Route path="/blogs" element={<Blog />} />
-            <Route path="/blogs/:id" element={<BlogDetail />} />
+              <Route path="/blogs" element={<Blog />} />
+              <Route path="/blogs/:id" element={<BlogDetail />} />
 
-            <Route path="/temples" element={<FullTemplePage />} />
-            <Route path="/online-pinddan" element={<HomeOnlineRitual />} />
+              <Route path="/temples" element={<FullTemplePage />} />
+              <Route path="/online-pinddan" element={<HomeOnlineRitual />} />
 
-            <Route path="/online-ritual/:id" element={<OnlineRitual />} />
+              <Route path="/online-ritual/:id" element={<OnlineRitual />} />
 
-            <Route path="/katha-jaap/:id" element={<KathaPujaBooking />} />
+              <Route path="/katha-jaap/:id" element={<KathaPujaBooking />} />
 
-            <Route element={<ProtectedLayout />}>
-              <Route path="/kundli" element={<KundliPortal />} />
+              <Route element={<ProtectedLayout />}>
+                <Route path="/kundli" element={<KundliPortal />} />
+              </Route>
+              <Route element={<ProtectedLayout />}>
+                <Route path="/name-correction" element={<NameCorrectionDummy />} />
+              </Route>
+
+              <Route element={<ProtectedLayout />}>
+                <Route
+                  path="/online-ritual-payment-details/:id"
+                  element={<OnlineRitualPaymentDetails />}
+                />
+              </Route>
+
+              <Route path="/temples/:id" element={<MandirDetailsPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/aarti" element={<AartiPage />} />
+
+              <Route path="/about-us" element={<AboutUs />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/cancellation-policy" element={<CancellationPolicy />} />
+              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+              <Route path="/disclaimer" element={<Disclaimer />} />
+              <Route path="/discrimination-policy" element={<DiscriminationPolicy />} />
+
+              {/* Home Puja */}
+              <Route path="/home-puja">
+                <Route index element={<HomePuja />} />
+                <Route path=":id" element={<HomePujaBooking />} />
+
+                {/* 🔐 Protected Payment */}
+                <Route element={<ProtectedLayout />}>
+                  <Route
+                    path="payment-details/:id"
+                    element={<HomePujaPaymentDetails />}
+                  />
+                </Route>
+              </Route>
+
+              {/* Katha Jaap */}
+              <Route path="/katha-jaap">
+                <Route index element={<KathaPuja />} />
+                <Route path=":id" element={<KathaPujaBooking />} />
+
+                {/* 🔐 Protected Payment */}
+                <Route element={<ProtectedLayout />}>
+                  <Route
+                    path="payment-details/:id"
+                    element={<KathaPujaBookingDetails />}
+                  />
+                </Route>
+              </Route>
+
+              {/* Temple Puja */}
+              <Route path="/temple-puja">
+                <Route index element={<TemplePuja />} />
+                <Route path=":id" element={<TemplePujaBooking />} />
+              </Route>
+
+              {/* Pind Pan */}
+              <Route path="/pind-dan">
+                <Route index element={<Pind_Dan />} />
+                <Route path=":id" element={<PindDanBooking />} />
+              </Route>
             </Route>
-            <Route element={<ProtectedLayout />}>
-              <Route path="/name-correction" element={<NameCorrectionDummy />} />
+
+            {/* ================= NAVBAR ONLY LAYOUT ================= */}
+            <Route element={<NavbarOnlyLayout />}>
+              {/* 🔐 Protected Profile Section */}
+              <Route element={<ProtectedLayout allowedRoles={["user"]} />}>
+                <Route path="/profile" element={<ProfileSection />} />
+                <Route path="/manage-sankalp" element={<ManageSankalp />} />
+                <Route path="/saved-addresses" element={<SavedAddresses />} />
+                <Route path="/my-booking" element={<MyBookings />} />
+              </Route>
+
+              <Route path="/help">
+                <Route index element={<HelpSupportSection />} />
+                <Route path="support" element={<HelpSection />} />
+              </Route>
             </Route>
 
-            <Route element={<ProtectedLayout />}>
+            {/* ================= AUTH ROUTES ================= */}
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/partner-signin" element={<PartnerSignIn />} />
+            <Route path="/partner-signup" element={<PartnerSignUp />} />
+
+            {/* ================= PARTNER ROUTES ================= */}
+            <Route element={<ProtectedLayout allowedRoles={["pandit"]} />}>
+              <Route path="/partner/dashboard" element={<PartnerDashboard />} />
+            </Route>
+
+            <Route path="/customer-care/signin" element={<CustomerCareSignIn />} />
+
+            <Route element={<ProtectedLayout allowedRoles={["customerCare"]} />}>
               <Route
-                path="/online-ritual-payment-details/:id"
-                element={<OnlineRitualPaymentDetails />}
+                path="/customer-care/dashboard"
+                element={<CustomerCareDashboard />}
               />
             </Route>
 
-            <Route path="/temples/:id" element={<MandirDetailsPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/aarti" element={<AartiPage />} />
-
-            <Route path="/about-us" element={<AboutUs />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/cancellation-policy" element={<CancellationPolicy />} />
-            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-            <Route path="/disclaimer" element={<Disclaimer />} />
-            <Route path="/discrimination-policy" element={<DiscriminationPolicy />} />
-
-            {/* Home Puja */}
-            <Route path="/home-puja">
-              <Route index element={<HomePuja />} />
-              <Route path=":id" element={<HomePujaBooking />} />
-
-              {/* 🔐 Protected Payment */}
-              <Route element={<ProtectedLayout />}>
-                <Route
-                  path="payment-details/:id"
-                  element={<HomePujaPaymentDetails />}
-                />
-              </Route>
+            {/* admin routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route element={<ProtectedLayout allowedRoles={["admin"]} />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/name-correct" element={<NameCorrection />} />
             </Route>
 
-            {/* Katha Jaap */}
-            <Route path="/katha-jaap">
-              <Route index element={<KathaPuja />} />
-              <Route path=":id" element={<KathaPujaBooking />} />
-
-              {/* 🔐 Protected Payment */}
-              <Route element={<ProtectedLayout />}>
-                <Route
-                  path="payment-details/:id"
-                  element={<KathaPujaBookingDetails />}
-                />
-              </Route>
-            </Route>
-
-            {/* Temple Puja */}
-            <Route path="/temple-puja">
-              <Route index element={<TemplePuja />} />
-              <Route path=":id" element={<TemplePujaBooking />} />
-            </Route>
-
-            {/* Pind Pan */}
-            <Route path="/pind-dan">
-              <Route index element={<Pind_Dan />} />
-              <Route path=":id" element={<PindDanBooking />} />
-            </Route>
-          </Route>
-
-          {/* ================= NAVBAR ONLY LAYOUT ================= */}
-          <Route element={<NavbarOnlyLayout />}>
-            {/* 🔐 Protected Profile Section */}
-            <Route element={<ProtectedLayout allowedRoles={["user"]} />}>
-              <Route path="/profile" element={<ProfileSection />} />
-              <Route path="/manage-sankalp" element={<ManageSankalp />} />
-              <Route path="/saved-addresses" element={<SavedAddresses />} />
-              <Route path="/my-booking" element={<MyBookings />} />
-            </Route>
-
-            <Route path="/help">
-              <Route index element={<HelpSupportSection />} />
-              <Route path="support" element={<HelpSection />} />
-            </Route>
-          </Route>
-
-          {/* ================= AUTH ROUTES ================= */}
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/partner-signin" element={<PartnerSignIn />} />
-          <Route path="/partner-signup" element={<PartnerSignUp />} />
-
-          {/* ================= PARTNER ROUTES ================= */}
-          <Route element={<ProtectedLayout allowedRoles={["pandit"]} />}>
-            <Route path="/partner/dashboard" element={<PartnerDashboard />} />
-          </Route>
-
-          <Route path="/customer-care/signin" element={<CustomerCareSignIn />} />
-
-          <Route element={<ProtectedLayout allowedRoles={["customerCare"]} />}>
-            <Route
-              path="/customer-care/dashboard"
-              element={<CustomerCareDashboard />}
-            />
-          </Route>
-
-          {/* admin routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route element={<ProtectedLayout allowedRoles={["admin"]} />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/name-correct" element={<NameCorrection />} />
-          </Route>
-
-          {/* ================= 404 ================= */}
+            {/* ================= 404 ================= */}
             {/* ================= 404 ================= */}
             <Route path="*" element={<div className="min-h-screen flex items-center justify-center bg-[#FFF4E1] font-serif text-2xl font-bold text-orange-800">404 - Page Not Found</div>} />
           </Routes>

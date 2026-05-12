@@ -60,8 +60,8 @@ export default function Pind_Dan() {
 
   return (
     <div className="min-h-screen bg-[#FFF4E1] text-[#2D1B08] selection:bg-orange-100">
-      <SEO 
-        title="Sacred Pind Daan & Pitra Dosh" 
+      <SEO
+        title="Sacred Pind Daan & Pitra Dosh"
         description="Book verified Pandits for sacred Pind Daan rituals at holy sites. Traditional ancestral rituals and Pitra Dosh Shanti with modern convenience."
         keywords="Pind Daan, Pitra Dosh Shanti, Ancestral Rituals, Online Pind Daan Booking, Sri Vedic Puja"
       />
@@ -77,7 +77,7 @@ export default function Pind_Dan() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-[1px] w-12 bg-orange-300"></div>
             <span className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-orange-600 font-bold">
-              Sacred Luxury Rituals
+              Sri Vedic Puja
             </span>
             <div className="h-[1px] w-12 bg-orange-300"></div>
           </div>

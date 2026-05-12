@@ -25,6 +25,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SEO from "../Components/SEO";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -120,13 +121,12 @@ const ProfileStepIndicator = ({ currentStep, setStep }) => {
           >
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all duration-300
-              ${
-                currentStep > step.num
+              ${currentStep > step.num
                   ? "bg-orange-500 border-orange-500 text-white"
                   : currentStep === step.num
                     ? "bg-white border-orange-500 text-orange-500 shadow-md shadow-orange-100"
                     : "bg-white border-gray-200 text-gray-300"
-              } group-hover:scale-110`}
+                } group-hover:scale-110`}
             >
               {currentStep > step.num ? <CheckCircle2 size={14} /> : step.num}
             </div>
@@ -227,9 +227,8 @@ const PujaCard = ({ puja, onComplete, onRefresh }) => {
         <div className="flex items-center gap-2">
           <CreditCard size={16} className="text-orange-400" />
           <span className="text-[11px] font-black uppercase tracking-wider text-gray-400">Payment Status:</span>
-          <span className={`text-[12px] font-bold px-3 py-0.5 rounded-full ${
-            puja.payment_status === 'fully_paid' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'
-          }`}>
+          <span className={`text-[12px] font-bold px-3 py-0.5 rounded-full ${puja.payment_status === 'fully_paid' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'
+            }`}>
             {puja.payment_status === 'fully_paid' ? 'Fully Paid' : 'Partially Paid'}
           </span>
         </div>
@@ -506,6 +505,7 @@ const PartnerDashboard = () => {
       className="min-h-screen bg-[#FFF4E1] font-sans pb-28"
       style={{ fontFamily: "'DM Sans', sans-serif" }}
     >
+      <SEO title="Partner Dashboard" />
       <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet"
@@ -514,7 +514,7 @@ const PartnerDashboard = () => {
       {/* HEADER */}
       <div className="bg-[#FDFAF4] border-b border-[#EDE8DC] sticky top-0 px-4 sm:px-6 pt-3 pb-3 z-40 shadow-sm">
         <div className="flex items-center justify-between gap-2 w-full">
-          
+
           {/* Left: Branding */}
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500 shadow-sm">
@@ -543,12 +543,12 @@ const PartnerDashboard = () => {
                 />
               </button>
             </div>
-            
+
             <div className="w-[1px] h-8 bg-[#EDE8DC] hidden sm:block"></div>
 
             {/* Clickable Profile (Moved to Right) */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                 className="flex items-center gap-2 min-w-0 p-1 rounded-2xl hover:bg-orange-50/50 transition-all active:scale-95 group border border-transparent hover:border-orange-100/50"
               >
@@ -573,7 +573,7 @@ const PartnerDashboard = () => {
                 <>
                   {/* Invisible Overlay for click-outside */}
                   <div className="fixed inset-0 z-40" onClick={() => setShowProfileDropdown(false)} />
-                  
+
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#EDE8DC] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                     <button
                       onClick={() => {
@@ -590,7 +590,7 @@ const PartnerDashboard = () => {
                         <p className="text-[10px] text-gray-400 font-medium">Update details</p>
                       </div>
                     </button>
-                    
+
                     <button
                       onClick={() => {
                         setShowProfileDropdown(false);
@@ -1290,11 +1290,10 @@ const PartnerDashboard = () => {
       {toastModal.show && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
           <div className="bg-[#FDFAF4] w-full max-w-sm rounded-3xl shadow-2xl border border-[#EDE8DC] p-8 text-center animate-in zoom-in-95 duration-200">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 border ${
-              toastModal.type === "success"
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 border ${toastModal.type === "success"
                 ? "bg-green-50 border-green-200"
                 : "bg-red-50 border-red-200"
-            }`}>
+              }`}>
               {toastModal.type === "success" ? (
                 <CheckCircle size={32} className="text-green-500" />
               ) : (
@@ -1307,11 +1306,10 @@ const PartnerDashboard = () => {
             <p className="text-sm text-[#6b5840] mb-6">{toastModal.message}</p>
             <button
               onClick={() => setToastModal({ show: false, type: "success", message: "" })}
-              className={`w-full py-3 rounded-xl font-bold text-[14px] text-white transition shadow-md ${
-                toastModal.type === "success"
+              className={`w-full py-3 rounded-xl font-bold text-[14px] text-white transition shadow-md ${toastModal.type === "success"
                   ? "bg-green-600 hover:bg-green-700"
                   : "bg-red-500 hover:bg-red-600"
-              }`}
+                }`}
             >
               OK
             </button>

@@ -49,7 +49,7 @@ const MyBookings = () => {
       try {
         const timestamp = new Date().getTime();
         const response = await fetch(`${API_BASE_URL}/puja/my-bookings?t=${timestamp}`, {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
             "Cache-Control": "no-cache",
             "Pragma": "no-cache"
@@ -125,10 +125,10 @@ const MyBookings = () => {
                 prev.map((b) =>
                   b.id === booking.id
                     ? {
-                        ...b,
-                        paid_amount: Number(b.total_price),
-                        payment_status: "fully_paid",
-                      }
+                      ...b,
+                      paid_amount: Number(b.total_price),
+                      payment_status: "fully_paid",
+                    }
                     : b
                 )
               );
@@ -225,8 +225,8 @@ const MyBookings = () => {
             setShowConfirm({ show: true, id: booking.id, data: booking })
           }
           className={`${baseClass} ${isDisabled
-              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-red-500 border-red-200 hover:bg-red-50 active:scale-95 cursor-pointer"
+            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+            : "text-red-500 border-red-200 hover:bg-red-50 active:scale-95 cursor-pointer"
             }`}
         >
           <Trash2 size={size === "sm" ? 11 : 12} />
@@ -366,8 +366,8 @@ const MyBookings = () => {
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] animate-bounce text-center min-w-[300px]">
           <div
             className={`px-6 py-3 rounded-2xl shadow-2xl flex items-center justify-center gap-3 border-2 border-white ${errorMsg.includes("successfully")
-                ? "bg-green-500 text-white"
-                : "bg-red-500 text-white"
+              ? "bg-green-500 text-white"
+              : "bg-red-500 text-white"
               }`}
           >
             <span className="text-xl">
@@ -590,11 +590,11 @@ const MyBookings = () => {
                       </p>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${(b.assignment_status === "pending" && b.pandit_name) ? "bg-blue-100 text-blue-600 border border-blue-200" :
-                            b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" :
-                              b.assignment_status === "accepted" ? "bg-indigo-100 text-indigo-600 border border-indigo-200" :
-                                b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" :
-                                  b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" :
-                                    "bg-blue-100 text-blue-600 border border-blue-200"
+                          b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" :
+                            b.assignment_status === "accepted" ? "bg-indigo-100 text-indigo-600 border border-indigo-200" :
+                              b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" :
+                                b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" :
+                                  "bg-blue-100 text-blue-600 border border-blue-200"
                           }`}>
                           {b.assignment_status === "pending" && b.pandit_name ? "Assigned" :
                             b.assignment_status === "pending" ? "Finding" :
@@ -621,11 +621,11 @@ const MyBookings = () => {
                       ID: <span className="ml-1 text-orange-600">{b.bookingId}</span>
                     </p>
                     <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${(b.assignment_status === "pending" && b.pandit_name) ? "bg-blue-100 text-blue-600 border border-blue-200" :
-                        b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" :
-                          b.assignment_status === "accepted" ? "bg-indigo-100 text-indigo-600 border border-indigo-200" :
-                            b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" :
-                              b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" :
-                                "bg-blue-100 text-blue-600 border border-blue-200"
+                      b.assignment_status === "pending" ? "bg-orange-100 text-orange-600 border border-orange-200" :
+                        b.assignment_status === "accepted" ? "bg-indigo-100 text-indigo-600 border border-indigo-200" :
+                          b.assignment_status === "declined" ? "text-red-500 bg-red-100 border border-red-200" :
+                            b.assignment_status === "completed" ? "bg-green-100 text-green-600 border border-green-200" :
+                              "bg-blue-100 text-blue-600 border border-blue-200"
                       }`}>
                       {b.assignment_status === "pending" && b.pandit_name ? "Pandit Assigned" :
                         b.assignment_status === "pending" ? "Finding Pandit" :

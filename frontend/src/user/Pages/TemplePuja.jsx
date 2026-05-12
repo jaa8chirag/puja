@@ -66,8 +66,8 @@ export default function TemplePuja() {
 
   return (
     <div className="min-h-screen bg-[#FFF4E1] text-[#2D1B08] selection:bg-orange-100">
-      <SEO 
-        title="Divine Temple Puja" 
+      <SEO
+        title="Divine Temple Puja"
         description="Book verified Pandits for sacred rituals at prestigious temples globally. Experience traditional Temple Pujas with live streaming and modern convenience."
         keywords="Temple Puja, Book Temple Rituals, Online Temple Booking, Sacred Temple Pujas, Sri Vedic Puja"
       />
@@ -198,7 +198,7 @@ export default function TemplePuja() {
                           </p>
                         </div>
                       )}
-                      
+
                       {service.dateOfStart && (
                         <div className="flex items-center gap-2">
                           <Calendar size={12} className="text-orange-500 shrink-0" />

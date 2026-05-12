@@ -75,8 +75,8 @@ export default function HomePuja() {
 
   return (
     <div className="min-h-screen bg-[#FFF4E1]">
-      <SEO 
-        title="Divine Home Puja" 
+      <SEO
+        title="Divine Home Puja"
         description="Book verified Pandits for authentic Vedic ceremonies at your doorstep. Traditional Home Pujas like Havan, Ganesha Puja, and more with modern convenience."
         keywords="Home Puja, Book Pandit for Home, Vedic Rituals at Home, Online Puja Booking, Sri Vedic Puja"
       />
@@ -93,7 +93,7 @@ export default function HomePuja() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-[1px] w-12 bg-orange-300"></div>
             <span className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-orange-600 font-bold">
-              Sacred Luxury Rituals
+              Sri Vedic Puja
             </span>
             <div className="h-[1px] w-12 bg-orange-300"></div>
           </div>

@@ -23,6 +23,7 @@ import Gallery from "../AdminComponets/AdminEventsAartis";
 import NameCorrectionList from "../AdminComponets/NameCorrectionList";
 import PersonalInfo from "../AdminComponets/PersonalInfo";
 import AdminNewsletter from "../AdminComponets/AdminNewsletter";
+import SEO from "../../user/Components/SEO";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Icon = ({ name }) => {
@@ -473,6 +474,7 @@ const AdminDashboard = () => {
 
   return (
     <>
+      <SEO title="Admin Panel" />
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');`}</style>
 
       <div className="flex bg-[#0d1117] min-h-screen">

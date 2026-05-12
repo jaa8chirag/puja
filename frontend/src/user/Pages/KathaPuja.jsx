@@ -57,8 +57,8 @@ export default function KathaPuja() {
 
   return (
     <div className="min-h-screen bg-[#FFF4E1]">
-      <SEO 
-        title="Divine Katha & Jaap" 
+      <SEO
+        title="Divine Katha & Jaap"
         description="Book verified Pandits for sacred narrations and Jaap rituals. Traditional Katha, Jaap, and Vedic narrations with modern convenience."
         keywords="Katha Jaap, Book Pandit for Katha, Vedic Narrations, Online Jaap Booking, Sri Vedic Puja"
       />
@@ -74,7 +74,7 @@ export default function KathaPuja() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-[1px] w-12 bg-orange-300"></div>
             <span className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-orange-600 font-bold">
-              Sacred Luxury Rituals
+              Sri Vedic Puja
             </span>
             <div className="h-[1px] w-12 bg-orange-300"></div>
           </div>
@@ -165,4 +165,4 @@ export default function KathaPuja() {
       </section>
     </div>
   );
-}
+}
