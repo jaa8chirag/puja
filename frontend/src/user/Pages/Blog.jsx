@@ -161,13 +161,15 @@ export default function Blog() {
                   style={{ boxShadow: '0 20px 50px -12px rgba(180,83,9,0.12)' }}
                 >
                   {/* Left Side: Image */}
-                  <div className="w-full md:w-[55%] h-64 md:h-[400px] overflow-hidden relative">
+                  <div className="w-full md:w-[55%] aspect-video overflow-hidden relative">
                     {buildImageUrl(featured.image_url) ? (
                       <img
                         src={buildImageUrl(featured.image_url)}
                         alt={featured.title}
                         loading="lazy"
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        width={1200}
+                        height={675}
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50">
@@ -265,13 +267,15 @@ function BlogCard({ blog, imageUrl, onRead }) {
       onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 16px rgba(180,83,9,0.07)'}
     >
       {/* Image — no badges on top */}
-      <div className="relative h-56 overflow-hidden shrink-0">
+      <div className="relative aspect-video overflow-hidden shrink-0">
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={blog.title}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            width={600}
+            height={338}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center"
@@ -307,15 +311,15 @@ function BlogCard({ blog, imageUrl, onRead }) {
           </p>
         )}
       </div>
-        <div className="px-5 pb-5 mt-auto">
-          <div className="flex items-center gap-2 text-[11px] text-stone-400 font-medium">
-            {blog.author && <span>{blog.author}</span>}
-            {blog.author && (blog.created_at || blog.read_time) && <span className="opacity-40">·</span>}
-            {blog.created_at && <span>{formatOrdinalDate(blog.created_at)}</span>}
-            {blog.created_at && blog.read_time && <span className="opacity-40">·</span>}
-            {blog.read_time && <span>{blog.read_time} read</span>}
-          </div>
+      <div className="px-5 pb-5 mt-auto">
+        <div className="flex items-center gap-2 text-[11px] text-stone-400 font-medium">
+          {blog.author && <span>{blog.author}</span>}
+          {blog.author && (blog.created_at || blog.read_time) && <span className="opacity-40">·</span>}
+          {blog.created_at && <span>{formatOrdinalDate(blog.created_at)}</span>}
+          {blog.created_at && blog.read_time && <span className="opacity-40">·</span>}
+          {blog.read_time && <span>{blog.read_time} read</span>}
         </div>
+      </div>
     </div>
   );
 }

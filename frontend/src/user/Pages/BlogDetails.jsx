@@ -133,13 +133,13 @@ export default function BlogDetail() {
               <div className="flex flex-wrap items-center gap-4 text-[13px] text-stone-400 font-medium pb-6 border-b border-orange-100">
                 {blog.author && <span>{blog.author}</span>}
                 {blog.author && (blog.date || blog.created_at || blog.readTime || blog.read_time) && <span className="opacity-40">·</span>}
-                
+
                 {(blog.date || blog.created_at) && (
                   <span>{formatOrdinalDate(blog.date || blog.created_at)}</span>
                 )}
 
                 {(blog.date || blog.created_at) && (blog.readTime || blog.read_time) && <span className="opacity-40">·</span>}
-                
+
                 {(blog.readTime || blog.read_time) && (
                   <span>{(blog.readTime || blog.read_time)} read</span>
                 )}
@@ -154,7 +154,9 @@ export default function BlogDetail() {
                   src={blog.image_url.startsWith('http') ? blog.image_url : blog.image_url.startsWith('/uploads/') ? `${API_BASE_URL.replace('/api', '')}${blog.image_url}` : `${API_BASE_URL}/uploads/${blog.image_url}`}
                   alt={blog.title}
                   loading="lazy"
-                  className="w-full h-64 md:h-[400px] object-cover"
+                  className="w-full aspect-video object-cover"
+                  width={1200}
+                  height={675}
                 />
               </div>
             )}
@@ -163,12 +165,12 @@ export default function BlogDetail() {
             <div className="bg-white rounded-3xl border border-orange-100 p-8 md:p-12"
               style={{ boxShadow: '0 4px 20px rgba(180,83,9,0.04)' }}>
               {blog.excerpt && (
-                <p className="text-xl md:text-2xl font-medium text-stone-700 mb-8 italic leading-relaxed border-l-4 border-orange-400 pl-6">
+                <p className="text-base md:text-lg font-medium text-stone-700 mb-8 italic leading-relaxed border-l-4 border-orange-400 pl-6">
                   {blog.excerpt}
                 </p>
               )}
-              <HTMLContent 
-                content={blog.content || blog.description || ''} 
+              <HTMLContent
+                content={blog.content || blog.description || ''}
                 className="text-base md:text-lg leading-[1.8] text-stone-800"
                 style={{ fontFamily: "'Georgia', serif" }}
               />
@@ -202,4 +204,4 @@ export default function BlogDetail() {
     </div>
   );
 }
-
+

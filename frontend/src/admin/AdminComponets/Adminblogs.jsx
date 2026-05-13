@@ -642,7 +642,7 @@ const Adminblogs = () => {
               <div>
                 <label className="text-gray-500 text-xs uppercase tracking-wider mb-1.5 block flex items-center justify-between">
                   <span>Featured Image</span>
-                  <span className="text-orange-500/70 lowercase font-bold tracking-normal">[Recommended Ratio 16:9]</span>
+                  <span className="text-orange-500/70 lowercase font-bold tracking-normal">[Recommended: 1200x675px (16:9)]</span>
                 </label>
                 <div
                   onClick={() => fileRef.current?.click()}
@@ -652,7 +652,7 @@ const Adminblogs = () => {
                     <img
                       src={imagePreview}
                       alt="preview"
-                      className="w-full h-40 object-cover rounded-lg"
+                      className="w-full aspect-video object-cover rounded-lg"
                     />
                   ) : (
                     <div className="py-5">
@@ -737,7 +737,7 @@ const Adminblogs = () => {
                 Purge Blog?
               </h3>
               <p className="text-slate-400 text-[12px] font-medium leading-relaxed">
-                You are about to delete <span className="text-orange-400 font-bold">"{selected.title}"</span>. 
+                You are about to delete <span className="text-orange-400 font-bold">"{selected.title}"</span>.
                 This action will remove the article from the public feed permanently.
               </p>
             </div>
