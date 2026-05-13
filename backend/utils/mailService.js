@@ -16,10 +16,10 @@ const transporter = nodemailer.createTransport({
 
 export const sendPaymentReceipt = async (to, receiptData) => {
   // Skip if credentials are not configured or are placeholders
-  const isConfigured = 
-    process.env.SMTP_USER && 
-    process.env.SMTP_USER !== 'your-email@gmail.com' && 
-    process.env.SMTP_PASS && 
+  const isConfigured =
+    process.env.SMTP_USER &&
+    process.env.SMTP_USER !== 'your-email@gmail.com' &&
+    process.env.SMTP_PASS &&
     process.env.SMTP_PASS !== 'your-app-password';
 
   if (!isConfigured) {
@@ -39,7 +39,7 @@ export const sendPaymentReceipt = async (to, receiptData) => {
   } = receiptData;
 
   const isFullPayment = paymentStatus === 'fully_paid';
-  
+
   const mailOptions = {
     from: `"Sri Vedic Puja" <${process.env.SMTP_USER}>`,
     to: to,
@@ -118,10 +118,10 @@ export const sendPaymentReceipt = async (to, receiptData) => {
 };
 
 export const sendResetCodeEmail = async (to, resetCode) => {
-  const isConfigured = 
-    process.env.SMTP_USER && 
-    process.env.SMTP_USER !== 'your-email@gmail.com' && 
-    process.env.SMTP_PASS && 
+  const isConfigured =
+    process.env.SMTP_USER &&
+    process.env.SMTP_USER !== 'your-email@gmail.com' &&
+    process.env.SMTP_PASS &&
     process.env.SMTP_PASS !== 'your-app-password';
 
   if (!isConfigured) {
@@ -170,6 +170,63 @@ export const sendResetCodeEmail = async (to, resetCode) => {
     return true;
   } catch (error) {
     console.error('[Email Error] Failed to send reset code:', error);
+    return false;
+  }
+};
+
+export const sendVerificationOTPEmail = async (to, otp) => {
+  const isConfigured = 
+    process.env.SMTP_USER && 
+    process.env.SMTP_USER !== 'your-email@gmail.com' && 
+    process.env.SMTP_PASS && 
+    process.env.SMTP_PASS !== 'your-app-password';
+
+  if (!isConfigured) {
+    console.log('⚠️ [Email Skipped] SMTP credentials not configured. Skipping verification email.');
+    return false;
+  }
+
+  const mailOptions = {
+    from: `"Sri Vedic Puja" <${process.env.SMTP_USER}>`,
+    to: to,
+    subject: `Email Verification OTP - Sri Vedic Puja`,
+    html: `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <div style="background: linear-gradient(135deg, #f97316, #b45309); padding: 24px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">Sri Vedic Puja</h1>
+          <p style="margin: 8px 0 0; opacity: 0.9;">Verify Your Email</p>
+        </div>
+        
+        <div style="padding: 32px; background-color: #ffffff; text-align: center;">
+          <p style="font-size: 16px; color: #4b5563;">Welcome to Sri Vedic Puja!</p>
+          <p style="font-size: 14px; color: #6b7280; line-height: 1.6;">
+            Use the OTP below to verify your email address and complete your registration:
+          </p>
+          
+          <div style="margin: 32px 0; padding: 20px; background-color: #fff7ed; border: 2px dashed #f97316; border-radius: 12px;">
+            <span style="font-size: 36px; font-weight: 800; color: #ea580c; letter-spacing: 12px; font-family: monospace;">${otp}</span>
+          </div>
+          
+          <p style="font-size: 12px; color: #9ca3af; margin-top: 24px;">
+            This OTP is valid for 10 minutes. If you did not request this, please ignore this email.
+          </p>
+        </div>
+        
+        <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #f3f4f6;">
+          <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+            © 2026 Sri Vedic Puja. All rights reserved.
+          </p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[Email Sent] Verification OTP:', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('[Email Error] Failed to send verification OTP:', error);
     return false;
   }
 };

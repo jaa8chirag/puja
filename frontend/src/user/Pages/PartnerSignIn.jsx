@@ -19,8 +19,8 @@ const PartnerSignIn = () => {
     e.preventDefault();
     
     const isEmail = phoneNumber.includes("@");
-    if (!isEmail && phoneNumber.replace(/\D/g, "").length < 7) {
-      setError("Please enter a valid mobile number or email.");
+    if (!isEmail && phoneNumber.replace(/\D/g, "").length !== 10) {
+      setError("Please enter a valid 10-digit mobile number or email.");
       return;
     }
     if (password.length < 6) {
@@ -115,15 +115,9 @@ const PartnerSignIn = () => {
                </label>
                <div className="flex bg-[#F9F7F4] border border-[#EBE6DF] rounded-2xl overflow-hidden focus-within:border-orange-500 transition-all shadow-sm">
                  {!phoneNumber.includes("@") && phoneNumber.length > 0 && /^\d+$/.test(phoneNumber) && (
-                   <select
-                     className="bg-gray-50 px-2 py-4 text-gray-700 border-r border-[#EBE6DF] font-bold text-xs outline-none cursor-pointer"
-                     value={countryCode}
-                     onChange={(e) => setCountryCode(e.target.value)}
-                   >
-                     {COUNTRY_CODES.map(c => (
-                       <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-                     ))}
-                   </select>
+                   <div className="bg-gray-50 px-4 py-4 text-gray-700 border-r border-[#EBE6DF] font-bold text-xs flex items-center">
+                     +91
+                   </div>
                  )}
                  <input
                    type="text"

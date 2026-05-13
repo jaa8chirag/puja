@@ -21,6 +21,8 @@ import {
   forgotPassword,
   resetPassword,
   googleLogin,
+  sendSignupOTP,
+  verifySignupOTP,
 } from "../controllers/authController.js";
 
 import { verifyToken } from "../middleware/auth.js";
@@ -70,6 +72,8 @@ router.post("/social-auth", socialAuth);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/google-login", googleLogin);
+router.post("/send-signup-otp", sendSignupOTP);
+router.post("/verify-signup-otp", verifySignupOTP);
 
 // Profile Routes
 router.get("/get-profile", verifyToken, getProfile);

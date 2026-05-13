@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
 import fetch from "node-fetch";
-import { sendPaymentReceipt, sendResetCodeEmail } from "../utils/mailService.js";
+import { sendPaymentReceipt, sendResetCodeEmail, sendVerificationOTPEmail } from "../utils/mailService.js";
 
 
 // =============================
@@ -75,9 +75,22 @@ export const signup = async (req, res) => {
 
     const uniqueReferralCode = 'PUJA' + (name ? name.substring(0, 4).toUpperCase().replace(/[^A-Z]/g, '') : 'USR') + Math.floor(1000 + Math.random() * 9000);
 
+    // 4️⃣ Check Email Verification if provided
+    if (email) {
+      const [otpRow] = await connection.query(
+        "SELECT * FROM email_otps WHERE email = ? AND is_verified = 1 LIMIT 1",
+        [email]
+      );
+      if (otpRow.length === 0) {
+        return res.status(400).json({ message: "Email not verified. Please verify your email first." });
+      }
+      // Optional: Delete the verification record after successful signup
+      await connection.query("DELETE FROM email_otps WHERE email = ?", [email]);
+    }
+
     const [userResult] = await connection.query(
-      "INSERT INTO users (name, phone, country_code, email, password, gotra, role, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, phone, finalCountryCode, email || null, hashedPassword, gotra || null, role || "user", uniqueReferralCode, referredBy],
+      "INSERT INTO users (name, phone, country_code, email, password, gotra, role, referral_code, referred_by, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, phone, finalCountryCode, email || null, hashedPassword, gotra || null, role || "user", uniqueReferralCode, referredBy, email ? 1 : 0],
     );
 
     const newUserId = userResult.insertId;
@@ -729,5 +742,66 @@ export const googleLogin = async (req, res) => {
       message: "Internal Server Error during Google Login", 
       error: error.message
     });
+  }
+};
+
+// =============================
+// 7️⃣ SEND SIGNUP OTP
+// =============================
+export const sendSignupOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    // Check if email already exists in users table
+    const [existing] = await db.query("SELECT id FROM users WHERE email = ? AND is_deleted = 0", [email]);
+    if (existing.length > 0) {
+      return res.status(409).json({ message: "Email already registered. Please login." });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+    // Clear old OTPs for this email and insert new one
+    await db.query("DELETE FROM email_otps WHERE email = ?", [email]);
+    await db.query(
+      "INSERT INTO email_otps (email, otp, expires_at) VALUES (?, ?, ?)",
+      [email, otp, expiry]
+    );
+
+    const emailSent = await sendVerificationOTPEmail(email, otp);
+    
+    res.status(200).json({
+      success: true,
+      message: emailSent ? "Verification OTP sent to your email." : "Failed to send OTP. Please check your email or try again later."
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending OTP", error: error.message });
+  }
+};
+
+// =============================
+// 8️⃣ VERIFY SIGNUP OTP
+// =============================
+export const verifySignupOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: "Email and OTP are required" });
+
+    const [rows] = await db.query(
+      "SELECT * FROM email_otps WHERE email = ? AND otp = ? AND expires_at > NOW()",
+      [email, otp]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Mark as verified
+    await db.query("UPDATE email_otps SET is_verified = 1 WHERE email = ?", [email]);
+
+    res.status(200).json({ success: true, message: "Email verified successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error verifying OTP", error: error.message });
   }
 };

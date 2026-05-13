@@ -150,8 +150,8 @@ const ProfileSection = () => {
       alert("Email is required for all users");
       return;
     }
-    if (personalData.phone && personalData.phone.length < 7) {
-      alert("Please enter a valid phone number");
+    if (personalData.phone && personalData.phone.length !== 10) {
+      alert("Please enter a valid 10-digit phone number");
       return;
     }
     setLoading(true);
@@ -350,15 +350,9 @@ const ProfileSection = () => {
               <div>
                 <label className={labelStyle}>Mobile Number</label>
                 <div className="flex gap-2">
-                  <select
-                    className="w-[100px] bg-orange-50/30 border border-orange-100 rounded-xl px-2 py-2.5 text-sm font-medium focus:outline-none focus:border-orange-400 transition-all cursor-pointer"
-                    value={personalData.country_code}
-                    onChange={(e) => setPersonalData({ ...personalData, country_code: e.target.value })}
-                  >
-                    {COUNTRY_CODES.map(c => (
-                      <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
-                    ))}
-                  </select>
+                  <div className="w-[80px] bg-orange-50/30 border border-orange-100 rounded-xl px-4 py-2.5 text-sm font-bold flex items-center justify-center">
+                    +91
+                  </div>
                   <div className="relative flex-1">
                     <input
                       type="text"

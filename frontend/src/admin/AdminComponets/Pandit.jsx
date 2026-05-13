@@ -208,6 +208,9 @@ const Pandits = () => {
   const handleSubmit = async () => {
     if (!formData.name || !formData.phone)
       return showToast("Name & Phone are required", "error");
+    
+    if (formData.phone.length !== 10)
+      return showToast("10-digit phone number required", "error");
 
     // Payment validation
     if (formData.paymentMethod === "bank") {
@@ -731,15 +734,9 @@ const Pandits = () => {
                       Contact Number
                     </label>
                     <div className="flex gap-2">
-                      <select
-                        className="w-[100px] px-2 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                        value={formData.country_code}
-                        onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-                      >
-                        {COUNTRY_CODES.map(c => (
-                          <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
-                        ))}
-                      </select>
+                      <div className="w-[80px] px-2 py-3.5 bg-[#0f172a] border border-slate-700 rounded-2xl text-xs font-bold text-white flex items-center justify-center">
+                        +91
+                      </div>
                       <div className="relative group flex-1">
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
                         <input

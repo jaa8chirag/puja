@@ -19,8 +19,8 @@ const AdminLogin = () => {
     e.preventDefault();
     
     const isEmail = mobileNumber.includes("@");
-    if (!isEmail && mobileNumber.replace(/\D/g, "").length < 7) {
-      setError("Please enter a valid mobile number or email.");
+    if (!isEmail && mobileNumber.replace(/\D/g, "").length !== 10) {
+      setError("Please enter a valid 10-digit mobile number or email.");
       return;
     }
     
@@ -91,15 +91,9 @@ const AdminLogin = () => {
               </label>
               <div className="flex bg-[#0f172a]/50 border border-slate-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-orange-500/40 focus-within:border-orange-500 transition-all">
                 {!mobileNumber.includes("@") && mobileNumber.length > 0 && /^\d+$/.test(mobileNumber) && (
-                  <select
-                    className="bg-transparent text-slate-400 font-bold border-r border-slate-700 px-3 outline-none cursor-pointer text-sm w-[100px]"
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                  >
-                    {COUNTRY_CODES.map(c => (
-                      <option key={c.isoCode} value={c.code} className="bg-[#1e293b]">{c.isoCode} ({c.code})</option>
-                    ))}
-                  </select>
+                  <div className="bg-transparent text-slate-400 font-bold border-r border-slate-700 px-4 flex items-center text-sm">
+                    +91
+                  </div>
                 )}
                 <input
                   type="text"

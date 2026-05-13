@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { User, Calendar, Clock } from "lucide-react";
 import HTMLContent from "../../Components/HTMLContent";
 import "../../Components/quill-content.css";
 
@@ -36,6 +37,21 @@ export default function BlogDetail() {
     navigator.clipboard?.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const formatOrdinalDate = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const day = date.getDate();
+    const month = date.toLocaleString('en-IN', { month: 'long' });
+    const year = date.getFullYear();
+
+    let suffix = 'th';
+    if (day % 10 === 1 && day !== 11) suffix = 'st';
+    else if (day % 10 === 2 && day !== 12) suffix = 'nd';
+    else if (day % 10 === 3 && day !== 13) suffix = 'rd';
+
+    return `${day}${suffix} ${month} ${year}`;
   };
 
   return (
@@ -114,42 +130,46 @@ export default function BlogDetail() {
               </div>
 
               {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-xs text-orange-700/60 font-medium pb-5 border-b border-orange-200">
-                {blog.author && <span className="flex items-center gap-1">✍️ {blog.author}</span>}
-                {blog.date && <span className="flex items-center gap-1">📅 {blog.date}</span>}
-                {blog.created_at && !blog.date && (
-                  <span className="flex items-center gap-1">📅 {new Date(blog.created_at).toLocaleDateString('hi-IN')}</span>
+              <div className="flex flex-wrap items-center gap-4 text-[13px] text-stone-400 font-medium pb-6 border-b border-orange-100">
+                {blog.author && <span>{blog.author}</span>}
+                {blog.author && (blog.date || blog.created_at || blog.readTime || blog.read_time) && <span className="opacity-40">·</span>}
+                
+                {(blog.date || blog.created_at) && (
+                  <span>{formatOrdinalDate(blog.date || blog.created_at)}</span>
                 )}
-                {blog.readTime && <span className="flex items-center gap-1">⏱ {blog.readTime} read</span>}
-                {blog.read_time && !blog.readTime && <span className="flex items-center gap-1">⏱ {blog.read_time}</span>}
-                {blog.views > 0 && <span className="flex items-center gap-1">👁 {blog.views}</span>}
+
+                {(blog.date || blog.created_at) && (blog.readTime || blog.read_time) && <span className="opacity-40">·</span>}
+                
+                {(blog.readTime || blog.read_time) && (
+                  <span>{(blog.readTime || blog.read_time)} read</span>
+                )}
               </div>
             </div>
 
             {/* ── Featured Image ── */}
             {blog.image_url && (
-              <div className="rounded-2xl overflow-hidden mb-8 border border-orange-200"
-                style={{ boxShadow: '0 4px 24px rgba(180,83,9,0.12)' }}>
+              <div className="rounded-3xl overflow-hidden mb-10 border border-orange-100"
+                style={{ boxShadow: '0 12px 40px rgba(180,83,9,0.08)' }}>
                 <img
                   src={blog.image_url.startsWith('http') ? blog.image_url : blog.image_url.startsWith('/uploads/') ? `${API_BASE_URL.replace('/api', '')}${blog.image_url}` : `${API_BASE_URL}/uploads/${blog.image_url}`}
                   alt={blog.title}
                   loading="lazy"
-                  className="w-full h-64 md:h-80 object-cover"
+                  className="w-full h-64 md:h-[400px] object-cover"
                 />
               </div>
             )}
 
             {/* ── Blog Body ── */}
-            <div className="bg-white rounded-2xl border border-orange-200 p-6 md:p-8"
-              style={{ boxShadow: '0 2px 16px rgba(180,83,9,0.06)' }}>
+            <div className="bg-white rounded-3xl border border-orange-100 p-8 md:p-12"
+              style={{ boxShadow: '0 4px 20px rgba(180,83,9,0.04)' }}>
               {blog.excerpt && (
-                <p className="text-lg font-medium text-orange-900/80 mb-6 italic leading-relaxed border-l-4 border-orange-300 pl-4">
+                <p className="text-xl md:text-2xl font-medium text-stone-700 mb-8 italic leading-relaxed border-l-4 border-orange-400 pl-6">
                   {blog.excerpt}
                 </p>
               )}
               <HTMLContent 
                 content={blog.content || blog.description || ''} 
-                className="text-sm md:text-base leading-relaxed"
+                className="text-base md:text-lg leading-[1.8] text-stone-800"
                 style={{ fontFamily: "'Georgia', serif" }}
               />
             </div>

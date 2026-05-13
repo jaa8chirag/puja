@@ -1,8 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { User, Calendar, Clock, Search } from "lucide-react";
+import { stripHtml } from "../../utils/stripHtml";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const CATEGORIES = ["All", "Jyotish", "Vastu", "Puja Vidhi", "Rashifal", "Upay"];
+
+const formatOrdinalDate = (dateStr) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const day = date.getDate();
+  const month = date.toLocaleString('en-IN', { month: 'long' });
+  const year = date.getFullYear();
+
+  let suffix = 'th';
+  if (day % 10 === 1 && day !== 11) suffix = 'st';
+  else if (day % 10 === 2 && day !== 12) suffix = 'nd';
+  else if (day % 10 === 3 && day !== 13) suffix = 'rd';
+
+  return `${day}${suffix} ${month} ${year}`;
+};
 
 export default function Blog() {
   const navigate = useNavigate();
@@ -80,15 +97,17 @@ export default function Blog() {
             <div className="h-px w-16" style={{ background: 'linear-gradient(90deg, #d97706, transparent)' }} />
           </div>
 
-          <div className="relative max-w-md mx-auto">
+          <div className="relative max-w-2xl mx-auto">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500"
+              size={20}
+            />
             <input
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search Blog..."
-              className="w-full bg-white/70 border border-orange-200 rounded-2xl px-5 py-3.5 text-[#3d1500] placeholder-orange-300/70 focus:outline-none focus:border-orange-400 focus:bg-white text-sm shadow-sm transition-all"
-              style={{ fontFamily: "'Georgia', serif" }}
+              placeholder="Search for Blogs, Vastu, or Jyotish..."
+              className="w-full pl-12 pr-4 py-3 bg-white border border-orange-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all text-[#3b2a1a] text-sm"
             />
-            <span className="absolute right-4 top-3.5 text-orange-400 text-sm">🔍</span>
           </div>
         </div>
 
@@ -129,63 +148,58 @@ export default function Blog() {
           <>
             {/* ── Featured Post ── */}
             {featured && (
-              <div className="mb-10">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="mb-14">
+                <div className="flex items-center gap-3 mb-6">
                   <div className="h-px flex-1 bg-orange-200" />
-                  <span className="text-orange-500/70 text-[10px] uppercase tracking-[0.35em] font-bold">Featured</span>
+                  <span className="text-orange-500/70 text-[10px] uppercase tracking-[0.4em] font-bold">Featured Spotlight</span>
                   <div className="h-px flex-1 bg-orange-200" />
                 </div>
 
                 <div
-                  className="relative rounded-3xl overflow-hidden cursor-pointer group min-h-[280px] border border-orange-200"
+                  className="relative flex flex-col md:flex-row rounded-[32px] overflow-hidden cursor-pointer group bg-white border border-orange-100 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-200/50"
                   onClick={() => navigate(`/blogs/${featured.id}`)}
-                  style={{ boxShadow: '0 8px 40px rgba(180,83,9,0.12)' }}
+                  style={{ boxShadow: '0 20px 50px -12px rgba(180,83,9,0.12)' }}
                 >
-                  {buildImageUrl(featured.image_url) ? (
-                    <img
-                      src={buildImageUrl(featured.image_url)}
-                      alt={featured.title}
-                      loading="lazy"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  ) : (
-                    <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #7c2d00 0%, #b45309 50%, #d97706 100%)' }} />
-                  )}
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(30,8,0,0.82) 100%)' }} />
-                  <div className="absolute inset-0 rounded-3xl ring-2 ring-transparent group-hover:ring-orange-400/40 transition-all duration-300" />
+                  {/* Left Side: Image */}
+                  <div className="w-full md:w-[55%] h-64 md:h-[400px] overflow-hidden relative">
+                    {buildImageUrl(featured.image_url) ? (
+                      <img
+                        src={buildImageUrl(featured.image_url)}
+                        alt={featured.title}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50">
+                        <span className="text-7xl opacity-20">🛕</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-10 transition-opacity" />
+                  </div>
 
-                  <div className="relative p-7 md:p-10 flex flex-col justify-end min-h-[280px]">
-                    <div className="flex items-center gap-2 mb-3">
-                      {featured.category && (
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-500/90 text-white">
-                          {featured.category}
-                        </span>
-                      )}
-                      {featured.tag && (
-                        <span className="text-xs px-3 py-1 rounded-full bg-black/30 text-orange-200 border border-orange-400/30 backdrop-blur-sm">
-                          {featured.tag}
-                        </span>
-                      )}
+                  {/* Right Side: Content */}
+                  <div className="w-full md:w-[45%] p-8 md:p-12 flex flex-col justify-center text-left">
+                    <div className="flex items-center gap-2 mb-4 text-[11px] font-medium uppercase tracking-[0.15em] text-stone-400">
+                      <span>Featured</span>
+                      <span className="opacity-40">·</span>
+                      <span>{featured.category || 'Vedic Gyan'}</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 leading-snug group-hover:text-orange-100 transition-colors"
-                      style={{ fontFamily: "'Georgia', serif", textShadow: '0 2px 8px rgba(0,0,0,0.4)', wordBreak: 'normal', overflowWrap: 'break-word' }}>
+
+                    <h2 className="text-xl md:text-3xl font-bold text-[#2D1A00] mb-4 leading-tight group-hover:text-orange-600 transition-colors"
+                      style={{ fontFamily: "'Georgia', serif", wordBreak: 'normal', overflowWrap: 'break-word' }}>
                       {featured.title}
                     </h2>
-                    {featured.excerpt && (
-                      <p className="text-orange-100/70 text-sm leading-relaxed mb-5 max-w-2xl line-clamp-2" style={{ wordBreak: 'normal', overflowWrap: 'break-word' }}>
-                        {featured.excerpt}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3 text-xs text-orange-200/60 flex-wrap">
-                        {featured.author && <span>✍️ {featured.author}</span>}
-                        {featured.created_at && <span>📅 {new Date(featured.created_at).toLocaleDateString('hi-IN')}</span>}
-                        {featured.read_time && <span>⏱ {featured.read_time} read</span>}
-                        {featured.views > 0 && <span>👁 {featured.views}</span>}
-                      </div>
-                      <span className="text-xs font-bold px-5 py-2 rounded-full text-white border border-orange-400/50 bg-orange-600/80 backdrop-blur-sm group-hover:bg-orange-600 transition-colors">
-                        Information →
-                      </span>
+
+                    <div className="text-stone-500 text-sm md:text-base leading-relaxed mb-6 line-clamp-3 overflow-hidden" style={{ wordBreak: 'normal', overflowWrap: 'break-word' }}>
+                      {stripHtml(featured.content || featured.excerpt || featured.description || '')}
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[13px] text-stone-400 mt-2">
+                      {featured.author && <span>{featured.author}</span>}
+                      <span className="opacity-40">·</span>
+                      {featured.created_at && <span>{formatOrdinalDate(featured.created_at)}</span>}
+                      <span className="opacity-40">·</span>
+                      {featured.read_time && <span>{featured.read_time} read</span>}
                     </div>
                   </div>
                 </div>
@@ -282,30 +296,25 @@ function BlogCard({ blog, imageUrl, onRead }) {
           )}
         </div>
 
-        <h3 className="text-orange-800 font-bold text-[17px] mb-2 leading-snug group-hover:text-orange-700 transition-colors line-clamp-2"
+        <h3 className="text-[#2D1A00] font-bold text-[17px] mb-2 leading-snug group-hover:text-orange-600 transition-colors line-clamp-2"
           style={{ fontFamily: "'Georgia', serif", wordBreak: 'normal', overflowWrap: 'break-word' }}>
           {blog.title}
         </h3>
 
-        {blog.excerpt && (
-          <p className="text-orange-700 text-[14px] leading-relaxed line-clamp-3" style={{ wordBreak: 'normal', overflowWrap: 'break-word' }}>
-            {blog.excerpt}
+        {(blog.excerpt || blog.content || blog.description) && (
+          <p className="text-stone-500 text-[14px] leading-relaxed line-clamp-3" style={{ wordBreak: 'normal', overflowWrap: 'break-word' }}>
+            {blog.excerpt || stripHtml(blog.content || blog.description || '')}
           </p>
         )}
       </div>
-        <div className="flex justify-between p-4 px-6">
-          {blog.created_at && (
-            <span className="flex items-center gap-1.5 text-[13px] text-orange-800">
-              <span className="text-[12px]">📅</span>
-              {new Date(blog.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </span>
-          )}
-          {blog.read_time && (
-            <span className="flex items-center gap-1.5 text-[13px] text-orange-800">
-              <span className="text-[12px]">🕐</span>
-              {blog.read_time}
-            </span>
-          )}
+        <div className="px-5 pb-5 mt-auto">
+          <div className="flex items-center gap-2 text-[11px] text-stone-400 font-medium">
+            {blog.author && <span>{blog.author}</span>}
+            {blog.author && (blog.created_at || blog.read_time) && <span className="opacity-40">·</span>}
+            {blog.created_at && <span>{formatOrdinalDate(blog.created_at)}</span>}
+            {blog.created_at && blog.read_time && <span className="opacity-40">·</span>}
+            {blog.read_time && <span>{blog.read_time} read</span>}
+          </div>
         </div>
     </div>
   );

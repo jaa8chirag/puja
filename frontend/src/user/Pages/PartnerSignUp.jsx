@@ -118,8 +118,8 @@ const PartnerSignUp = () => {
             setError("Please fill all required fields and upload the document.");
             return;
         }
-        if (formData.phone.length < 7) {
-            setError("Please enter a valid phone number.");
+        if (formData.phone.length !== 10) {
+            setError("Please enter a valid 10-digit phone number.");
             return;
         }
         setError("");
@@ -273,15 +273,9 @@ const PartnerSignUp = () => {
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black text-[#8C7A6B] uppercase ml-1 tracking-wider">Mobile</label>
                                     <div className="flex bg-[#FBF9F7] border border-gray-300 rounded-xl focus-within:border-orange-500 transition-all overflow-hidden">
-                                        <select
-                                            className="bg-gray-50 px-2 py-3 text-gray-700 border-r border-gray-300 font-bold text-sm outline-none cursor-pointer w-[100px]"
-                                            value={formData.country_code}
-                                            onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-                                        >
-                                            {COUNTRY_CODES.map(c => (
-                                                <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
-                                            ))}
-                                        </select>
+                                        <div className="bg-gray-50 px-4 py-3 text-gray-700 border-r border-gray-300 font-bold text-sm flex items-center">
+                                            +91
+                                        </div>
                                         <input className="w-full px-3 py-3 bg-transparent outline-none text-sm font-bold text-[#3D2B1D]" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })} />
                                     </div>
                                 </div>

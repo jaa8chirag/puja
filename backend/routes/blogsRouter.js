@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
     const { category, search, limit = 10, page = 1 } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = `SELECT id, title, slug, excerpt, category, tag, author, image_url, read_time, views, created_at
+    let query = `SELECT id, title, slug, excerpt, content, category, tag, author, image_url, read_time, views, created_at
                  FROM blogs WHERE status = 'published'`;
     const params = [];
 

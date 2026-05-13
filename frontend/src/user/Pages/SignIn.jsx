@@ -28,8 +28,8 @@ const SignIn = () => {
     if (e) e.preventDefault();
 
     const isEmail = phoneNumber.includes("@");
-    if (!isEmail && phoneNumber.replace(/\D/g, "").length < 7) {
-      setError("Please enter a valid mobile number or email.");
+    if (!isEmail && phoneNumber.replace(/\D/g, "").length !== 10) {
+      setError("Please enter a valid 10-digit mobile number or email.");
       return;
     }
 
@@ -129,8 +129,8 @@ const SignIn = () => {
 
   // User submitted phone from modal — retry with phone
   const handleGooglePhoneContinue = async () => {
-    if (googlePhone.replace(/\D/g, "").length < 7) {
-      setGooglePhoneError("Please enter a valid mobile number.");
+    if (googlePhone.replace(/\D/g, "").length !== 10) {
+      setGooglePhoneError("Please enter a valid 10-digit mobile number.");
       return;
     }
     setGooglePhoneError("");
@@ -182,6 +182,27 @@ const SignIn = () => {
             </div>
           )}
 
+          {/* Social Auth Buttons */}
+          <div className="flex flex-col gap-4">
+            <button
+              onClick={() => handleSocialAuth('Google')}
+              className="flex items-center justify-center gap-3 py-4 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95 w-full"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+              <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Continue with Google</span>
+            </button>
+          </div>
+
+          {/* OR Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-[#FFFCF5] text-gray-400 font-medium">Or continue with</span>
+            </div>
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
@@ -189,15 +210,9 @@ const SignIn = () => {
               </label>
               <div className="flex border border-gray-300 rounded-xl overflow-hidden bg-white shadow-sm focus-within:border-orange-500 transition-all">
                 {(!phoneNumber.includes("@") && phoneNumber.length > 0 && /^\+?\d+$/.test(phoneNumber.replace(/\s/g, ""))) && (
-                  <select
-                    className="bg-gray-50 px-2 py-3 text-gray-700 border-r border-gray-100 font-bold text-sm outline-none cursor-pointer w-[100px]"
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                  >
-                    {COUNTRY_CODES.map(c => (
-                      <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
-                    ))}
-                  </select>
+                  <div className="bg-gray-50 px-4 py-3 text-gray-700 border-r border-gray-100 font-bold text-sm flex items-center">
+                    +91
+                  </div>
                 )}
                 <input
                   type="text"
@@ -247,26 +262,6 @@ const SignIn = () => {
             </button>
           </form>
 
-          {/* OR Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-[#FFFCF5] text-gray-400 font-medium">Or continue with</span>
-            </div>
-          </div>
-
-          {/* Social Auth Buttons */}
-          <div className="flex flex-col gap-4">
-            <button
-              onClick={() => handleSocialAuth('Google')}
-              className="flex items-center justify-center gap-3 py-4 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95 w-full"
-            >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Continue with Google</span>
-            </button>
-          </div>
 
           <div className="text-center pt-8">
             <p className="text-sm text-gray-500">
@@ -334,15 +329,9 @@ const SignIn = () => {
               )}
 
               <div className="flex border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-orange-500 transition-all">
-                <select
-                  className="bg-gray-50 px-2 py-3.5 text-gray-700 border-r border-gray-200 font-bold text-sm outline-none cursor-pointer w-[100px]"
-                  value={googleCountryCode}
-                  onChange={(e) => setGoogleCountryCode(e.target.value)}
-                >
-                  {COUNTRY_CODES.map(c => (
-                    <option key={c.isoCode} value={c.code} className="bg-[#1e293b]">{c.isoCode} ({c.code})</option>
-                  ))}
-                </select>
+                <div className="bg-gray-50 px-4 py-3.5 text-gray-700 border-r border-gray-200 font-bold text-sm flex items-center">
+                  +91
+                </div>
                 <input
                   type="tel"
                   className="w-full px-4 py-3 outline-none text-gray-700 font-medium"
@@ -355,7 +344,7 @@ const SignIn = () => {
 
               <button
                 onClick={handleGooglePhoneContinue}
-                disabled={googlePhone.length < 7 || isLoading}
+                disabled={googlePhone.length !== 10 || isLoading}
                 className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-200 hover:shadow-orange-300 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:shadow-none"
               >
                 {isLoading ? <Loader2 className="animate-spin" size={20} /> : (

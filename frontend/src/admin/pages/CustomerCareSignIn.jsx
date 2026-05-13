@@ -27,7 +27,12 @@ const CustomerCareSignIn = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage({ type: '', text: '' });
+    const isPhone = /^\d+$/.test(formData.phone);
+    if (isPhone && formData.phone.length !== 10) {
+      setMessage({ type: 'error', text: '10-digit phone number required' });
+      setLoading(false);
+      return;
+    }
     try {
       const response = await axios.post(`${API_BASE_URL}/user/login`, formData);
       if (response.data.token) {
@@ -77,15 +82,9 @@ const CustomerCareSignIn = () => {
               <label className="text-xs font-semibold uppercase text-slate-500">Email or Phone</label>
               <div className="flex mt-1">
                 {formData.phone && !formData.phone.includes('@') && /^\d+$/.test(formData.phone) && (
-                  <select
-                    className="bg-[#0f172a] border border-slate-700 border-r-0 rounded-l-lg px-2 py-2.5 text-sm font-bold text-slate-400 outline-none cursor-pointer w-[100px]"
-                    value={formData.country_code}
-                    onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-                  >
-                    {COUNTRY_CODES.map(c => (
-                      <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
-                    ))}
-                  </select>
+                  <div className="bg-[#0f172a] border border-slate-700 border-r-0 rounded-l-lg px-3 py-2.5 text-sm font-bold text-slate-400 flex items-center justify-center">
+                    +91
+                  </div>
                 )}
                 <input
                   type="text"

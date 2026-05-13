@@ -195,6 +195,8 @@ const Users = () => {
   };
 
   const updateUser = async () => {
+    if (editingUser.phone && editingUser.phone.length !== 10)
+      return showToast("10-digit phone number required", "error");
     setActionLoading("edit");
     try {
       await API.put(`/users/${editingUser.id}`, editingUser);
@@ -211,6 +213,8 @@ const Users = () => {
   const addUser = async () => {
     if (!newUser.name || !newUser.phone)
       return showToast("Name and phone required", "error");
+    if (newUser.phone.length !== 10)
+      return showToast("10-digit phone number required", "error");
     setActionLoading("add");
     try {
       await API.post(`/createUser`, newUser);
@@ -519,19 +523,9 @@ const Users = () => {
               }
             />
             <div className="flex gap-2">
-              <select
-                className="w-[100px] px-2 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all cursor-pointer"
-                value={showAddModal ? newUser.country_code : editingUser?.country_code}
-                onChange={(e) =>
-                  showAddModal
-                    ? setNewUser({ ...newUser, country_code: e.target.value })
-                    : setEditingUser({ ...editingUser, country_code: e.target.value })
-                }
-              >
-                {COUNTRY_CODES.map(c => (
-                  <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
-                ))}
-              </select>
+              <div className="w-[80px] px-2 py-3 border border-slate-800 rounded-2xl text-xs bg-[#0f172a] text-white flex items-center justify-center font-bold">
+                +91
+              </div>
               <div className="flex-1">
                 <ModalField
                   icon={Phone}

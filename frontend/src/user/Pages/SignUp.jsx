@@ -22,6 +22,13 @@ const SignUp = () => {
         referralCode: ''
     });
 
+    // Email verification states
+    const [isOtpSent, setIsOtpSent] = useState(false);
+    const [otpValue, setOtpValue] = useState("");
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
+
     const navigate = useNavigate();
 
     const isStep1Valid = formData.name.trim().length >= 3;
@@ -31,11 +38,66 @@ const SignUp = () => {
       length: formData.password.length >= 6,
       match: formData.password === formData.confirmPassword && formData.confirmPassword.length > 0,
     };
-    const isStep2Valid = formData.phone.length >= 7 && formData.email.trim() !== '' && pwChecks.length && pwChecks.match;
+    const isStep2Valid = formData.phone.length === 10 && formData.email.trim() !== '' && isEmailVerified && pwChecks.length && pwChecks.match;
+
+    const handleSendOtp = async () => {
+        if (!formData.email.includes('@')) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+        setIsSendingOtp(true);
+        setError("");
+        try {
+            const res = await fetch(`${API_BASE_URL}/user/send-signup-otp`, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setIsOtpSent(true);
+                setError("");
+            } else {
+                setError(data.message || "Failed to send OTP.");
+            }
+        } catch (err) {
+            setError("Failed to send verification email.");
+        } finally {
+            setIsSendingOtp(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (otpValue.length !== 6) {
+            setError("Please enter a 6-digit OTP.");
+            return;
+        }
+        setIsVerifying(true);
+        setError("");
+        try {
+            const res = await fetch(`${API_BASE_URL}/user/verify-signup-otp`, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email, otp: otpValue })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setIsEmailVerified(true);
+                setIsOtpSent(false);
+                setError("");
+            } else {
+                setError(data.message || "Invalid OTP.");
+            }
+        } catch (err) {
+            setError("Verification failed.");
+        } finally {
+            setIsVerifying(false);
+        }
+    };
 
     const handleRegister = async () => {
         if (!isStep2Valid) {
-            if (formData.phone.length < 7) setError("Please enter a valid phone number.");
+            if (formData.phone.length !== 10) setError("Please enter a valid 10-digit phone number.");
             else if (formData.email.trim() === '') setError("Email is required for all users.");
             else if (!pwChecks.length) setError("Password must be at least 6 characters.");
             else if (!pwChecks.match) setError("Passwords do not match.");
@@ -183,15 +245,9 @@ const SignUp = () => {
                                         <Smartphone size={12} className="text-[#E79A37]" /> Mobile Number
                                     </label>
                                     <div className="flex border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#FFB347] transition-all">
-                                        <select
-                                            className="bg-gray-50 px-2 py-4 text-gray-700 border-r border-gray-200 font-bold text-sm outline-none cursor-pointer w-[100px]"
-                                            value={formData.country_code}
-                                            onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-                                        >
-                                            {COUNTRY_CODES.map(c => (
-                                                <option key={c.isoCode} value={c.code}>{c.isoCode} ({c.code})</option>
-                                            ))}
-                                        </select>
+                                        <div className="bg-gray-50 px-4 py-4 text-gray-700 border-r border-gray-200 font-bold text-sm flex items-center">
+                                            +91
+                                        </div>
                                         <input
                                             type="tel"
                                             className="w-full px-4 py-4 outline-none text-sm text-gray-700 bg-[#FFFCF5]/50 font-medium"
@@ -206,14 +262,68 @@ const SignUp = () => {
                                     <label className="text-[11px] font-bold text-gray-500 uppercase flex items-center gap-2">
                                         <Mail size={12} className="text-[#E79A37]" /> Your Email
                                     </label>
-                                    <input
-                                        type="email"
-                                        placeholder="yourname@gmail.com"
-                                        className="w-full px-4 py-4 bg-[#FFFCF5]/50 border border-gray-200 rounded-xl outline-none focus:border-[#FFB347] transition-all text-sm text-gray-700 font-medium"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="email"
+                                            placeholder="yourname@gmail.com"
+                                            className={`w-full px-4 py-4 bg-[#FFFCF5]/50 border border-gray-200 rounded-xl outline-none focus:border-[#FFB347] transition-all text-sm text-gray-700 font-medium ${isEmailVerified ? 'pr-24 bg-green-50 border-green-200' : 'pr-20'}`}
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            disabled={isEmailVerified || isOtpSent}
+                                        />
+                                        {!isEmailVerified ? (
+                                            <button
+                                                type="button"
+                                                onClick={handleSendOtp}
+                                                disabled={isSendingOtp || isOtpSent || formData.email.trim() === ''}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-orange-500 text-white text-[10px] font-bold px-3 py-2 rounded-lg hover:bg-orange-600 transition-all disabled:opacity-50"
+                                            >
+                                                {isSendingOtp ? <Loader2 size={12} className="animate-spin" /> : (isOtpSent ? "SENT" : "VERIFY")}
+                                            </button>
+                                        ) : (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-green-600 font-bold text-[10px] uppercase">
+                                                <span>Verified</span>
+                                                <div className="bg-green-100 p-0.5 rounded-full">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {isOtpSent && !isEmailVerified && (
+                                    <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                                        <label className="text-[10px] font-bold text-orange-600 uppercase tracking-widest ml-1">Enter 6-Digit OTP</label>
+                                        <div className="flex gap-3">
+                                            <input
+                                                type="text"
+                                                maxLength="6"
+                                                placeholder="000000"
+                                                className="flex-1 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl outline-none focus:border-orange-500 text-center text-lg font-bold tracking-[10px] text-gray-700"
+                                                value={otpValue}
+                                                onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleVerifyOtp}
+                                                disabled={isVerifying || otpValue.length !== 6}
+                                                className="px-6 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-50 text-[11px]"
+                                            >
+                                                {isVerifying ? <Loader2 className="animate-spin" /> : "CONFIRM"}
+                                            </button>
+                                        </div>
+                                        <div className="flex justify-between items-center px-1">
+                                            <p className="text-[10px] text-gray-400">Didn't receive? Check spam folder.</p>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => { setIsOtpSent(false); setOtpValue(""); }}
+                                                className="text-[10px] font-bold text-orange-600 hover:underline"
+                                            >
+                                                Change Email
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
