@@ -182,26 +182,7 @@ const SignIn = () => {
             </div>
           )}
 
-          {/* Social Auth Buttons */}
-          <div className="flex flex-col gap-4">
-            <button
-              onClick={() => handleSocialAuth('Google')}
-              className="flex items-center justify-center gap-3 py-4 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95 w-full"
-            >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Continue with Google</span>
-            </button>
-          </div>
-
-          {/* OR Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-[#FFFCF5] text-gray-400 font-medium">Or continue with</span>
-            </div>
-          </div>
+          {/* Google login button and OR divider removed from UI as per user request */}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">

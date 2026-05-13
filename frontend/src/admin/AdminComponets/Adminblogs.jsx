@@ -640,8 +640,9 @@ const Adminblogs = () => {
 
               {/* Image Upload */}
               <div>
-                <label className="text-gray-500 text-xs uppercase tracking-wider mb-1.5 block">
-                  Featured Image
+                <label className="text-gray-500 text-xs uppercase tracking-wider mb-1.5 block flex items-center justify-between">
+                  <span>Featured Image</span>
+                  <span className="text-orange-500/70 lowercase font-bold tracking-normal">[Recommended Ratio 16:9]</span>
                 </label>
                 <div
                   onClick={() => fileRef.current?.click()}
@@ -660,7 +661,7 @@ const Adminblogs = () => {
                         Click to upload an image
                       </p>
                       <p className="text-gray-700 text-xs mt-1">
-                        JPG, PNG, WebP
+                        JPG, PNG, WebP (Best: 1200x675px)
                       </p>
                     </div>
                   )}
