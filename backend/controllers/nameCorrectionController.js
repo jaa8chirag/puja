@@ -727,6 +727,7 @@ async function getAIAnalysis(params) {
         model: "llama-3.3-70b-versatile",
         max_tokens: 1500,
         temperature: 0.4,
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "system",

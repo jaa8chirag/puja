@@ -19,7 +19,10 @@ const buildImageUrl = (url) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
   if (url.startsWith("/img/")) return url;
-  if (url.startsWith("/uploads/")) return `${API_BASE_URL.replace("/api", "")}${url}`;
+  if (url.startsWith("/uploads/")) {
+    const baseUrl = API_BASE_URL.endsWith("/api") ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+    return `${baseUrl}/api${url}`;
+  }
   return `${API_BASE_URL}/uploads/${url}`;
 };
 

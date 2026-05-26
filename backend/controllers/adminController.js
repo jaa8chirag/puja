@@ -449,10 +449,12 @@ export const adminCreateUser = async (req, res) => {
     const requesterRole = req.user.role;
 
     if (!name || !phone || !password || !role) {
+      console.log("adminCreateUser 400: All fields are required. Body:", req.body);
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     if (password.length < 6) {
+      console.log("adminCreateUser 400: Password must be at least 6 characters long");
       return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
     }
 
@@ -466,6 +468,7 @@ export const adminCreateUser = async (req, res) => {
     // Check if user already exists
     const [existing] = await db.execute("SELECT id FROM users WHERE phone = ? AND (country_code = ? OR country_code IS NULL)", [phone, country_code || "+91"]);
     if (existing.length > 0) {
+      console.log("adminCreateUser 400: User with this phone and country code already exists", phone);
       return res.status(400).json({ success: false, message: "User with this phone and country code already exists" });
     }
 

@@ -8,7 +8,10 @@ const buildImageUrl = (url) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
   if (url.startsWith("/img/")) return url;
-  if (url.startsWith("/uploads/")) return `${API_BASE_URL.replace("/api", "")}${url}`;
+  if (url.startsWith("/uploads/")) {
+    const baseUrl = API_BASE_URL.endsWith("/api") ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+    return `${baseUrl}/api${url}`;
+  }
   return `${API_BASE_URL}/uploads/${url}`;
 };
 
@@ -202,8 +205,10 @@ export default function ReviewSection() {
       {/* Google Review Button */}
       <div className="text-center mt-8">
         <a
-          href="#"
-          className="inline-block px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
+          href="https://www.google.com/search?q=Sri+Vedic+Puja+Noida"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md hover:shadow-lg"
         >
           Review us on Google
         </a>

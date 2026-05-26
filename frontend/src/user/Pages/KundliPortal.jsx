@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-
+import { Sparkles } from "lucide-react";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const API_URL = `${API_BASE_URL}/kundli/generate`;
 
@@ -155,7 +155,7 @@ function KundliChart({ planets, lagnaRashi }) {
               <g key={h}>
                 <text x={rx} y={ry} textAnchor="middle"
                   fill="#92400e" fontSize="17" fontWeight="bold" fontFamily="serif">
-                  {h === 1 ? "1 ASC" : rashiNum}
+                  {h === 1 ? `${rashiNum} ASC` : rashiNum}
                 </text>
                 {plist.map((p, i) => (
                   <text key={i} x={px} y={py + i * 20} textAnchor="middle"
@@ -679,10 +679,6 @@ export default function KundliPortal() {
   const TABS = [
     { id: 'planets', label: '🪐 Planets' },
     { id: 'doshas', label: '⚠️ Doshas' },
-    { id: 'optionA', label: '📜 Option A' },
-    { id: 'optionB', label: '📐 Option B' },
-    { id: 'verdict', label: '✅ Verdict' },
-    { id: 'raw', label: '🔍 Raw' },
   ];
 
   const SOURCE_BADGE = {

@@ -186,8 +186,8 @@ const Users = () => {
       await API.delete(`/users/${deleteTarget.id}`);
       showToast("User deleted");
       await fetchUsers();
-    } catch {
-      showToast("Delete failed", "error");
+    } catch (err) {
+      showToast(err.response?.data?.message || "Delete failed", "error");
     } finally {
       setActionLoading(null);
       setDeleteTarget(null);
@@ -203,8 +203,8 @@ const Users = () => {
       showToast("User updated");
       setEditingUser(null);
       await fetchUsers();
-    } catch {
-      showToast("Update failed", "error");
+    } catch (err) {
+      showToast(err.response?.data?.message || "Update failed", "error");
     } finally {
       setActionLoading(null);
     }
@@ -215,6 +215,8 @@ const Users = () => {
       return showToast("Name and phone required", "error");
     if (newUser.phone.length !== 10)
       return showToast("10-digit phone number required", "error");
+    if (!newUser.password || newUser.password.length < 6)
+      return showToast("Password must be at least 6 characters long", "error");
     setActionLoading("add");
     try {
       await API.post(`/createUser`, newUser);
@@ -222,8 +224,8 @@ const Users = () => {
       setShowAddModal(false);
       setNewUser({ name: "", email: "", phone: "", country_code: "+91", password: "", role: "user" });
       await fetchUsers();
-    } catch {
-      showToast("Failed to create user", "error");
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to create user", "error");
     } finally {
       setActionLoading(null);
     }

@@ -122,7 +122,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
           puja_name: basePujaName,
           puja_type: basePujaType,
           description: baseDescription,
-          status: data.status || "active",
+          status: data.status || "",
           address: data.address || "",
           about: data.about || "",
           dateOfStart: formattedDateTime,
@@ -173,8 +173,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
         );
         formData.append(key, JSON.stringify(validPrices));
       } else if (key === "status") {
-        // Keep existing status if not featured, or use form.status if featured
-        formData.append("status", form.status || (editData?.status || "active"));
+        formData.append("status", form.is_featured === 1 ? form.status : "");
       } else {
         formData.append(key, form[key]);
       }
@@ -202,7 +201,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
       close();
     } catch (err) {
       console.error("Error saving service:", err);
-      alert("Error saving service");
+      alert(err.response?.data?.message || err.response?.data?.error || "Error saving service");
     }
   };
 
@@ -243,7 +242,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
       setShowBenefitForm(false);
       alert("Benefits saved successfully!");
     } catch (error) {
-      alert("Error saving benefits");
+      alert(error.response?.data?.message || error.response?.data?.error || "Error saving benefits");
     }
   };
 
@@ -259,7 +258,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
         setEditingBenefit(null);
       }
     } catch (error) {
-      alert("Error updating benefit");
+      alert(error.response?.data?.message || error.response?.data?.error || "Error updating benefit");
     }
   };
 
@@ -269,7 +268,7 @@ const ServiceModal = ({ close, editData, refresh }) => {
       const response = await deleteBenefit(benefitId);
       if (response.data.success) await loadBenefits(editData.id);
     } catch (error) {
-      alert("Error deleting benefit");
+      alert(error.response?.data?.message || error.response?.data?.error || "Error deleting benefit");
     }
   };
 

@@ -118,7 +118,7 @@ export default function NameCorrectionDummy() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href="https://wa.me/919771157571"
+                  href="https://wa.me/918287479966"
                   target="_blank"
                   rel="noreferrer"
                   className="group flex items-center gap-3 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-green-200 active:scale-95"

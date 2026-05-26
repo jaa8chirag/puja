@@ -129,10 +129,10 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-3 mt-8">
               <div className="flex flex-col items-center gap-1">
                 <button
-                  className="w-full bg-orange-500 text-white font-bold py-3 px-4 sm:px-12 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-sm sm:text-base whitespace-nowrap"
+                  className="w-full h-full bg-orange-500 text-white font-bold py-3 px-2 sm:px-6 rounded-xl shadow-md hover:bg-orange-600 transition-all active:scale-95 text-[11px] sm:text-sm leading-tight flex items-center justify-center text-center"
                   onClick={() => navigate("/kundli")}
                 >
-                  Find Your Kundli
+                  FREE KUNDLI & DOSHA ANALYSIS
                 </button>
                 <p className="text-[10px] text-center text-gray-600">
                   Vedic birth chart analysis
@@ -141,13 +141,13 @@ export default function Home() {
 
               <div className="flex flex-col items-center gap-1">
                 <button
-                  className="w-full bg-white text-orange-500 font-bold py-3 px-4 sm:px-12 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-sm sm:text-base whitespace-nowrap"
+                  className="w-full h-full bg-white text-orange-500 font-bold py-3 px-2 sm:px-6 rounded-xl border border-orange-200 shadow-sm hover:bg-orange-50 transition-all active:scale-95 text-[11px] sm:text-sm leading-tight flex items-center justify-center text-center"
                   onClick={() => navigate("/name-correction")}
                 >
                   Name correction
                 </button>
                 <p className="text-[10px] text-center text-gray-600 leading-tight">
-                  Correct your name as per Shastra
+                  Complimentary with every offline paid puja Booking
                 </p>
               </div>
             </div>
